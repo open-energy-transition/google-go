@@ -56,7 +56,6 @@ Rule ``clean_osm_data``
 
 .. automodule:: clean_osm_data
 
-
 Rule ``build_osm_network``
 =============================
 

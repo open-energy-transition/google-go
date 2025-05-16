@@ -111,3 +111,7 @@ reset:
 		rm -r ./.snakemake || true; \
 		echo "Reset completed." \
 	) || echo "Reset cancelled."
+
+tyndp:
+	snakemake -call --configfile config/config.tyndp.yaml --rerun-incomplete $(args)
+	snakemake -call rulegraph filegraph --configfile config/config.tyndp.yaml

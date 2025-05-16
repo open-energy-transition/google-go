@@ -3,11 +3,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 run:
-  prefix: "test-sector-tyndp"
-  disable_progressbar: true
-  shared_resources:
-    policy: false
-  shared_cutouts: true
+  prefix: "tyndp"
 
 # TODO set foresight
 foresight: myopic
@@ -22,42 +18,26 @@ scenario:
 countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'CY', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK']
 
 snapshots:
-  start: "2013-03-01"
-  end: "2013-03-08"
+  # TODO define multiple climatic years, being either 1995 2008 or 2009
+  start: "2013-01-01"
+  end: "2014-01-01"
 
 enable:
   retrieve_tyndp_bundle: true
 
 co2_budget:
   # TODO define carbon budget compliant with EU 2030 and 2050 targets
-  2040: 0.25  # Temporary increase to allow CI to pass while load configurations are incomplete.
+  2020: 0.720 # average emissions of 2019 to 2021 relative to 1990, CO2 excl LULUCF, EEA data, European Environment Agency. (2023a). Annual European Union greenhouse gas inventory 1990–2021 and inventory report 2023 - CRF Table. https://unfccc.int/documents/627830
+  2025: 0.648 # With additional measures (WAM) projection, CO2 excl LULUCF, European Environment Agency. (2023e). Member States’ greenhouse gas (GHG) emission projections 2023. https://www.eea.europa.eu/en/datahub/datahubitem-view/4b8d94a4-aed7-4e67-a54c-0623a50f48e8
+  2030: 0.450 # 55% reduction by 2030 (Ff55)
+  2035: 0.250
+  2040: 0.100 # 90% by 2040
+  2045: 0.050
+  2050: 0.000 # climate-neutral by 2050
 
 electricity:
   base_network: tyndp-raw
   transmission_limit: v1.0
-
-  extendable_carriers:
-    Generator: [OCGT]
-    StorageUnit: [battery]
-    Store: [H2]
-    Link: [H2 pipeline]
-
-  renewable_carriers: [solar, solar-hsat, onwind, offwind-ac, offwind-dc, offwind-float]
-
-atlite:
-  default_cutout: europe-2013-03-sarah3-era5
-  cutouts:
-    europe-2013-03-sarah3-era5:
-      time: ["2013-03-01", "2013-03-08"]
-
-renewable:
-  offwind-ac:
-    max_depth: false
-  offwind-dc:
-    max_depth: false
-  offwind-float:
-    max_depth: false
-    min_depth: false
 
 links:
   p_max_pu: 1.0
@@ -77,6 +57,7 @@ load:
   manual_adjustments: false
   supplement_synthetic: false
   tyndp_scenario: DE  # NT, DE or GA
+
 pypsa_eur:
   Bus:
   - AC
@@ -141,27 +122,13 @@ sector:
   transmission_efficiency:
     enable:
     - gas pipeline
-  electricity_distribution_grid: true
-  gas_network: false
-  electrobiofuels: false
-  ammonia: false
-  regional_co2_sequestration_potential:
-    enable: false
-  co2_spatial: false
-  co2_network: false
 
 clustering:
-  mode: administrative
+  mode: administrative  # TODO Switch to Bidding zones to preserve bidding zones shapes
   administrative:
     level: 3
   temporal:
-    resolution_sector: 1h
-
-solving:
-  solver:
-    name: gurobi
-    options: gurobi-default
-  mem: 4000
+    resolution_sector: 6H
 
 plotting:
   balance_map:

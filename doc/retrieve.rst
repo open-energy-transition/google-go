@@ -19,6 +19,11 @@ Rule ``retrieve_databundle``
 
 .. automodule:: retrieve_databundle
 
+Rule ``retrieve_tyndp_bundle``
+============================
+
+.. automodule:: retrieve_tyndp_bundle
+
 Rule ``retrieve_eurostat_data``
 ===============================
 

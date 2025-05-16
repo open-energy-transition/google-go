@@ -173,8 +173,11 @@ if config["enable"]["retrieve"]:
 
     rule retrieve_tyndp_bundle:
         output:
+            dir=directory("data/tyndp_2024_bundle"),
             reference_grid="data/tyndp_2024_bundle/Line data/ReferenceGrid_Electricity.xlsx",
             buses="data/tyndp_2024_bundle/Nodes/LIST OF NODES.xlsx",
+            h2_reference_grid="data/tyndp_2024_bundle/Line data/ReferenceGrid_Hydrogen.xlsx",
+            electricity_demand=directory("data/tyndp_2024_bundle/Demand Profiles"),
         log:
             "logs/retrieve_tyndp_bundle.log",
         retries: 2

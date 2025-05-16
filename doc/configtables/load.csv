@@ -1,4 +1,5 @@
 ,Unit,Values,Description
+source,--,"{""opsd"",""tyndp""}","Data source used for the electrical load (OSPD or TYNDP, default: OPSD)."
 fill_gaps,--,--,"Gaps filling strategy used."
 -- enable,bool,"{true, false}","Whether to fill gaps using interpolation for small gaps and time shift for large gaps."
 -- interpolate_limit,hours,integer,"Maximum gap size (consecutive nans) which interpolated linearly."
@@ -10,3 +11,4 @@ supplement_synthetic,bool,"{true, false}","Whether to supplement missing data fo
 distribution_key,--,--,"Distribution key for spatially disaggregating the per-country electricity demand data."
 -- gdp,float,"[0, 1]","Weighting factor for the GDP data in the distribution key."
 -- population,float,"[0, 1]","Weighting factor for the population data in the distribution key."
+tyndp_scenario,--,"{""NT"",""DE"",""GA""}","Scenario configuration of the electricity demand when using the `tyndp` source, which is one of NT, DE or GA."

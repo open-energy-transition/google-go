@@ -1296,6 +1296,8 @@ rule prepare_sector_network:
         limited_heat_sources=config_provider(
             "sector", "district_heating", "limited_heat_sources"
         ),
+        load_source=config_provider("load", "source"),
+        scaling_factor=config_provider("load", "scaling_factor"),
         temperature_limited_stores=config_provider(
             "sector", "district_heating", "temperature_limited_stores"
         ),
@@ -1420,6 +1422,11 @@ rule prepare_sector_network:
         ates_potentials=lambda w: (
             resources("ates_potentials_base_s_{clusters}_{planning_horizons}.csv")
             if config_provider("sector", "district_heating", "ates", "enable")(w)
+            else []
+        ),
+        load=lambda w: (
+            resources("electricity_demand_base_s_{planning_horizons}.nc")
+            if config_provider("load", "source")(w) == "tyndp"
             else []
         ),
     output:
