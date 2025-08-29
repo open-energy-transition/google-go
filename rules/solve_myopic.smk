@@ -120,6 +120,8 @@ rule add_certificate:
         network=resources(
             "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
         ),
+        country_shapes=resources("country_shapes.geojson"),
+        europe_shape=resources("europe_shape.geojson"),
     output:
         network=resources(
             "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_certificate.nc"

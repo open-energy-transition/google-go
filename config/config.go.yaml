@@ -6,7 +6,7 @@
 
 run:
   prefix: ""
-  name: "multi-year-it"
+  name: "v1-multi-year-it-10e-0h"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -28,9 +28,10 @@ scenario:
   sector_opts:
   - ''
   planning_horizons:
-  - 2025
+  - 2020
   - 2030
-  - 2035
+  - 2040
+  # - 2050 (Currently infeasable for IT)
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
 countries: ['IT'] #['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
@@ -49,14 +50,28 @@ enable:
   build_cutout: false
   retrieve_cutout: false
   drop_leap_day: true
-  certificate: true  # [true, false ] If true, model the guarantee of origin
+  certificate: true # [true, false ] If true, model the guarantee of origin
+
+clustering:
+  temporal:
+    resolution_sector: 3H
+
+sector:
+  methanol:
+    regional_methanol_demand: true
 
 certificate:
   scope: national # {national, global}
   plant_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear"]
   plant_status: ["new", "existing"] # ["new", "existing"] if you include all (both new or existing), or only new powerplants
   max_plant_lifetime_as_new: 10
-  plant_grouping: ["country", "carrier", "status"]
+  plant_grouping: ["carrier", "status"] # [] or ["carrier", "status"]
+  bus_grouping: [] # [] or ["carrier", "status"]
 
-  strategy: vol-match
   energy_matching: 10 # in percent
+  hourly_matching: 0 #80 # in percent
+
+  map:
+    supply: [-0.5,-0.5]
+    demand: [0.5,0.5]
+    market: [0,0]
