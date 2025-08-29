@@ -1,0 +1,146 @@
+# SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+run:
+  prefix: "test-sector-tyndp"
+  disable_progressbar: true
+  shared_resources:
+    policy: false
+  shared_cutouts: true
+
+# TODO set foresight
+foresight: myopic
+
+scenario:
+  clusters:
+  - all
+  planning_horizons:
+  - 2030
+  - 2040
+
+countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'CY', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK']
+
+snapshots:
+  start: "2013-03-01"
+  end: "2013-03-08"
+
+enable:
+  retrieve_tyndp_bundle: true
+
+co2_budget:
+  # TODO define carbon budget compliant with EU 2030 and 2050 targets
+  2040: 0.25  # Temporary increase to allow CI to pass while load configurations are incomplete.
+
+electricity:
+  base_network: tyndp-raw
+  transmission_limit: v1.0
+
+  extendable_carriers:
+    Generator: [OCGT]
+    StorageUnit: [battery]
+    Store: [H2]
+    Link: [H2 pipeline]
+
+  renewable_carriers: [solar, solar-hsat, onwind, offwind-ac, offwind-dc, offwind-float]
+
+atlite:
+  default_cutout: europe-2013-03-sarah3-era5
+  cutouts:
+    europe-2013-03-sarah3-era5:
+      time: ["2013-03-01", "2013-03-08"]
+
+renewable:
+  offwind-ac:
+    max_depth: false
+  offwind-dc:
+    max_depth: false
+  offwind-float:
+    max_depth: false
+    min_depth: false
+
+links:
+  p_max_pu: 1.0
+  p_min_pu: 0
+
+transmission_projects:
+  enable: true
+  include:
+    tyndp2020: false
+    nep: false
+    manual: false
+
+load:
+  source: tyndp # opsd, tyndp
+  fill_gaps:
+    enable: false
+  manual_adjustments: false
+  supplement_synthetic: false
+  tyndp_scenario: DE  # NT, DE or GA
+pypsa_eur:
+  Bus:
+  - AC
+  Link:
+  - DC
+  Generator:
+  - onwind
+  - offwind-ac
+  - offwind-dc
+  - offwind-float
+  - solar-hsat
+  - solar
+  - ror
+  StorageUnit:
+  - PHS
+  - hydro
+  Store: []
+
+sector:
+  transport: false
+  heating: false
+  biomass: true
+  industry: true
+  use_industry_load: false
+  shipping: false
+  aviation: false
+  agriculture: false
+
+  oil_boilers: false
+  biomass_boiler: false
+
+  hydrogen_turbine: true
+
+  transmission_efficiency:
+    enable:
+    - gas pipeline
+  electricity_distribution_grid: true
+  H2_network: false
+  gas_network: false
+  electrobiofuels: false
+  ammonia: false
+  regional_co2_sequestration_potential:
+    enable: false
+  co2_spatial: false
+  co2_network: false
+
+clustering:
+  mode: administrative
+  administrative:
+    level: bz
+  temporal:
+    resolution_sector: 1h
+
+solving:
+  solver:
+    name: gurobi
+    options: gurobi-default
+
+plotting:
+  balance_map:
+    bus_carriers:
+    - AC
+    - H2
+    - gas
+    - oil
+    - methanol
+    - co2 stored

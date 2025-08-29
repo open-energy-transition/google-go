@@ -892,6 +892,8 @@ def process_offshore_regions(
         offshore_locs = buses.loc[c_b & buses.substation_off, ["x", "y"]].rename_axis(
             "name"
         )
+        if offshore_locs.empty:
+            continue
         offshore_regions_c = gpd.GeoDataFrame(
             {
                 "name": offshore_locs.index,
@@ -1581,7 +1583,17 @@ if __name__ == "__main__":
     if "snakemake" not in globals():
         from scripts._helpers import mock_snakemake
 
-        snakemake = mock_snakemake("base_network")
+        snakemake = mock_snakemake(
+            "base_network",
+            run="test-sector-tyndp",
+            opts="",
+            clusters="all",
+            configfiles="config/test/config.go.yaml",
+            ll="v1.0",
+            sector_opts="",
+            planning_horizons="2030",
+        )
+
     configure_logging(snakemake)
     set_scenario_config(snakemake)
     mp.set_start_method("spawn", force=True)

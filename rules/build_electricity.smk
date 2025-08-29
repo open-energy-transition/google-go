@@ -934,7 +934,7 @@ if config["electricity"]["base_network"] == "osm-raw":
             "../scripts/build_osm_network.py"
 
 
-if config["electricity"]["base_network"] == "tyndp":
+if config["electricity"]["base_network"] == "tyndp-raw":
 
     rule build_tyndp_network:
         params:
