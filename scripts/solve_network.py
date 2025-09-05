@@ -1164,6 +1164,113 @@ def add_co2_atmosphere_constraint(n, snapshots):
             n.model.add_constraints(lhs <= rhs, name=f"GlobalConstraint-{name}")
 
 
+def add_virtual_ppl_matching(n):
+    from scripts.add_certificate import get_virtual_ppl_dataframe
+
+    certificate = n.config["certificate"]
+    planning_horizons = snakemake.wildcards.get("planning_horizons", None)
+
+    vpp = get_virtual_ppl_dataframe(n, certificate, planning_horizons)
+
+    # Explode VPP DataFrame by 'ppl' column, reset index, and re-index on 'ppl'
+    df = vpp.explode("ppl").reset_index().set_index("ppl")
+
+    # Split into links and generators
+    df_links = df[df["component"] == "links"].copy()
+    df_links.index.name = "Link"
+
+    df_gens = df[df["component"] == "generators"].copy()
+    df_gens.index.name = "Generator"
+
+    # Compute RHS: aggregated power per virtual_ppl from links and generators
+    rhs_links = (
+        (
+            n.model["Link-p"].loc[:, df_links.index]
+            * n.links.loc[df_links.index].efficiency
+        )
+        .groupby(df_links.virtual_ppl)
+        .sum()
+    )
+    rhs_gens = (
+        n.model["Generator-p"].loc[:, df_gens.index].groupby(df_gens.virtual_ppl).sum()
+    )
+    rhs = rhs_links + rhs_gens
+
+    # Prepare VPP DataFrame to get LHS: generator power per virtual_ppl
+    df_vpp = vpp.reset_index().set_index("virtual_ppl", drop=False)
+    df_vpp.index.name = "Generator"
+
+    lhs = n.model["Generator-p"].loc[:, df_vpp.index].groupby(df_vpp.virtual_ppl).sum()
+
+    n.model.add_constraints(
+        lhs <= rhs,
+        name="virtual_ppl_constraint",
+    )
+
+    logger.info("Activate: add_virtual_ppl_matching")
+
+
+# def add_go_annual_matching_constraints(n, snapshots):
+#     certificate = n.config["certificate"]
+#     weights = n.snapshot_weightings["stores"]
+#     energy_matching = certificate["energy_matching"] / 100
+
+#     demand_list = n.stores.filter(like="GO Demand", axis=0).index
+#     df = n.loads_t.p_set.copy()
+
+#     if certificate["scope"] == "national":
+#         go_list = n.stores.loc[demand_list].bus.map(n.buses.location)
+#         go_list = pd.Series(go_list.index, index=go_list.values)
+#         df.columns = df.columns.map(n.loads.bus).map(n.buses.country).map(go_list)
+#         df = df.T.groupby(df.columns).sum().T
+#     else:
+#         df["GO Demand"] = df.T.sum()
+#         df = df[["GO Demand"]]
+
+#     df.columns.name = "Store"
+#     rhs = weights @ df
+
+#     last_i = snapshots[-1]
+#     lhs = n.model["Store-e"].loc[last_i, demand_list]
+
+#     n.model.add_constraints(
+#         lhs == energy_matching * rhs,
+#         name="go_annual_matching_constraint",
+#     )
+
+#     logger.info("Activate: add_go_annual_matching_constraints")
+
+
+# def add_247_go_matching_constraints(n):
+#     certificate = n.config["certificate"]
+#     weights = n.snapshot_weightings["stores"]
+#     energy_matching = certificate["energy_matching"] / 100
+
+#     demand_list = n.stores.filter(like="GO Demand", axis=0).index
+#     df = n.loads_t.p_set.copy()
+
+#     if certificate["scope"] == "national":
+#         go_list = n.stores.loc[demand_list].bus.map(n.buses.location)
+#         go_list = pd.Series(go_list.index, index=go_list.values)
+#         df.columns = df.columns.map(n.loads.bus).map(n.buses.country).map(go_list)
+#         df = df.T.groupby(df.columns).sum().T
+#     else:
+#         df["GO Demand"] = df.T.sum()
+#         df = df[["GO Demand"]]
+
+#     df.columns.name = "Store"
+#     rhs = weights @ df
+
+#     lhs = n.model["Store-p"].loc[:, demand_list].sum(dim="snapshot")
+
+#     n.model.add_constraints(
+#         lhs == energy_matching * rhs,
+#         name="247_go_matching_constraint",
+#     )
+
+#     logger.info("Activate: add_247_go_matching_constraints")
+
+
 def extra_functionality(
     n: pypsa.Network, snapshots: pd.DatetimeIndex, planning_horizons: str | None = None
 ) -> None:
@@ -1242,6 +1349,14 @@ def extra_functionality(
         module = importlib.import_module(module_name)
         custom_extra_functionality = getattr(module, module_name)
         custom_extra_functionality(n, snapshots, snakemake)  # pylint: disable=E0601
+
+    if config["enable"].get("certificate"):
+        add_virtual_ppl_matching(n)
+
+        # if strategy == "vol-match":
+        #     add_go_annual_matching_constraints(n, snapshots)
+        # if strategy == "247-go":
+        #     add_247_go_matching_constraints(n)
 
 
 def check_objective_value(n: pypsa.Network, solving: dict) -> None:

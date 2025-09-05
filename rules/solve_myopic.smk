@@ -113,6 +113,25 @@ rule add_brownfield:
 ruleorder: add_existing_baseyear > add_brownfield
 
 
+rule add_certificate:
+    params:
+        certificate=config_provider("certificate"),
+    input:
+        network=resources(
+            "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+        ),
+        country_shapes=resources("country_shapes.geojson"),
+        europe_shape=resources("europe_shape.geojson"),
+    output:
+        network=resources(
+            "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_certificate.nc"
+        ),
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/add_certificate.py"
+
+
 rule solve_sector_network_myopic:
     params:
         solving=config_provider("solving"),
@@ -122,8 +141,14 @@ rule solve_sector_network_myopic:
         ),
         custom_extra_functionality=input_custom_extra_functionality,
     input:
-        network=resources(
-            "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+        network=branch(
+            config_provider("enable", "certificate"),
+            resources(
+                "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_certificate.nc"
+            ),
+            resources(
+                "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+            ),
         ),
         costs=resources("costs_{planning_horizons}.csv"),
     output:
