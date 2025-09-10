@@ -27,6 +27,35 @@ logger = logging.getLogger(__name__)
 
 
 def get_geo_center(shapes, output_index=None, x_offset=0, y_offset=0):
+    """
+    Computes the geographic center (centroid) of countries or regions from a shapefile,
+    and returns a GeoDataFrame with longitude (`x`) and latitude (`y`) coordinates.
+
+    Parameters
+    ----------
+    shapes : str or Path
+        Path to the shapefile containing geographic shapes (e.g., country polygons).
+
+    output_index : str or None, optional
+        If provided, uses this string to build a custom index in the format
+        "<output_index> <country>". Otherwise, sets the index to the 'country' column.
+
+    x_offset : float, optional
+        Value to shift the longitude (`x`) of all centroids (default is 0).
+
+    y_offset : float, optional
+        Value to shift the latitude (`y`) of all centroids (default is 0).
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        A GeoDataFrame containing at least:
+        - 'country': Country or region name
+        - 'x': Adjusted longitude of the centroid
+        - 'y': Adjusted latitude of the centroid
+        - (index): Either 'country' or a composite string like "GO Market Germany"
+    """
+
     gdf = gpd.read_file(shapes)
 
     # Rename 'name' column to 'country' if it exists
@@ -55,6 +84,22 @@ def get_geo_center(shapes, output_index=None, x_offset=0, y_offset=0):
 
 
 def add_virtual_carriers(n, carriers):
+    """
+    Adds "virtual" carriers to a PyPSA network based on a list of existing carriers.
+
+    Virtual carriers are duplicates of existing ones, prefixed with "virtual ",
+    and are typically used to represent special flows or accounting mechanisms (e.g., for certificate markets),
+    without contributing to emissions or affecting original carrier properties.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network to which the virtual carriers will be added.
+
+    carriers : list of str
+        List of existing carrier names to duplicate as virtual carriers.
+    """
+
     virtual_carrier_dict = {c: f"virtual {c}" for c in carriers}
     new_carriers = [
         orig
@@ -97,6 +142,38 @@ def add_virtual_carriers(n, carriers):
 
 
 def get_virtual_ppl_dataframe(n, certificate, planning_horizons):
+    """
+    Constructs a DataFrame defining virtual power plants (VPPs) for use in GoO or certificate tracking.
+
+    This function groups real power plant units (generators and links) into virtual plants
+    based on certificate criteria such as technology, plant age, and location. Each virtual plant
+    is assigned a unique name, virtual carrier, and virtual bus identifier.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network containing generator and link components.
+
+    certificate : dict
+        Dictionary specifying how to group and filter plants. Must include:
+        - "plant_carriers": list of carriers to include (e.g., ["solar", "wind"]).
+        - "plant_status": list of statuses to include ("new", "existing").
+        - "plant_grouping": list of attributes to group plants by (e.g., ["carrier", "status"]).
+        - "bus_grouping": list of attributes to group virtual buses by (e.g., ["carrier"]).
+        - "max_plant_lifetime_as_new": int, max years a plant is considered "new".
+
+    planning_horizons : int or str
+        Current planning year.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame indexed by `virtual_ppl` name, with the following columns:
+        - "ppl": List of real plant indices (generators or links) included in each VPP.
+        - "virtual_carrier": Carrier name used for the VPP (e.g., "virtual solar").
+        - "virtual_bus": Bus name for the VPP (e.g., "GO Supply Germany solar new").
+    """
+
     carriers = certificate["plant_carriers"]
     status = certificate["plant_status"]
     plant_group = certificate["plant_grouping"].copy()
@@ -180,10 +257,31 @@ def get_virtual_ppl_dataframe(n, certificate, planning_horizons):
 
 
 def add_virtual_ppl(n, certificate, planning_horizons):
+    """
+    Adds virtual power plants (VPPs) to the PyPSA network based on real generator and link data,
+    grouped according to certificate-based criteria.
+
+    This function uses the `get_virtual_ppl_dataframe` helper to identify groups of existing
+    power plants (generators or links) and models them as aggregate virtual generators. It also
+    creates corresponding virtual buses positioned using geographic centroids.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network object to which virtual generators and buses are added.
+
+    certificate : dict
+        Configuration dictionary containing VPP setup parameters. Expected keys:
+        - all the keys in get_virtual_ppl_dataframe()
+        - "map": A dict of x and y offsets for placing supply components on the map.
+
+    planning_horizons : int or str
+        Current planning year.
+    """
+
     df_vpp = get_virtual_ppl_dataframe(n, certificate, planning_horizons)
 
     df_bus = df_vpp.groupby(["virtual_bus", "country"]).size().reset_index("country")
-    print(snakemake.input.country_shapes)
     df_node = get_geo_center(
         snakemake.input.country_shapes,
         x_offset=certificate["map"]["supply"][0],
@@ -297,7 +395,7 @@ def get_load_demand(n, profile="", set_logger=True):
     n : pypsa.Network
         A PyPSA network object containing time-series data for loads and buses.
 
-    profile : str, optional (default = "")
+    profile : str
         Determines how the load demand should be modified:
         - "total": Returns the raw total load demand per country (no modification).
         - "total_daily_avg": Averages the load per day and forward-fills to match the original resolution.
@@ -312,6 +410,7 @@ def get_load_demand(n, profile="", set_logger=True):
         A DataFrame with timestamps as the index and countries as columns, containing
         the processed electricity load demand.
     """
+
     elec_load = n.loads[n.loads.carrier == "electricity"].index
     load = n.loads_t.p_set[elec_load].copy()
     load.columns = load.columns.map(n.loads.bus).map(n.buses.country)
@@ -345,7 +444,7 @@ def get_go_background_demand(n, aib_filepath, profile=""):
     n : pypsa.Network
         A PyPSA network object containing time-series snapshots and bus information.
 
-    profile : str, optional (default = "")
+    profile : str
         Defines the method for shaping the background GO demand profile:
         - "historical": Uses the historical monthly distribution of GO cancellations from AIB data.
         - all profiles from get_load_demand()
@@ -407,6 +506,29 @@ def get_go_background_demand(n, aib_filepath, profile=""):
 
 
 def add_demand(n, load, cert_demand, cert_map, name):
+    """
+    Adds Guarantee of Origin (GO) demand to the PyPSA network.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network object to which demand components are added.
+
+    load : pandas.DataFrame
+        A time series of electricity demand per country. Columns are country codes.
+
+    cert_demand : dict
+        Contains certificate demand configuration. Must include:
+        - "energy_matching": percentage of total load to be matched with certificates.
+        - "hourly_matching": percentage of demand that must match hourly (vs. buffered).
+
+    cert_map : tuple(float, float)
+        A tuple of x and y offsets for placing market components on the map.
+
+    name : str or None
+        Label to append to the names of buses and loads.
+    """
+
     energy_matching = cert_demand["energy_matching"] / 100
     hourly_matching = cert_demand["hourly_matching"] / 100
 
@@ -471,6 +593,31 @@ def add_demand(n, load, cert_demand, cert_map, name):
 
 
 def add_go_market(n, cert_demand, cert_map, name):
+    """
+    Adds a market bus for Guarantees of Origin (GO) to the PyPSA network.
+
+    This function connects GO supply and demand buses via a market bus, representing
+    either national or EU-wide GoO trading scopes. It builds market connections
+    based on filters and spatial placement defined in the certification scheme.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network to which the GoO market connections are added.
+
+    cert_demand : dict
+        Configuration for the GoO market setup. Must include:
+        - "supply_filter": dict of filtering criteria for GoO supply (e.g., by country or technology).
+        - "scope": either "national" or "eu" defining the market granularity.
+        - "market_name": optional string to label the market bus.
+
+    cert_map : dict
+        A dictionary of x and y offsets for placing market components on the map.
+
+    name : str
+        Label to append to the names of market buses and links.
+    """
+
     supply_filter = cert_demand["supply_filter"]
     scope = cert_demand["scope"]
     market_name = cert_demand["market_name"]
