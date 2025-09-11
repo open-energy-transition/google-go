@@ -6,7 +6,7 @@
 
 run:
   prefix: ""
-  name: "v1-multi-year-it-10e-0h"
+  name: "go-all"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -22,19 +22,21 @@ foresight: myopic
 
 scenario:
   clusters:
-  - 3
+  - 50
   opts:
   - ''
   sector_opts:
   - ''
   planning_horizons:
-  - 2020
+  # - 2020
   - 2030
-  - 2040
+  # - 2040
   # - 2050 (Currently infeasable for IT)
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
-countries: ['IT'] #['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
+countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
+# ['IT'] #
+
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
 snapshots:
@@ -56,22 +58,45 @@ clustering:
   temporal:
     resolution_sector: 3H
 
-sector:
-  methanol:
-    regional_methanol_demand: true
+# sector:
+#   methanol:
+#     regional_methanol_demand: true
 
 certificate:
-  scope: national # {national, global}
   plant_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear"]
   plant_status: ["new", "existing"] # ["new", "existing"] if you include all (both new or existing), or only new powerplants
   max_plant_lifetime_as_new: 10
-  plant_grouping: ["carrier", "status"] # [] or ["carrier", "status"]
-  bus_grouping: [] # [] or ["carrier", "status"]
+  plant_grouping: ["carrier", "status"] # [] or ["carrier", "status"]: Each generator are disaggregated by ...
+  bus_grouping: [] # [] or ["carrier", "status"]: Each supply bus are disaggregated by ...
+  aib_filepath: "data/AIB_monthly_data.csv"
 
-  energy_matching: 10 # in percent
-  hourly_matching: 0 #80 # in percent
+  background_demand:
+    enable: true
+    scope: global # Cannot set scope to national due to many countries GO Demand exceeds national electricity demand. 
+    supply_filter:
+      country: ['AT', 'BE', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'NL', 'NO', 'PT', 'RS', 'SE', 'SI', 'SK']
+      status: false
+      carrier: false
+    market_name: "AIB"
+    go_profile: historical # {"historical", "total_daily_avg", "total", "baseload"}
+    energy_matching: 100 # in percent relative to historical GO demand
+    hourly_matching: 0
+
+  new_demand:
+    enable: true
+    scope: national # {national, global}
+    supply_filter:
+      country: false
+      status: false
+      carrier: false
+    market_name: ""
+    go_profile: total # {"total_daily_avg", "total", "baseload"}
+    energy_matching: 10 # in percent relative to country electricity load
+    hourly_matching: 0 # 80 # in percent    
 
   map:
-    supply: [-0.5,-0.5]
-    demand: [0.5,0.5]
-    market: [0,0]
+    supply: [-0.5, -0.5]
+    background_demand: [0.5, -0.5]
+    new_demand: [0.5, 0.5]
+    market: [0, 0]
+    market AIB: [0, 0.5]
