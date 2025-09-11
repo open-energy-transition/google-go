@@ -411,10 +411,20 @@ def get_load_demand(n, profile="", set_logger=True):
         the processed electricity load demand.
     """
 
-    elec_load = n.loads[n.loads.carrier == "electricity"].index
-    load = n.loads_t.p_set[elec_load].copy()
-    load.columns = load.columns.map(n.loads.bus).map(n.buses.country)
-    load = load.T.groupby(level=0).sum().T
+    elec_demand = [
+        "electricity",
+        "land transport EV",
+        "industry electricity",
+        "agriculture electricity",
+        "agriculture machinery electric",
+    ]
+
+    elec_index = n.loads[n.loads.carrier.isin(elec_demand)].index
+    dynamic_load_index = n.loads_t.p_set.columns
+    dynamic_elec_index = list(set(dynamic_load_index) & set(elec_index))
+    dynamic_load = n.loads_t.p_set[dynamic_elec_index].copy()
+    dynamic_load.columns = dynamic_load.columns.map(n.loads.bus).map(n.buses.country)
+    load = dynamic_load.T.groupby(level=0).sum().T
 
     if profile == "total_daily_avg":
         load = load.resample("d").mean().reindex(n.snapshots, method="ffill")
@@ -430,6 +440,14 @@ def get_load_demand(n, profile="", set_logger=True):
 
     if set_logger:
         logger.info(f"{profile} profile for go demand is selected")
+
+    static_elec_index = list(set(elec_index) - set(dynamic_elec_index))
+    if static_elec_index:
+        static_load = n.loads.loc[static_elec_index].copy()
+        static_load["country"] = static_load.bus.map(n.buses.country)
+        static_load = static_load.groupby("country")["p_set"].sum()
+
+        load += static_load
 
     return load
 
