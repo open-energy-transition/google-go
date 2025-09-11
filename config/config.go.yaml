@@ -6,7 +6,7 @@
 
 run:
   prefix: ""
-  name: "go-all"
+  name: "baseline-3H"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -22,7 +22,7 @@ foresight: myopic
 
 scenario:
   clusters:
-  - 50
+  - 39
   opts:
   - ''
   sector_opts:
@@ -35,8 +35,6 @@ scenario:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
 countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
-# ['IT'] #
-
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
 snapshots:
@@ -58,9 +56,17 @@ clustering:
   temporal:
     resolution_sector: 3H
 
-# sector:
-#   methanol:
-#     regional_methanol_demand: true
+sector:
+  co2_network: false
+  H2_network: false
+  gas_network: false
+
+strip_network:
+  enable: true
+  by_country: false
+  merge_load: true
+  snapshots_start: false
+  snapshots_end: false
 
 certificate:
   plant_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear"]
