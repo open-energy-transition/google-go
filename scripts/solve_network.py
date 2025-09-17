@@ -1210,6 +1210,63 @@ def add_virtual_ppl_matching(n):
     logger.info("Activate: add_virtual_ppl_matching")
 
 
+def add_virtual_storage_matching(n):
+    from scripts.add_certificate import get_virtual_storage_dataframe
+
+    certificate = n.config["certificate"]
+
+    if (
+        certificate["new_demand"]["enable"]
+        and certificate["new_demand"]["scope"] == "national"
+    ) or (
+        certificate["background_demand"]["enable"]
+        and certificate["background_demand"]["scope"] == "national"
+    ):
+        storage_carriers = certificate["storage_carriers"]
+
+        df = get_virtual_storage_dataframe(n, storage_carriers)
+
+        if df.empty:
+            return
+
+        df_vs = df.groupby(["virtual_storage", "country", "carrier", "direction"]).sum()
+        df_vs = df_vs.reset_index(level=["country", "carrier", "direction"])
+        lhs = n.model["Generator-p"].loc[:, df_vs.index]
+
+        df.index.name = "Link"
+        df.rename(columns={"virtual_storage": "Generator"}, inplace=True)
+        rhs = (
+            (n.model["Link-p"].loc[:, df.index] * df.efficiency)
+            .groupby(df.Generator)
+            .sum()
+        )
+
+        n.model.add_constraints(
+            lhs == rhs,
+            name="virtual_storage_constraint",
+        )
+
+        logger.info("Activate: virtual_storage_matching")
+
+
+def add_buffer_matching(n):
+    weights = n.snapshot_weightings["stores"]
+    df = n.stores.filter(like="GO Buffer", axis=0)
+
+    if df.empty:
+        return
+
+    lhs = weights * n.model["Store-p"].loc[:, df.index].sum(dim="snapshot")
+    rhs = df["e_nom"]
+
+    n.model.add_constraints(
+        lhs <= rhs,
+        name="buffer_matching_constraints",
+    )
+
+    logger.info("Activate: buffer_matching_constraints")
+
+
 # def add_go_annual_matching_constraints(n, snapshots):
 #     certificate = n.config["certificate"]
 #     weights = n.snapshot_weightings["stores"]
@@ -1352,6 +1409,8 @@ def extra_functionality(
 
     if config["enable"].get("certificate"):
         add_virtual_ppl_matching(n)
+        add_buffer_matching(n)
+        add_virtual_storage_matching(n)
 
         # if strategy == "vol-match":
         #     add_go_annual_matching_constraints(n, snapshots)

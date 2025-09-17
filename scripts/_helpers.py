@@ -1079,3 +1079,42 @@ def load_cutout(
         cutout.data = cutout.data.sel(time=time)
 
     return cutout
+
+
+def overwrite_config_by_year(config, params, planning_horizons):
+    """
+    Overwrites configuration parameters for a specific planning year if defined in the Snakemake config.
+
+    This function checks whether the current `planning_horizons` year is included in the `overwrite_years`
+    section of the Snakemake configuration. If it is, the corresponding override values are recursively
+    applied to the provided `params` object, updating any matching keys within each named parameter group.
+
+    Parameters
+    ----------
+    params : object
+        An object (typically a Snakemake params namespace or similar) containing named configuration
+        parameter dictionaries accessible via `params._names` and `params[name]`.
+
+    planning_horizons : int or str
+        The current planning year for which configuration parameters may be conditionally overwritten.
+
+    Notes
+    -----
+    - The function uses a nested helper `deep_update` to recursively merge dictionaries.
+    - It assumes the presence of a `snakemake.config["overwrite_years"]
+    """
+
+    def deep_update(original, updates):
+        for key, value in updates.items():
+            if isinstance(value, dict) and isinstance(original.get(key), dict):
+                deep_update(original[key], value)
+            else:
+                original[key] = value
+
+    overwrite_years = config.get("overwrite_years", [])
+
+    if int(planning_horizons) in overwrite_years:
+        overwrites = overwrite_years[int(planning_horizons)]
+        if overwrites:
+            for params_name in params._names:
+                deep_update(params[params_name], overwrites.get(params_name, {}))

@@ -124,6 +124,10 @@ rule strip_network:
         network=resources(
             "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield_strip.nc"
         ),
+    log:
+        logs(
+            "strip_network_base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}.log"
+        ),
     conda:
         "../envs/environment.yaml"
     script:
@@ -148,6 +152,10 @@ rule add_certificate:
     output:
         network=resources(
             "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_certificate.nc"
+        ),
+    log:
+        logs(
+            "add_certificate_base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}.log"
         ),
     conda:
         "../envs/environment.yaml"

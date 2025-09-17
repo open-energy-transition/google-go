@@ -6,6 +6,7 @@ This script strips the network to produce electricity only models
 """
 
 import logging
+
 import pypsa
 
 from scripts._helpers import (
@@ -17,7 +18,6 @@ from scripts._helpers import (
 logger = logging.getLogger(__name__)
 
 carrier_to_keep = [
-
     # Electricity Sources (Renewable & Non-renewable)
     "AC",
     "DC",
@@ -38,7 +38,6 @@ carrier_to_keep = [
     "oil primary",
     "gas",
     "uranium",
-
     # Battery-related
     "battery",
     "EV battery",
@@ -47,17 +46,14 @@ carrier_to_keep = [
     "battery discharger",
     "home battery charger",
     "home battery discharger",
-
     # Electricity Use Cases
     "electricity",
     "industry electricity",
     "agriculture electricity",
     "agriculture machinery electric",
-
     # Transport
     "land transport EV",
     "BEV charger",
-
     # Hydrogen-related
     "H2",
     "H2 Store",
@@ -65,50 +61,51 @@ carrier_to_keep = [
     "H2 Electrolysis",
     "H2 pipeline",
     "H2 turbine",
-
     # CO₂ / Carbon-related
     "co2",
     "co2 stored",
     "co2 sequestered",
     "CO2 pipeline",
     "DAC",
-
     # Fossil Fuel Technologies
     "CCGT",
     "OCGT",
-    "SMR CC",
-
+    # "SMR CC",
     # Infrastructure / Grid
     "electricity distribution grid",
     "gas pipeline",
     "low voltage",
-
     # Miscellaneous / Unknown
-    None
+    None,
 ]
 
-def strip_network(n, country=None):
+
+def strip_network(n):  # , country=None):
     """
     Strip network to core electricity related components
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     n : pypsa.Network
         The PyPSA network object to modify.
 
-    Returns:
-    --------
+    Returns
+    -------
     pypsa.Network
     """
 
     m = n.copy()
 
-    if country:
-        countries_to_keep = country + [""]
-    else:
-        countries_to_keep = m.buses.country.unique()
+    # if country:
+    #     countries_to_keep = country + [""]
+    # else:
+    #     countries_to_keep = m.buses.country.unique()
 
-    nodes_to_keep = m.buses[m.buses.carrier.isin(carrier_to_keep) & m.buses.country.isin(countries_to_keep)].index
+    nodes_to_keep = m.buses[
+        m.buses.carrier.isin(
+            carrier_to_keep
+        )  # & m.buses.country.isin(countries_to_keep)
+    ].index
     m.remove("Bus", n.buses.index.symmetric_difference(nodes_to_keep))
 
     for c in m.iterate_components(
@@ -124,23 +121,24 @@ def strip_network(n, country=None):
         to_drop = c.df.index.symmetric_difference(to_keep)
         m.remove(c.name, to_drop)
 
-    m.links.loc[m.links.carrier.isin(["H2 Electrolysis","H2 Fuel Cell"]),"bus2"] = ''
+    m.links.loc[m.links.carrier.isin(["H2 Electrolysis", "H2 Fuel Cell"]), "bus2"] = ""
 
     logger.info("Strip network to core electricity related components")
 
     return m
 
+
 def merge_load(n):
     """
     Consolidates and simplifies electricity demand loads in a PyPSA network.
-    
-    Parameters:
-    -----------
+
+    Parameters
+    ----------
     n : pypsa.Network
         The PyPSA network object to modify.
 
-    Returns:
-    --------
+    Returns
+    -------
     None
         pypsa.Network is then modified.
     """
@@ -156,12 +154,13 @@ def merge_load(n):
     load = n.loads.loc[elec_index].copy()
     p_set = load.groupby("bus")["p_set"].sum()
 
-    n.remove("Load",elec_index)
+    n.remove("Load", elec_index)
 
     p_set = p_set.rename({v: k for k, v in n.loads.bus.items()})
     n.loads_t.p_set[p_set.index] += p_set
 
     logger.info("Merge electricity demand loads to one electricity loads per bus")
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -185,7 +184,7 @@ if __name__ == "__main__":
 
     options = snakemake.params.strip_network
 
-    n = strip_network(n, country=options["by_country"])        
+    n = strip_network(n)  # , country=options["by_country"])
 
     if options["merge_load"]:
         merge_load(n)
@@ -194,12 +193,12 @@ if __name__ == "__main__":
         new_snapshots = n.snapshots[(n.snapshots >= options["snapshots_start"])]
         n.set_snapshots(new_snapshots)
 
-        logger.info(f"strip snapshots to start at {options["snapshots_start"]}")
-    
+        logger.info(f"strip snapshots to start at {options['snapshots_start']}")
+
     if options["snapshots_end"]:
         new_snapshots = n.snapshots[(n.snapshots < options["snapshots_end"])]
         n.set_snapshots(new_snapshots)
 
-        logger.info(f"strip snapshots to end at {options["snapshots_end"]}")
+        logger.info(f"strip snapshots to end at {options['snapshots_end']}")
 
     n.export_to_netcdf(snakemake.output[0])
