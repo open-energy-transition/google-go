@@ -68,6 +68,11 @@ strip_network:
   snapshots_start: false
   snapshots_end: false
 
+grid_policy:
+  renewable_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop"]
+  clean_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear", "allam"]
+  emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"]
+
 certificate:
   plant_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear"]
   plant_status: ["new", "existing"] # ["new", "existing"] if you include all (both new or existing), or only new powerplants
