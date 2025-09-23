@@ -113,18 +113,49 @@ rule add_brownfield:
 ruleorder: add_existing_baseyear > add_brownfield
 
 
+rule strip_network:
+    params:
+        strip_network=config_provider("strip_network"),
+    input:
+        network=resources(
+            "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+        ),
+    output:
+        network=resources(
+            "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield_strip.nc"
+        ),
+    log:
+        logs(
+            "strip_network_base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}.log"
+        ),
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/strip_network.py"
+
+
 rule add_certificate:
     params:
         certificate=config_provider("certificate"),
     input:
-        network=resources(
-            "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+        network=branch(
+            config_provider("strip_network", "enable"),
+            resources(
+                "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield_strip.nc"
+            ),
+            resources(
+                "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+            ),
         ),
         country_shapes=resources("country_shapes.geojson"),
         europe_shape=resources("europe_shape.geojson"),
     output:
         network=resources(
             "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_certificate.nc"
+        ),
+    log:
+        logs(
+            "add_certificate_base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}.log"
         ),
     conda:
         "../envs/environment.yaml"
@@ -146,8 +177,14 @@ rule solve_sector_network_myopic:
             resources(
                 "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_certificate.nc"
             ),
-            resources(
-                "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+            branch(
+                config_provider("strip_network", "enable"),
+                resources(
+                    "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield_strip.nc"
+                ),
+                resources(
+                    "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
+                ),
             ),
         ),
         costs=resources("costs_{planning_horizons}.csv"),

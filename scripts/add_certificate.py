@@ -10,15 +10,16 @@ import logging
 import os
 import warnings
 import zipfile
+from collections import defaultdict
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pypsa
 import requests
-
-from scripts._helpers import (
+from _helpers import (
     configure_logging,
+    overwrite_config_by_year,
     set_scenario_config,
     update_config_from_wildcards,
 )
@@ -719,15 +720,149 @@ def add_go_market(n, cert_demand, cert_map, name):
     )
 
 
+def get_virtual_storage_dataframe(n, storage_carriers):
+    """
+    Constructs a DataFrame defining virtual storages for use in GoO or certificate tracking.
+
+    This function identifies real storage units and their associated charger and discharger links,
+    and groups them into virtual storage systems.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network containing stores, links, and buses.
+
+    storage_carriers : list of str
+        A list of storage carrier names to include (e.g., ["battery", "H2 Store"]).
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame indexed by the link index (from `n.links`), with the following columns:
+
+        - bus : str
+            The storage bus associated with the link.
+        - carrier : str
+            The carrier of the original storage store.
+        - elec_check : str
+            The connected bus (bus0 or bus1) on the opposite side, used to verify electrical connection.
+        - country : str
+            The country of the storage bus, derived from `n.buses.country`.
+        - link_carrier : str
+            The carrier of the link (e.g., "battery charger").
+        - direction : str
+            Either "charger" or "discharger", indicating the link's role.
+        - efficiency : float
+            The efficiency of the link if it is a discharger; set to 1.0 for chargers.
+        - virtual_storage : str
+            A generated name combining country, carrier, and direction (e.g., "virtual DE battery discharger").
+    """
+
+    # Filter storage elements
+    df_store = n.stores.loc[n.stores.carrier.isin(storage_carriers), ["bus", "carrier"]]
+
+    df = pd.DataFrame()
+
+    elec_bus = n.buses[n.buses.carrier.isin(["AC", "low voltage"])].index
+
+    # Create reverse mapping: bus → list of link indices for bus0 and bus1
+    for busN, direction in {"bus0": "discharger", "bus1": "charger"}.items():
+        other_bus = "bus0" if busN == "bus1" else "bus1"
+
+        busN_map = defaultdict(list)
+        for link, bus in n.links[busN].items():
+            busN_map[bus].append(link)
+
+        df_new = df_store.copy()
+        df_new["link_index"] = df_store["bus"].map(busN_map)
+        df_new = df_new.dropna(subset=["link_index"])
+        df_new = df_new.explode("link_index").set_index("link_index")
+
+        # Check that the other bus is electrical
+        df_new["elec_check"] = df_new.index.map(n.links[other_bus])
+        df_new = df_new[df_new["elec_check"].isin(elec_bus)]
+
+        # Add metadata
+        df_new["country"] = df_new["bus"].map(n.buses.country)
+        df_new["link_carrier"] = df_new.index.map(n.links.carrier)
+        df_new["direction"] = direction
+        df_new["efficiency"] = (
+            df_new.index.map(n.links.efficiency) if direction == "discharger" else 1.0
+        )
+        df = pd.concat([df, df_new])
+
+    df["virtual_storage"] = (
+        "virtual " + df["country"] + " " + df["carrier"] + " " + df["direction"]
+    )
+
+    return df
+
+
+def add_virtual_storage(n, storage_carriers):
+    """
+    Adds virtual storage units to the PyPSA network based on existing store and link components,
+    grouping them into virtual representations suitable for certificate tracking (e.g., GoO).
+
+    This function uses `get_virtual_storage_dataframe()` to identify charger and discharger links
+    associated with eligible storage units and aggregates them into virtual generators.
+    It then assigns them to virtual carriers and connects them to national "GO Market" buses.
+
+    Parameters
+    ----------
+    n : pypsa.Network
+        The PyPSA network containing stores, links, and buses.
+
+    storage_carriers : list of str
+        A list of storage carrier names to include (e.g., ["battery", "H2 Store"]).
+
+    Returns
+    -------
+    None
+        Modifies the network in-place by adding virtual generators.
+    """
+
+    df = get_virtual_storage_dataframe(n, storage_carriers)
+
+    df = df.groupby(["virtual_storage", "country", "carrier", "direction"]).sum()
+    df = df.reset_index(level=["country", "carrier", "direction"])
+
+    # Get national market bus. Batteries in Global markets does not make physical correlation
+    market_bus = n.buses.filter(like="GO Market", axis=0)
+    market_bus = market_bus[market_bus.country != "EU"]
+
+    df["market_bus"] = df.country.map({v: k for k, v in market_bus.country.items()})
+
+    # Edge case alternative: multiple markets in the same country
+    # market_map = defaultdict(list)
+    # for market, country in market_bus.country.items():
+    #     market_map[country].append(market)
+
+    # df["market_bus"] = df["country"].map(market_map)
+
+    # Prepare virtual_carriers from storages
+    add_virtual_carriers(n, storage_carriers)
+    df["virtual_carrier"] = "virtual " + df["carrier"]
+    df["sign"] = df["direction"].map({"discharger": 1, "charger": -1})
+
+    n.add(
+        "Generator",
+        df.index,
+        bus=df["market_bus"],
+        carrier=df["virtual_carrier"],
+        sign=df["sign"],
+        p_nom_extendable=True,
+    )
+
+
 if __name__ == "__main__":
     if "snakemake" not in globals():
-        from scripts._helpers import mock_snakemake
+        from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
             "add_certificate",
             run="",
             opts="",
-            clusters="50",
+            clusters="39",
             configfiles="config/config.go.yaml",
             ll="",
             sector_opts="",
@@ -739,8 +874,10 @@ if __name__ == "__main__":
 
     n = pypsa.Network(snakemake.input.network)
 
-    certificate = snakemake.params.certificate
     planning_horizons = snakemake.wildcards.get("planning_horizons", None)
+    overwrite_config_by_year(snakemake.config, snakemake.params, planning_horizons)
+
+    certificate = snakemake.params.certificate
 
     # Add Certificates
     n.add(
@@ -786,5 +923,17 @@ if __name__ == "__main__":
             "New",
         )
         add_go_market(n, certificate["new_demand"], certificate["map"], "New")
+
+    if (
+        certificate["new_demand"]["enable"]
+        and certificate["new_demand"]["scope"] == "national"
+    ) or (
+        certificate["background_demand"]["enable"]
+        and certificate["background_demand"]["scope"] == "national"
+    ):
+        add_virtual_storage(
+            n,
+            certificate["storage_carriers"],
+        )
 
     n.export_to_netcdf(snakemake.output[0])

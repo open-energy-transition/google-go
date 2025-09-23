@@ -6,7 +6,7 @@
 
 run:
   prefix: ""
-  name: "go-all"
+  name: "baseline-3H"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -22,21 +22,19 @@ foresight: myopic
 
 scenario:
   clusters:
-  - 50
+  - 39
   opts:
   - ''
   sector_opts:
   - ''
   planning_horizons:
-  # - 2020
+  # - 2025
   - 2030
+  # - 2035
   # - 2040
-  # - 2050 (Currently infeasable for IT)
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
 countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
-# ['IT'] #
-
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
 snapshots:
@@ -58,9 +56,17 @@ clustering:
   temporal:
     resolution_sector: 3H
 
-# sector:
-#   methanol:
-#     regional_methanol_demand: true
+sector:
+  co2_network: false
+  H2_network: false
+  gas_network: false
+
+strip_network:
+  enable: true
+  # by_country: false
+  merge_load: true
+  snapshots_start: false
+  snapshots_end: false
 
 certificate:
   plant_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear"]
@@ -69,6 +75,7 @@ certificate:
   plant_grouping: ["carrier", "status"] # [] or ["carrier", "status"]: Each generator are disaggregated by ...
   bus_grouping: [] # [] or ["carrier", "status"]: Each supply bus are disaggregated by ...
   aib_filepath: "data/AIB_monthly_data.csv"
+  storage_carriers: ["battery", "H2 Store"]
 
   background_demand:
     enable: true
@@ -92,7 +99,7 @@ certificate:
     market_name: ""
     go_profile: total # {"total_daily_avg", "total", "baseload"}
     energy_matching: 10 # in percent relative to country electricity load
-    hourly_matching: 0 # 80 # in percent    
+    hourly_matching: 90 # 80 # in percent    
 
   map:
     supply: [-0.5, -0.5]
@@ -100,3 +107,9 @@ certificate:
     new_demand: [0.5, 0.5]
     market: [0, 0]
     market AIB: [0, 0.5]
+
+overwrite_years:
+  2030:
+    # certificate:
+    #   new_demand:
+    #     energy_matching: 10
