@@ -11,6 +11,11 @@ Release Notes
 Upcoming Release
 ================
 
+* Include new storage technologies such as li-ion, vanadium, lfp, lair, pair and iron-air. 
+  These technologies can now be configured as either store-link combinations or standalone storage units.
+  Implemented in both `add_electricity.py` and `prepare_sector_network.py`.
+  (https://github.com/open-energy-transition/pypsa-eur/pull/58) 
+
 * Fixed `ValueError` in `prepare_sector_network.py` in function `add_storage_and_grids`
   when running with few nodes such that they are all already connected by existing gas
   lines. (https://github.com/PyPSA/pypsa-eur/pull/1780)
