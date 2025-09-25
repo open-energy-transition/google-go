@@ -314,6 +314,13 @@ def load_costs(
         overwrites = config["overwrites"].get(attr)
         if overwrites is not None:
             overwrites = pd.Series(overwrites)
+            
+            new_idx = overwrites.index.difference(costs.index)
+            if not new_idx.empty:
+                new_rows = pd.DataFrame(index=new_idx, columns=costs.columns)
+                new_rows = new_rows.fillna(np.nan)
+                costs = pd.concat([costs, new_rows])
+
             costs.loc[overwrites.index, attr] = overwrites
             logger.info(f"Overwriting {attr} with:\n{overwrites}")
 
@@ -381,7 +388,16 @@ def load_costs(
         overwrites = config["overwrites"].get(attr)
         if overwrites is not None:
             overwrites = pd.Series(overwrites)
-            idx = overwrites.index.intersection(costs.index)
+
+            new_idx = overwrites.index.difference(costs.index)
+            if not new_idx.empty:
+                new_rows = pd.DataFrame(index=new_idx, columns=costs.columns)
+                new_rows = new_rows.fillna(np.nan)
+                costs = pd.concat([costs, new_rows])
+
+            #idx = overwrites.index.intersection(costs.index)
+            idx = overwrites.index
+
             costs.loc[idx, attr] = overwrites.loc[idx]
             logger.info(f"Overwriting {attr} with:\n{overwrites}")
 

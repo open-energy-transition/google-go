@@ -1,0 +1,58 @@
+# -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
+#
+# SPDX-License-Identifier: MIT
+
+# This file is used to define the scenarios that are run by snakemake. Each entry on the first level is a scenario. Each scenario can contain configuration overrides with respect to the config/config.yaml settings.
+#
+# Example
+#
+# custom-scenario: # name of the scenario
+#   electricity:
+#       renewable_carriers: [wind, solar] # override the list of renewable carriers
+
+# ===================== Baseline =====================
+# ====================================================
+
+# no confounding factors towards decarbonization
+baseline-3H:
+  enable:
+    certificate: false
+
+# minimal factors towards decarbonization
+baseline-co2-price-low-3H:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 40
+
+# potential factors towards decarbonization
+baseline-co2-price-dev-3H:
+  enable:
+    certificate: false
+
+  overwrite_years:
+    2025:
+      costs:
+        emission_prices:
+          co2: 62.8
+    2030:
+      costs:
+        emission_prices:
+          co2: 113.4
+    2035:
+      costs:
+        emission_prices:
+          co2: 137.6
+    2040:
+      costs:
+        emission_prices:
+          co2: 147.0
+
+# only existing AIB GO Market factors towards decarbonization
+baseline-AIB-3H:
+  certificate:
+    background_demand:
+      enable: true

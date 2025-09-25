@@ -1216,13 +1216,14 @@ def add_virtual_storage_matching(n):
 
     certificate = n.config["certificate"]
 
-    if (
+    if ((
         certificate["new_demand"]["enable"]
         and certificate["new_demand"]["scope"] == "national"
     ) or (
         certificate["background_demand"]["enable"]
         and certificate["background_demand"]["scope"] == "national"
-    ):
+    )) and certificate["storage_carriers"]:
+        
         storage_carriers = certificate["storage_carriers"]
 
         df = get_virtual_storage_dataframe(n, storage_carriers)

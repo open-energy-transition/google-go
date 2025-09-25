@@ -924,13 +924,13 @@ if __name__ == "__main__":
         )
         add_go_market(n, certificate["new_demand"], certificate["map"], "New")
 
-    if (
+    if ((
         certificate["new_demand"]["enable"]
         and certificate["new_demand"]["scope"] == "national"
     ) or (
         certificate["background_demand"]["enable"]
         and certificate["background_demand"]["scope"] == "national"
-    ):
+    )) and certificate["storage_carriers"]:
         add_virtual_storage(
             n,
             certificate["storage_carriers"],
