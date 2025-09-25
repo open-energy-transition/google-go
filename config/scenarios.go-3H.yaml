@@ -19,17 +19,8 @@ baseline-3H:
   enable:
     certificate: false
 
-# minimal factors towards decarbonization
-baseline-co2-price-low-3H:
-  enable:
-    certificate: false
-
-  costs:
-    emission_prices:
-      co2: 40
-
-# potential factors towards decarbonization
-baseline-co2-price-dev-3H:
+# base CO2 prices
+baseline-co2-price-3H:
   enable:
     certificate: false
 
@@ -41,15 +32,61 @@ baseline-co2-price-dev-3H:
     2030:
       costs:
         emission_prices:
-          co2: 113.4
+          co2: 108
     2035:
       costs:
         emission_prices:
-          co2: 137.6
+          co2: 112
     2040:
       costs:
         emission_prices:
-          co2: 147.0
+          co2: 115
+
+# low CO2 prices
+baseline-co2-price-low-3H:
+  enable:
+    certificate: false
+
+  overwrite_years:
+    2025:
+      costs:
+        emission_prices:
+          co2: 62.8
+    2030:
+      costs:
+        emission_prices:
+          co2: 12
+    2035:
+      costs:
+        emission_prices:
+          co2: 19
+    2040:
+      costs:
+        emission_prices:
+          co2: 27
+
+# high CO2 prices
+baseline-co2-price-high-3H:
+  enable:
+    certificate: false
+
+  overwrite_years:
+    2025:
+      costs:
+        emission_prices:
+          co2: 62.8
+    2030:
+      costs:
+        emission_prices:
+          co2: 108
+    2035:
+      costs:
+        emission_prices:
+          co2: 139
+    2040:
+      costs:
+        emission_prices:
+          co2: 159
 
 # only existing AIB GO Market factors towards decarbonization
 baseline-AIB-3H:

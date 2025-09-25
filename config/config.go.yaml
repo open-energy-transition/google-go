@@ -140,26 +140,18 @@ overwrite_years:
     costs:
       marginal_cost:
         green_ocgt: 457.6
-  #     emission_prices:
-  #       co2: 62.8
+
   2030:
     costs:
       marginal_cost:
         green_ocgt: 381.8
-  #     emission_prices:
-  #       co2: 113.4
+
   2035:
     costs:
       marginal_cost:
         green_ocgt: 306.1
-  #     emission_prices:
-  #       co2: 137.6
+
   2040:
     costs:
       marginal_cost:
         green_ocgt: 230.3
-  #     emission_prices:
-  #       co2: 147.0
-  # Current co2 price is based on Trading Price September 2025 https://tradingeconomics.com/commodity/carbon
-  # Future price is based on World Energy Outlook 2024 https://iea.blob.core.windows.net/assets/140a0470-5b90-4922-a0e9-838b3ac6918c/WorldEnergyOutlook2024.pdf
-  # All price value are set to 2021 values https://www.in2013dollars.com/europe/inflation/2021
