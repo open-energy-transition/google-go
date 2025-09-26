@@ -28,7 +28,7 @@ baseline-co2-price-3H:
     2025:
       costs:
         emission_prices:
-          co2: 62.8
+          co2: 53
     2030:
       costs:
         emission_prices:
@@ -51,7 +51,7 @@ baseline-co2-price-low-3H:
     2025:
       costs:
         emission_prices:
-          co2: 62.8
+          co2: 12
     2030:
       costs:
         emission_prices:
@@ -74,7 +74,7 @@ baseline-co2-price-high-3H:
     2025:
       costs:
         emission_prices:
-          co2: 62.8
+          co2: 108
     2030:
       costs:
         emission_prices:
