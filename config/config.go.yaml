@@ -73,11 +73,11 @@ sector:
 
 costs:
   marginal_cost:
-    green_ocgt: 230.3
-    adv_firm_tech: 14
+    green_ocgt: 223.8
+    adv_firm_tech: 13.6
   capital_cost:
-    green_ocgt: 74896
-    adv_firm_tech: 602084
+    green_ocgt: 72790
+    adv_firm_tech: 585153
 
   emission_prices:
     enable: true
@@ -139,19 +139,19 @@ overwrite_years:
   2025:
     costs:
       marginal_cost:
-        green_ocgt: 457.6
+        green_ocgt: 444.7
 
   2030:
     costs:
       marginal_cost:
-        green_ocgt: 381.8
+        green_ocgt: 371.1
 
   2035:
     costs:
       marginal_cost:
-        green_ocgt: 306.1
+        green_ocgt: 297.5
 
   2040:
     costs:
       marginal_cost:
-        green_ocgt: 230.3
+        green_ocgt: 223.8
