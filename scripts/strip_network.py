@@ -80,7 +80,24 @@ carrier_to_keep = [
 ]
 
 
-def strip_network(n):  # , country=None):
+def extend_carrier_list(config_elec):
+    
+    config_carriers = [
+        carrier
+        for key in ["conventional_carriers", "renewable_carriers", "novel_carriers"]
+        for carrier in config_elec[key]
+    ]
+    
+    storage_carriers = [
+        suffix
+        for key in ["StorageUnit", "Store", "Link"]
+        for carrier in config_elec["extendable_carriers"][key]
+        for suffix in [carrier, carrier + " charger", carrier + " discharger"]
+    ]
+    return config_carriers + storage_carriers
+
+
+def strip_network(n, carriers):  # , country=None):
     """
     Strip network to core electricity related components
 
@@ -88,6 +105,8 @@ def strip_network(n):  # , country=None):
     ----------
     n : pypsa.Network
         The PyPSA network object to modify.
+    carriers : list
+        The carrier to be kept
 
     Returns
     -------
@@ -103,7 +122,7 @@ def strip_network(n):  # , country=None):
 
     nodes_to_keep = m.buses[
         m.buses.carrier.isin(
-            carrier_to_keep
+            carriers
         )  # & m.buses.country.isin(countries_to_keep)
     ].index
     m.remove("Bus", n.buses.index.symmetric_difference(nodes_to_keep))
@@ -182,9 +201,12 @@ if __name__ == "__main__":
 
     n = pypsa.Network(snakemake.input.network)
 
+    config_elec = snakemake.params.electricity
     options = snakemake.params.strip_network
+    
+    carrier = carrier_to_keep + extend_carrier_list(config_elec)
 
-    n = strip_network(n)  # , country=options["by_country"])
+    n = strip_network(n, carrier)
 
     if options["merge_load"]:
         merge_load(n)

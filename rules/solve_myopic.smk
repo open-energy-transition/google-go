@@ -115,6 +115,7 @@ ruleorder: add_existing_baseyear > add_brownfield
 
 rule strip_network:
     params:
+        electricity=config_provider("electricity"),
         strip_network=config_provider("strip_network"),
     input:
         network=resources(
