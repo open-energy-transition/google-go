@@ -19,74 +19,33 @@ baseline-3H:
   enable:
     certificate: false
 
-# base CO2 prices
+# low CO2 prices
 baseline-co2-price-3H:
   enable:
     certificate: false
 
-  overwrite_years:
-    2025:
-      costs:
-        emission_prices:
-          co2: 53
-    2030:
-      costs:
-        emission_prices:
-          co2: 108
-    2035:
-      costs:
-        emission_prices:
-          co2: 112
-    2040:
-      costs:
-        emission_prices:
-          co2: 115
+  costs:
+    emission_prices:
+      co2: 25
 
-# low CO2 prices
-baseline-co2-price-low-3H:
+# medium CO2 prices
+baseline-co2-price-3H:
   enable:
     certificate: false
 
-  overwrite_years:
-    2025:
-      costs:
-        emission_prices:
-          co2: 12
-    2030:
-      costs:
-        emission_prices:
-          co2: 12
-    2035:
-      costs:
-        emission_prices:
-          co2: 19
-    2040:
-      costs:
-        emission_prices:
-          co2: 27
+  costs:
+    emission_prices:
+      co2: 50
 
 # high CO2 prices
-baseline-co2-price-high-3H:
+baseline-co2-price-3H:
   enable:
     certificate: false
 
-  overwrite_years:
-    2025:
-      costs:
-        emission_prices:
-          co2: 108
-    2030:
-      costs:
-        emission_prices:
-          co2: 108
-    2035:
-      costs:
-        emission_prices:
-          co2: 139
-    2040:
-      costs:
-        emission_prices:
-          co2: 159
+  costs:
+    emission_prices:
+      co2: 100
+
 
 # only existing AIB GO Market factors towards decarbonization
 baseline-AIB-3H:
