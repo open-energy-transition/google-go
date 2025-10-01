@@ -171,7 +171,7 @@ def merge_load(n):
     # Simplify load
     elec_index = n.loads[n.loads.carrier.isin(aux_elec_demand)].index
     load = n.loads.loc[elec_index].copy()
-    p_set = load.groupby("bus")["p_set"].sum()
+    p_set = load.groupby("bus")["p_set"].sum() * 2
 
     n.remove("Load", elec_index)
 
