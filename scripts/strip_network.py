@@ -171,12 +171,14 @@ def merge_load(n):
     # Simplify load
     elec_index = n.loads[n.loads.carrier.isin(aux_elec_demand)].index
     load = n.loads.loc[elec_index].copy()
-    p_set = load.groupby("bus")["p_set"].sum() * 2
+    p_set = load.groupby("bus")["p_set"].sum()
 
     n.remove("Load", elec_index)
 
     p_set = p_set.rename({v: k for k, v in n.loads.bus.items()})
     n.loads_t.p_set[p_set.index] += p_set
+    n.loads_t.p_set[p_set.index] *= 2
+
 
     logger.info("Merge electricity demand loads to one electricity loads per bus")
 
