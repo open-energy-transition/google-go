@@ -30,8 +30,8 @@ scenario:
   planning_horizons:
   - 2025
   - 2030
-  #- 2035
-  #- 2040
+  - 2035
+  - 2040
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
 countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
@@ -145,6 +145,10 @@ overwrite_years:
     costs:
       marginal_cost:
         green_ocgt: 444.7
+    
+    electricity:
+      heating_factors:
+        increment: 1.10
 
   2030:
     costs:
@@ -159,8 +163,16 @@ overwrite_years:
     costs:
       marginal_cost:
         green_ocgt: 297.5
+    
+    electricity:
+      heating_factors:
+        increment: 1.10
 
   2040:
     costs:
       marginal_cost:
         green_ocgt: 223.8
+    
+    electricity:
+      heating_factors:
+        increment: 1.10
