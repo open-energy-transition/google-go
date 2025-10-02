@@ -118,6 +118,7 @@ rule strip_network:
         electricity=config_provider("electricity"),
         strip_network=config_provider("strip_network"),
     input:
+        network_p=solved_previous_horizon,
         network=resources(
             "networks/base_s_{clusters}_{opts}_{sector_opts}_{planning_horizons}_brownfield.nc"
         ),

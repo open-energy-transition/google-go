@@ -62,6 +62,11 @@ electricity:
     StorageUnit: [li-ion, iron-air]
     Store: [H2]
 
+  heating_factors:
+    enable: true # [true, false ] If true, model exogenous electricity demand for heating
+    share: 0.2
+    increment: 1.00
+
 clustering:
   temporal:
     resolution_sector: 3H
@@ -140,18 +145,34 @@ overwrite_years:
     costs:
       marginal_cost:
         green_ocgt: 444.7
+    
+    electricity:
+      heating_factors:
+        increment: 1.10
 
   2030:
     costs:
       marginal_cost:
         green_ocgt: 371.1
+    
+    electricity:
+      heating_factors:
+        increment: 1.10
 
   2035:
     costs:
       marginal_cost:
         green_ocgt: 297.5
+    
+    electricity:
+      heating_factors:
+        increment: 1.10
 
   2040:
     costs:
       marginal_cost:
         green_ocgt: 223.8
+    
+    electricity:
+      heating_factors:
+        increment: 1.10
