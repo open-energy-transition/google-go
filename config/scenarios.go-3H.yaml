@@ -20,7 +20,7 @@ baseline-3H:
     certificate: false
 
 # low CO2 prices
-baseline-co2-price-3H:
+baseline-co2-price-low-3H:
   enable:
     certificate: false
 
@@ -29,7 +29,7 @@ baseline-co2-price-3H:
       co2: 25
 
 # medium CO2 prices
-baseline-co2-price-3H:
+baseline-co2-price-medium-3H:
   enable:
     certificate: false
 
@@ -38,7 +38,7 @@ baseline-co2-price-3H:
       co2: 50
 
 # high CO2 prices
-baseline-co2-price-3H:
+baseline-co2-price-high-3H:
   enable:
     certificate: false
 

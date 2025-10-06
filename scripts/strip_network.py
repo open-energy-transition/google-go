@@ -226,7 +226,6 @@ if __name__ == "__main__":
 
     if options["merge_load"]:
         n_p = pypsa.Network(snakemake.input.network_p)
-        overwrite_config_by_year(snakemake.config, snakemake.params, int(snakemake.wildcards.planning_horizons))
         merge_load(n, config_elec)
 
     if options["snapshots_start"]:
