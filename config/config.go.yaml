@@ -6,10 +6,11 @@
 
 run:
   prefix: ""
-  name: "baseline-3H"
+  name:
+  - baseline-co2-price-low-3H
   scenarios:
-    enable: false
-    file: config/scenarios.yaml
+    enable: true
+    file: config/scenarios.go-3H.yaml
   disable_progressbar: false
   shared_resources:
     policy: false
@@ -64,8 +65,8 @@ electricity:
 
   heating_factors:
     enable: true # [true, false ] If true, model exogenous electricity demand for heating
-    share: 0.2
-    increment: 1.1
+    share: 0.18
+    increment: 1.0
 
 clustering:
   temporal:
@@ -145,18 +146,34 @@ overwrite_years:
     costs:
       marginal_cost:
         green_ocgt: 444.7
+    
+    electricity:
+      heating_factors:
+        share: 0.18
 
   2030:
     costs:
       marginal_cost:
         green_ocgt: 371.1
+    
+    electricity:
+      heating_factors:
+        share: 0.20
 
   2035:
     costs:
       marginal_cost:
         green_ocgt: 297.5
 
+    electricity:
+      heating_factors:
+        share: 0.21
+
   2040:
     costs:
       marginal_cost:
         green_ocgt: 223.8
+    
+    electricity:
+      heating_factors:
+        share: 0.23

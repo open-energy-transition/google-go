@@ -183,15 +183,11 @@ def merge_load(n, config_elec):
     n.loads_t.p_set[p_set.index] += p_set
 
     if config_elec["heating_factors"].get("enable", False):
-        planning_horizons = snakemake.wildcards.get("planning_horizons", None)
         heat_share = config_elec["heating_factors"]["share"]
         heat_increment = config_elec["heating_factors"]["increment"]
 
-        if planning_horizons == "2025":
-            heat_elc_load_base = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
-            heat_elc_load_new = heat_elc_load_base * heat_increment
-        else:
-            heat_elc_load_new = n_p.loads_t.p[p_set.index] * heat_share * heat_increment
+        heat_elc_load_base = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
+        heat_elc_load_new = heat_elc_load_base * heat_increment
         
         n.loads_t.p_set[p_set.index] += heat_elc_load_new
 
@@ -225,7 +221,7 @@ if __name__ == "__main__":
     n = strip_network(n, carrier)
 
     if options["merge_load"]:
-        n_p = pypsa.Network(snakemake.input.network_p)
+        overwrite_config_by_year(snakemake.config, snakemake.params, snakemake.wildcards.get("planning_horizons", None))
         merge_load(n, config_elec)
 
     if options["snapshots_start"]:
