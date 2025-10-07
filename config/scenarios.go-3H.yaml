@@ -26,7 +26,7 @@ baseline-co2-price-low-3H:
 
   costs:
     emission_prices:
-      co2: 25
+      co2: -25
 
 # medium CO2 prices
 baseline-co2-price-medium-3H:
@@ -35,7 +35,7 @@ baseline-co2-price-medium-3H:
 
   costs:
     emission_prices:
-      co2: 50
+      co2: -50
 
 # high CO2 prices
 baseline-co2-price-high-3H:
@@ -44,7 +44,7 @@ baseline-co2-price-high-3H:
 
   costs:
     emission_prices:
-      co2: 100
+      co2: -100
 
 
 # only existing AIB GO Market factors towards decarbonization
