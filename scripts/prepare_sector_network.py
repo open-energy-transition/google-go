@@ -1422,6 +1422,7 @@ def add_novel_technologies(
             carrier=carrier,
             marginal_cost=costs.at[carrier, "marginal_cost"],
             capital_cost=costs.at[carrier, "capital_cost"],
+            lifetime=costs.at[carrier, "lifetime"],
         )
     
 

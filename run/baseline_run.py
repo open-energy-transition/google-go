@@ -134,7 +134,7 @@ def main():
         config_s = yaml.safe_load(file)
 
     # Extract scenarios with '--'
-    baseline_list = [key for key in config_s if "baseline" in key]
+    baseline_list = [key for key in config_s]
 
     scenario_pair = []
     while True:

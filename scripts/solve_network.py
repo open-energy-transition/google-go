@@ -973,6 +973,36 @@ def add_TES_charger_ratio_constraints(n: pypsa.Network) -> None:
     n.model.add_constraints(lhs == 0, name="TES_charger_ratio")
 
 
+def add_storage_inverter_fix(n):
+    """
+    Add constraint ensuring that charger = discharger for batteries:
+    """
+    store_techs = n.config["electricity"]["extendable_carriers"]["Store"]
+
+    for store in store_techs:
+        if store in ["H2", "H2 tank", "battery"]:
+            continue
+
+        if not n.links.p_nom_extendable.any():
+            return
+
+        discharger_bool = n.links.index.str.contains(f"{store} discharger")
+        charger_bool = n.links.index.str.contains(f"{store} charger")
+
+        dischargers_ext = n.links[discharger_bool].query("p_nom_extendable").index
+        chargers_ext = n.links[charger_bool].query("p_nom_extendable").index
+
+        eff = n.links.efficiency[dischargers_ext].values
+        lhs = (
+            n.model["Link-p_nom"].loc[chargers_ext]
+            - n.model["Link-p_nom"].loc[dischargers_ext] * eff
+        )
+
+        n.model.add_constraints(lhs == 0, name=f"{store}-inverter_ratio")
+
+        logger.info(f"Activate: {store}-inverter_ratio")
+
+
 def add_battery_constraints(n):
     """
     Add constraint ensuring that charger = discharger, i.e.
@@ -994,6 +1024,36 @@ def add_battery_constraints(n):
     )
 
     n.model.add_constraints(lhs == 0, name="Link-charger_ratio")
+
+
+def add_storage_duration_fix(n):
+    """
+    Add constraint ensuring that P/E ratio for batteries is based on max_hours
+    """
+    store_techs = n.config["electricity"]["extendable_carriers"]["Store"]
+
+    for store in store_techs:
+        if store in ["H2", "H2 tank"]:
+            continue
+
+        if not n.links.p_nom_extendable.any():
+            return
+
+        energy_bool = n.stores.index.str.contains(store)
+        energy_ext = n.stores[energy_bool].query("e_nom_extendable").index
+
+        charger_bool = n.links.index.str.contains(f"{store} charger")
+        chargers_ext = n.links[charger_bool].query("p_nom_extendable").index
+
+        expr = (
+            n.model["Store-e_nom"].loc[energy_ext]
+            == n.model["Link-p_nom"].loc[chargers_ext]
+            * n.config["electricity"]["max_hours"][store]
+        )
+
+        n.model.add_constraints(expr, name=f"{store}-duration")
+
+        logger.info(f"Activate: {store}-duration")
 
 
 def add_lossy_bidirectional_link_constraints(n):
@@ -1184,18 +1244,24 @@ def add_virtual_ppl_matching(n):
     df_gens.index.name = "Generator"
 
     # Compute RHS: aggregated power per virtual_ppl from links and generators
-    rhs_links = (
-        (
-            n.model["Link-p"].loc[:, df_links.index]
-            * n.links.loc[df_links.index].efficiency
+    rhs = 0
+
+    if not df_links.empty:
+        rhs_links = (
+            (
+                n.model["Link-p"].loc[:, df_links.index]
+                * n.links.loc[df_links.index].efficiency
+            )
+            .groupby(df_links.virtual_ppl)
+            .sum()
         )
-        .groupby(df_links.virtual_ppl)
-        .sum()
-    )
-    rhs_gens = (
-        n.model["Generator-p"].loc[:, df_gens.index].groupby(df_gens.virtual_ppl).sum()
-    )
-    rhs = rhs_links + rhs_gens
+        rhs += rhs_links
+
+    if not df_gens.empty:
+        rhs_gens = (
+            n.model["Generator-p"].loc[:, df_gens.index].groupby(df_gens.virtual_ppl).sum()
+        )
+        rhs += rhs_gens
 
     # Prepare VPP DataFrame to get LHS: generator power per virtual_ppl
     df_vpp = vpp.reset_index().set_index("virtual_ppl", drop=False)
@@ -1330,6 +1396,9 @@ def add_buffer_matching(n):
 #     logger.info("Activate: add_247_go_matching_constraints")
 
 
+
+
+
 def extra_functionality(
     n: pypsa.Network, snapshots: pd.DatetimeIndex, planning_horizons: str | None = None
 ) -> None:
@@ -1384,6 +1453,10 @@ def extra_functionality(
             add_TES_energy_to_power_ratio_constraints(n)
             add_TES_charger_ratio_constraints(n)
 
+    if config["electricity"]["make_Store_StorageUnit"]:
+        add_storage_inverter_fix(n)
+        add_storage_duration_fix(n)
+    
     add_battery_constraints(n)
     add_lossy_bidirectional_link_constraints(n)
     add_pipe_retrofit_constraint(n)

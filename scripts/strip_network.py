@@ -137,7 +137,7 @@ def strip_network(n, carriers):  # , country=None):
             )
         else:
             location_boolean = c.df.bus.isin(nodes_to_keep)
-        to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier_to_keep)]
+        to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier)]
         to_drop = c.df.index.symmetric_difference(to_keep)
         m.remove(c.name, to_drop)
 

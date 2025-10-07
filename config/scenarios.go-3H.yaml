@@ -52,3 +52,18 @@ baseline-AIB-3H:
   certificate:
     background_demand:
       enable: true
+
+# Energy matching developement of 10% energy 5 years
+energy-match-3H:
+  certificate:
+    new_demand:
+      enable: true
+      energy_matching: 10
+      hourly_matching: 0
+
+hourly-match-90-3H:
+  certificate:
+    new_demand:
+      enable: true
+      energy_matching: 10
+      hourly_matching: 90
