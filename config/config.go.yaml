@@ -99,7 +99,7 @@ costs:
 
   emission_prices:
     enable: true
-    co2: -0.
+    co2: 0.
 
 strip_network:
   enable: true

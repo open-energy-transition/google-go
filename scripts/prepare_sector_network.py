@@ -769,7 +769,7 @@ def add_co2_tracking(n, costs, options, sequestration_potential_file=None):
         e_nom_extendable=True,
         e_min_pu=-1,
         carrier="co2",
-        marginal_cost=co2_price,
+        marginal_cost=-co2_price,
         bus="co2 atmosphere",
     )
 
