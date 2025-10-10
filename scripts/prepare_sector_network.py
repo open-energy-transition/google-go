@@ -26,6 +26,7 @@ from scripts._helpers import (
     get,
     set_scenario_config,
     update_config_from_wildcards,
+    overwrite_config_by_year,
 )
 from scripts.add_electricity import (
     attach_storageunits,
@@ -753,6 +754,14 @@ def add_co2_tracking(n, costs, options, sequestration_potential_file=None):
     # this tracks CO2 in the atmosphere
     n.add("Bus", "co2 atmosphere", location="EU", carrier="co2", unit="t_co2")
 
+    # set carbon prices through setting marginal cost to storing CO2 in the atmosphere
+    if snakemake.params.costs["emission_prices"]["enable"]:
+        co2_price = snakemake.params.costs["emission_prices"]["co2"]
+
+        logger.info(f"Adding CO2 prices of {co2_price} EUR/tCO2")
+    else:
+        co2_price = 0
+
     # can also be negative
     n.add(
         "Store",
@@ -760,6 +769,7 @@ def add_co2_tracking(n, costs, options, sequestration_potential_file=None):
         e_nom_extendable=True,
         e_min_pu=-1,
         carrier="co2",
+        marginal_cost=-co2_price,
         bus="co2 atmosphere",
     )
 
@@ -1393,6 +1403,28 @@ def add_generation(
             efficiency2=costs.at[carrier, "CO2 intensity"],
             lifetime=costs.at[generator, "lifetime"],
         )
+
+
+def add_novel_technologies(
+    n: pypsa.Network,
+    costs: pd.DataFrame,
+    pop_layout: pd.DataFrame,
+    novel_carriers: list,
+):
+    nodes = pop_layout.index
+    
+    for carrier in novel_carriers:
+        n.add(
+            "Generator",
+            nodes + " " + carrier,
+            bus=nodes,
+            p_nom_extendable=True,
+            carrier=carrier,
+            marginal_cost=costs.at[carrier, "marginal_cost"],
+            capital_cost=costs.at[carrier, "capital_cost"],
+            lifetime=costs.at[carrier, "lifetime"],
+        )
+    
 
 
 def add_ammonia(
@@ -6173,6 +6205,7 @@ if __name__ == "__main__":
     ext_carriers = snakemake.params.electricity.get("extendable_carriers", dict())
 
     investment_year = int(snakemake.wildcards.planning_horizons)
+    overwrite_config_by_year(snakemake.config, snakemake.params, investment_year)
 
     n = pypsa.Network(snakemake.input.network)
 
@@ -6262,6 +6295,15 @@ if __name__ == "__main__":
         existing_capacities=existing_capacities,
         existing_efficiencies=existing_efficiencies,
     )
+
+    novel_carriers = snakemake.params.electricity.get("novel_carriers")
+    if novel_carriers:
+        add_novel_technologies(
+            n=n,
+            costs=costs,
+            pop_layout=pop_layout,
+            novel_carriers=novel_carriers,
+        )
 
     add_h2_gas_infrastructure(
         n=n,
@@ -6460,14 +6502,16 @@ if __name__ == "__main__":
         limit = co2_cap.loc[investment_year]
     else:
         limit = get(co2_budget, investment_year)
-    add_co2limit(
-        n,
-        options,
-        snakemake.input.co2_totals_name,
-        snakemake.params.countries,
-        nyears,
-        limit,
-    )
+    
+    if limit:
+        add_co2limit(
+            n,
+            options,
+            snakemake.input.co2_totals_name,
+            snakemake.params.countries,
+            nyears,
+            limit,
+        )
 
     maxext = snakemake.params["lines"]["max_extension"]
     if maxext is not None:

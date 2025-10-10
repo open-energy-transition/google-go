@@ -180,7 +180,13 @@ def get_virtual_ppl_dataframe(n, certificate, planning_horizons):
     plant_group = certificate["plant_grouping"].copy()
     bus_group = certificate["bus_grouping"]
     max_lifetime_as_new = certificate["max_plant_lifetime_as_new"]
-    new_threshold = int(planning_horizons) - max_lifetime_as_new
+    
+    # if_max_lifetime is defined as year of construction
+    if max_lifetime_as_new >= 100: 
+        new_threshold = max_lifetime_as_new
+    # If max_lifetime is defined in year since construction
+    else: 
+        new_threshold = int(planning_horizons) - max_lifetime_as_new
 
     # Filtering out links with generator carriers (coal, oil, nuclear)
     shared_carriers = set(n.generators.carrier) & set(n.links.carrier)
@@ -924,13 +930,13 @@ if __name__ == "__main__":
         )
         add_go_market(n, certificate["new_demand"], certificate["map"], "New")
 
-    if (
+    if ((
         certificate["new_demand"]["enable"]
         and certificate["new_demand"]["scope"] == "national"
     ) or (
         certificate["background_demand"]["enable"]
         and certificate["background_demand"]["scope"] == "national"
-    ):
+    )) and certificate["storage_carriers"]:
         add_virtual_storage(
             n,
             certificate["storage_carriers"],

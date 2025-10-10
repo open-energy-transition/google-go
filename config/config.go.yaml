@@ -6,10 +6,14 @@
 
 run:
   prefix: ""
-  name: "baseline-3H"
+  name:
+  #- baseline-3H
+  #- baseline-co2-price-low-3H
+  - baseline-co2-price-medium-3H
+  #- baseline-co2-price-high-3H
   scenarios:
-    enable: false
-    file: config/scenarios.yaml
+    enable: true
+    file: config/scenarios.go-3H.yaml
   disable_progressbar: false
   shared_resources:
     policy: false
@@ -28,10 +32,10 @@ scenario:
   sector_opts:
   - ''
   planning_horizons:
-  # - 2025
+  - 2025
   - 2030
-  # - 2035
-  # - 2040
+  - 2035
+  - 2040
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
 countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
@@ -52,6 +56,27 @@ enable:
   drop_leap_day: true
   certificate: true # [true, false ] If true, model the guarantee of origin
 
+co2_budget: false # Disabling co2_budget in favor of co2 prices
+
+electricity:
+
+  novel_carriers: [green_ocgt, adv_firm_tech]
+
+  extendable_carriers:
+    StorageUnit: [li-ion, iron-air] # This will be the list of storage technologies not filtered in the 
+    Store: [li-ion, iron-air, H2 tank]
+
+  make_Store_StorageUnit: true
+
+  max_hours:
+    li-ion: 6
+    iron-air: 100
+
+  heating_factors:
+    enable: true # [true, false ] If true, model exogenous electricity demand for heating
+    share: 0.18
+    increment: 1.0
+
 clustering:
   temporal:
     resolution_sector: 3H
@@ -61,6 +86,21 @@ sector:
   H2_network: false
   gas_network: false
 
+costs:
+  marginal_cost:
+    green_ocgt: 223.8
+    adv_firm_tech: 13.6
+  capital_cost:
+    green_ocgt: 72790
+    adv_firm_tech: 585153
+  lifetime:
+    green_ocgt: 25
+    adv_firm_tech: 40
+
+  emission_prices:
+    enable: true
+    co2: 0.
+
 strip_network:
   enable: true
   # by_country: false
@@ -69,33 +109,33 @@ strip_network:
   snapshots_end: false
 
 grid_policy:
-  renewable_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop"]
-  clean_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear", "allam"]
-  emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"]
+  renewable_carriers: [green_ocgt, adv_firm_tech, offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop]
+  clean_carriers: [green_ocgt, adv_firm_tech,offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, allam]
+  emitters: [CCGT, OCGT, coal, lignite, oil]
 
 certificate:
-  plant_carriers: ["offwind", "offwind-ac", "offwind-dc", "offwind-float", "onwind", "ror", "hydro", "urban central solid biomass CHP", "geothermal", "solar", "solar-hsat", "solar rooftop", "nuclear"]
-  plant_status: ["new", "existing"] # ["new", "existing"] if you include all (both new or existing), or only new powerplants
-  max_plant_lifetime_as_new: 10
-  plant_grouping: ["carrier", "status"] # [] or ["carrier", "status"]: Each generator are disaggregated by ...
-  bus_grouping: [] # [] or ["carrier", "status"]: Each supply bus are disaggregated by ...
+  plant_carriers: [green_ocgt, adv_firm_tech, offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear]
+  plant_status: [new] # [new, existing] if you include all (both new or existing), or only new powerplants
+  max_plant_lifetime_as_new: 2 # Must always be new in each planning_horizons
+  plant_grouping: [carrier, status] # [] or [carrier, status]: Each generator are disaggregated by ...
+  bus_grouping: [] # [] or [carrier, status]: Each supply bus are disaggregated by ...
   aib_filepath: "data/AIB_monthly_data.csv"
-  storage_carriers: ["battery", "H2 Store"]
+  storage_carriers: [li-ion, iron-air, H2 Store]
 
   background_demand:
-    enable: true
+    enable: false
     scope: global # Cannot set scope to national due to many countries GO Demand exceeds national electricity demand. 
     supply_filter:
       country: ['AT', 'BE', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'NL', 'NO', 'PT', 'RS', 'SE', 'SI', 'SK']
       status: false
       carrier: false
-    market_name: "AIB"
+    market_name: AIB
     go_profile: historical # {"historical", "total_daily_avg", "total", "baseload"}
     energy_matching: 100 # in percent relative to historical GO demand
     hourly_matching: 0
 
   new_demand:
-    enable: true
+    enable: false
     scope: national # {national, global}
     supply_filter:
       country: false
@@ -114,7 +154,38 @@ certificate:
     market AIB: [0, 0.5]
 
 overwrite_years:
+  2025:
+    costs:
+      marginal_cost:
+        green_ocgt: 444.7
+    
+    electricity:
+      heating_factors:
+        share: 0.18
+
   2030:
-    # certificate:
-    #   new_demand:
-    #     energy_matching: 10
+    costs:
+      marginal_cost:
+        green_ocgt: 371.1
+    
+    electricity:
+      heating_factors:
+        share: 0.20
+
+  2035:
+    costs:
+      marginal_cost:
+        green_ocgt: 297.5
+
+    electricity:
+      heating_factors:
+        share: 0.21
+
+  2040:
+    costs:
+      marginal_cost:
+        green_ocgt: 223.8
+    
+    electricity:
+      heating_factors:
+        share: 0.23

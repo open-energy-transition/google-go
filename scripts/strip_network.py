@@ -13,6 +13,7 @@ from scripts._helpers import (
     configure_logging,
     set_scenario_config,
     update_config_from_wildcards,
+    overwrite_config_by_year,
 )
 
 logger = logging.getLogger(__name__)
@@ -80,7 +81,24 @@ carrier_to_keep = [
 ]
 
 
-def strip_network(n):  # , country=None):
+def extend_carrier_list(config_elec):
+    
+    config_carriers = [
+        carrier
+        for key in ["conventional_carriers", "renewable_carriers", "novel_carriers"]
+        for carrier in config_elec[key]
+    ]
+    
+    storage_carriers = [
+        suffix
+        for key in ["StorageUnit", "Store", "Link"]
+        for carrier in config_elec["extendable_carriers"][key]
+        for suffix in [carrier, carrier + " charger", carrier + " discharger"]
+    ]
+    return config_carriers + storage_carriers
+
+
+def strip_network(n, carriers):  # , country=None):
     """
     Strip network to core electricity related components
 
@@ -88,6 +106,8 @@ def strip_network(n):  # , country=None):
     ----------
     n : pypsa.Network
         The PyPSA network object to modify.
+    carriers : list
+        The carrier to be kept
 
     Returns
     -------
@@ -103,7 +123,7 @@ def strip_network(n):  # , country=None):
 
     nodes_to_keep = m.buses[
         m.buses.carrier.isin(
-            carrier_to_keep
+            carriers
         )  # & m.buses.country.isin(countries_to_keep)
     ].index
     m.remove("Bus", n.buses.index.symmetric_difference(nodes_to_keep))
@@ -117,7 +137,7 @@ def strip_network(n):  # , country=None):
             )
         else:
             location_boolean = c.df.bus.isin(nodes_to_keep)
-        to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier_to_keep)]
+        to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier)]
         to_drop = c.df.index.symmetric_difference(to_keep)
         m.remove(c.name, to_drop)
 
@@ -128,7 +148,7 @@ def strip_network(n):  # , country=None):
     return m
 
 
-def merge_load(n):
+def merge_load(n, config_elec):
     """
     Consolidates and simplifies electricity demand loads in a PyPSA network.
 
@@ -136,6 +156,9 @@ def merge_load(n):
     ----------
     n : pypsa.Network
         The PyPSA network object to modify.
+    
+    config_elec : dict
+        The electricity configuration dictionary.
 
     Returns
     -------
@@ -159,6 +182,15 @@ def merge_load(n):
     p_set = p_set.rename({v: k for k, v in n.loads.bus.items()})
     n.loads_t.p_set[p_set.index] += p_set
 
+    if config_elec["heating_factors"].get("enable", False):
+        heat_share = config_elec["heating_factors"]["share"]
+        heat_increment = config_elec["heating_factors"]["increment"]
+
+        heat_elc_load_base = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
+        heat_elc_load_new = heat_elc_load_base * heat_increment
+        
+        n.loads_t.p_set[p_set.index] += heat_elc_load_new
+
     logger.info("Merge electricity demand loads to one electricity loads per bus")
 
 
@@ -168,11 +200,10 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "strip_network",
-            run="",
+            run="baseline-3H",
             opts="",
-            clusters="50",
+            clusters="39",
             configfiles="config/config.go.yaml",
-            ll="",
             sector_opts="",
             planning_horizons="2030",
         )
@@ -182,12 +213,16 @@ if __name__ == "__main__":
 
     n = pypsa.Network(snakemake.input.network)
 
+    config_elec = snakemake.params.electricity
     options = snakemake.params.strip_network
+    
+    carrier = carrier_to_keep + extend_carrier_list(config_elec)
 
-    n = strip_network(n)  # , country=options["by_country"])
+    n = strip_network(n, carrier)
 
     if options["merge_load"]:
-        merge_load(n)
+        overwrite_config_by_year(snakemake.config, snakemake.params, snakemake.wildcards.get("planning_horizons", None))
+        merge_load(n, config_elec)
 
     if options["snapshots_start"]:
         new_snapshots = n.snapshots[(n.snapshots >= options["snapshots_start"])]
