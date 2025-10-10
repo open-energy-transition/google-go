@@ -1224,6 +1224,144 @@ def add_co2_atmosphere_constraint(n, snapshots):
 
             n.model.add_constraints(lhs <= rhs, name=f"GlobalConstraint-{name}")
 
+def retrieve_tyndp_data(tyndp_scenario, planning_horizons):
+    """
+    Retrieve TYNDP data from the specified URL and scenario.
+    """
+
+    import os
+    data_file = "../data/tyndp_results/tyndp_res_targets.csv"
+    # Check if file already exists
+    if os.path.exists(data_file):
+        print("TYNDP data already downloaded and processed.")
+    else:
+        import urllib.request
+        import zipfile
+        import country_converter as coco
+        cc = coco.CountryConverter()
+
+        url = "https://storage.googleapis.com/open-tyndp-data-store/250117-TYNDP-2024-Visualisation-Platform.zip"
+        target_file = "../data/tyndp_results/250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx"
+        data_file = "../data/tyndp_results/tyndp_res_targets.csv"
+
+        # Download
+        os.makedirs("../data/tyndp_results", exist_ok=True)
+        zip_file = "../data/tyndp_results/tyndp.zip"
+        
+        print("Downloading and extracting TYNDP data...")
+        urllib.request.urlretrieve(url, zip_file)
+        
+        with zipfile.ZipFile(zip_file, 'r') as z:
+            z.extract("250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx", ".")
+            os.rename("250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx", target_file)
+        
+        os.remove(zip_file)
+        print("Download completed!")
+    
+        # Read
+        years = [2030, 2035, 2040, 2050]
+        scenarios = ["National Trends",
+                    "Distributed Energy",
+                    "Global Ambition",]
+        climate_year = "CY2009"
+        target = "Generation"
+        columns_to_drop = [
+            "Category_Detail",
+            "Climate_Year",
+            "Property_Name",
+            "Unit_Name",
+        ]
+        non_res = [
+            "Gas",
+            "Nuclear",
+            "Other thermal",
+        ]
+        countries_pypsa = n.config["countries"]
+        
+        elc_generation_tyndp = pd.read_excel(target_file, index_col="Country")
+        elc_generation_tyndp = elc_generation_tyndp.copy()
+        elc_generation_tyndp_subset = elc_generation_tyndp[(elc_generation_tyndp["Climate_Year"] == climate_year)
+                                                    & (elc_generation_tyndp["Property_Name"] == target)
+                                                    ].drop(columns=columns_to_drop)
+
+        # Process
+        country_names = elc_generation_tyndp_subset.index
+
+        manual_country_mapping = {
+            'Lybia': 'LY',
+            'Moldavia': 'MD',
+        }
+        processed_names = [manual_country_mapping.get(name, name) for name in country_names]
+        country_codes = cc.convert(processed_names, to="ISO2")
+        elc_generation_tyndp_subset.index = country_codes
+        elc_generation_tyndp_pypsa = elc_generation_tyndp_subset.copy()[elc_generation_tyndp_subset.index.isin(countries_pypsa)]
+
+        shares_res_scen = {}
+        for scen in scenarios:   
+            for yy in years:
+                # Skip years that don't exist for each scenario
+                if (scen == "National Trends" and (yy == 2035 or yy == 2050)) or (scen == "Distributed Energy" and yy == 2030):
+                    continue
+
+                generation = elc_generation_tyndp_pypsa[(elc_generation_tyndp_pypsa["Scenario"] == scen)
+                                                        & (elc_generation_tyndp_pypsa["Year"] == yy)].drop(
+                                                            columns=["Year", "Scenario"]
+                                                        )
+                generation_by_country = generation.groupby([generation.index, "Category_Simple"]).sum()
+                generation_by_country_unstacked = generation_by_country.unstack().fillna(0)
+                generation_by_country_unstacked.columns = generation_by_country_unstacked.columns.droplevel(0).rename("Carrier")
+                
+                shares_by_country = (generation_by_country_unstacked.div(generation_by_country_unstacked.sum(axis=1), axis=0))
+                shares_by_country_res = shares_by_country.loc[:,~shares_by_country.columns.isin(non_res)].sum(axis=1).round(2)
+                shares_total = (generation_by_country_unstacked.sum().div(generation_by_country_unstacked.sum().sum()))
+                shares_total_res = shares_total[~shares_total.index.isin(non_res)].sum().round(2)
+                
+                shares_res = shares_by_country_res.copy()
+                shares_res.loc["EU+"] = shares_total_res
+                shares_res_scen[(scen, yy)] = shares_res
+
+        df_shares_res_scen = pd.DataFrame(shares_res_scen)
+        # Add interpolated data to the existing DataFrame
+        df_shares_res_scen[("National Trends", 2035)] = ((df_shares_res_scen[("National Trends", 2030)] + df_shares_res_scen[("National Trends", 2040)]) / 2).round(2)
+        df_shares_res_scen[("Distributed Energy", 2030)] = df_shares_res_scen[("National Trends", 2030)]
+        df_shares_res_scen[("Distributed Energy", 2045)] = ((df_shares_res_scen[("Distributed Energy", 2040)] + df_shares_res_scen[("Distributed Energy", 2050)]) / 2).round(2)
+        df_shares_res_scen[("Global Ambition", 2030)] = df_shares_res_scen[("National Trends", 2030)]
+        df_shares_res_scen[("Global Ambition", 2045)] = ((df_shares_res_scen[("Global Ambition", 2040)] + df_shares_res_scen[("Global Ambition", 2050)]) / 2).round(2)
+
+        df_shares_res_scen = df_shares_res_scen.reindex(sorted(df_shares_res_scen.columns), axis=1)
+
+        # Save
+        df_shares_res_scen.to_csv("../data/tyndp_results/tyndp_res_targets.csv")
+
+    tyndp_shares_all = pd.read_csv("../data/tyndp_results/tyndp_res_targets.csv", index_col=0, header=[0, 1])
+    tyndp_shares = tyndp_shares_all[(tyndp_scenario, str(planning_horizons))]
+    
+    return tyndp_shares.to_frame()
+
+def add_rps_constraints(n, planning_horizons):
+    """
+    Add renewable portfolio standard (RPS) constraints based on TYNDP results.
+    The constraints set a minimum share of renewable energy generation in each planning horizon.
+    Also, they can be defined for individual countries or for the entire system.
+    """
+    weights = n.snapshot_weightings["generators"]
+    res_carriers = n.config["grid_policy"]["renewable_carriers"]
+    res_target = n.config["res_target"]
+    
+    # Retrieve data
+    if res_target["tyndp_data"]["enable"]:
+        source = "tyndp"
+        tyndp_scenario = res_target["tyndp_data"]["tyndp_scenario"]
+        res_shares = retrieve_tyndp_data(tyndp_scenario, planning_horizons)
+    else:
+        source = "manual"
+        res_shares = pd.DataFrame([res_target["res_shares_default"]]).T
+    
+    res_shares.columns = [f'RES_target_{planning_horizons}']
+    logger.info(f"Setting res_shares-{source}:\n{res_shares}")
+
+    # Build constraints
+    
 
 def add_virtual_ppl_matching(n):
     from scripts.add_certificate import get_virtual_ppl_dataframe
@@ -1481,6 +1619,9 @@ def extra_functionality(
         module = importlib.import_module(module_name)
         custom_extra_functionality = getattr(module, module_name)
         custom_extra_functionality(n, snapshots, snakemake)  # pylint: disable=E0601
+
+    if config.get("res_target", False) and planning_horizons != "2025":
+        add_rps_constraints(n, planning_horizons)
 
     if config["enable"].get("certificate"):
         add_virtual_ppl_matching(n)
@@ -1841,7 +1982,7 @@ if __name__ == "__main__":
             clusters="39",
             configfiles="config/config.go.yaml",
             sector_opts="",
-            planning_horizons="2025",
+            planning_horizons="2030",
         )
     configure_logging(snakemake)
     set_scenario_config(snakemake)
