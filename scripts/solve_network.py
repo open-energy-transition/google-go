@@ -40,6 +40,7 @@ import pandas as pd
 import pypsa
 import xarray as xr
 import yaml
+import country_converter as coco
 from linopy.remote.oetc import OetcCredentials, OetcHandler, OetcSettings
 from pypsa.descriptors import get_activity_mask
 from pypsa.descriptors import get_switchable_as_dense as get_as_dense
@@ -1237,8 +1238,6 @@ def retrieve_tyndp_data(tyndp_scenario, planning_horizons):
     else:
         import urllib.request
         import zipfile
-        import country_converter as coco
-        cc = coco.CountryConverter()
 
         url = "https://storage.googleapis.com/open-tyndp-data-store/250117-TYNDP-2024-Visualisation-Platform.zip"
         target_file = "../data/tyndp_results/250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx"
@@ -1292,7 +1291,7 @@ def retrieve_tyndp_data(tyndp_scenario, planning_horizons):
             'Moldavia': 'MD',
         }
         processed_names = [manual_country_mapping.get(name, name) for name in country_names]
-        country_codes = cc.convert(processed_names, to="ISO2")
+        country_codes = coco.CountryConverter().convert(processed_names, to="ISO2")
         elc_generation_tyndp_subset.index = country_codes
         elc_generation_tyndp_pypsa = elc_generation_tyndp_subset.copy()[elc_generation_tyndp_subset.index.isin(countries_pypsa)]
 
@@ -1344,8 +1343,6 @@ def add_rps_constraints(n, planning_horizons):
     The constraints set a minimum share of renewable energy generation in each planning horizon.
     Also, they can be defined for individual countries or for the entire system.
     """
-    weights = n.snapshot_weightings["generators"]
-    res_carriers = n.config["grid_policy"]["renewable_carriers"]
     res_target = n.config["res_target"]
     
     # Retrieve data
@@ -1358,10 +1355,68 @@ def add_rps_constraints(n, planning_horizons):
         res_shares = pd.DataFrame([res_target["res_shares_default"]]).T
     
     res_shares.columns = [f'RES_target_{planning_horizons}']
-    logger.info(f"Setting res_shares-{source}:\n{res_shares}")
+    country_names = ["System" if code == "not found" else code for code in coco.CountryConverter().convert(res_shares.index, to="short_name")]
+    res_shares_log = res_shares.copy()
+    res_shares_log["Country"] = country_names
+    logger.info(f"Setting res_shares-{source}:\n{res_shares_log[res_shares_log.columns[::-1]]}")
 
     # Build constraints
+    weights = n.snapshot_weightings["generators"]
+    res_carriers = n.config["grid_policy"]["renewable_carriers"]
+    negative_carriers = determine_storage_carrier(n) # PHS, battery chargers/dischargers, and H2 links (FCs, turbines, electrolysers)
+    grid_carriers = ["electricity distribution grid", "AC", "DC", "low voltage"]
+    bus_grid = n.buses[n.buses.carrier.isin(grid_carriers)].index
     
+    res_shares_xr = xr.DataArray(res_shares[f"RES_target_{planning_horizons}"]).rename(dim_0 = "country")
+    dispatch_tot_cc = 0
+    dispatch_res_cc = 0
+    for c in {"Generator", "StorageUnit", "Link"}:
+        assets = n.df(c)
+        if assets.empty:
+            continue
+        
+        bus = "bus" if c in n.one_port_components else "bus1"
+        attr = "p_dispatch" if c == "StorageUnit" else "p"
+        dispatch = n.model[f"{c}-{attr}"].mul(weights).sum(dim="snapshot")
+        attr = pypsa.descriptors.nominal_attrs[c]
+
+        # Identify assets producing electricity
+        assets_elc = assets[(assets[bus].isin(bus_grid)) # attached to AC or low-voltage grids...
+            & (~assets.carrier.isin(grid_carriers + negative_carriers))] # ...but excluding grid links (DC, elc distribution, dischargers) and storage w/ net-negative dispatch (PHS)
+        
+        # Select total (res + non-res) assets
+        efficiency = 1 if c != "Link" else assets_elc.efficiency
+        dispatch = dispatch.loc[assets_elc.index] * efficiency
+        grouper_tot = assets_elc[bus].map(n.buses.country).rename("country")
+        dispatch_tot_cc += dispatch.groupby(grouper_tot).sum()
+
+        # Select only res assets
+        res_index = assets[assets.carrier.isin(res_carriers)].index
+        if res_index.empty:
+            continue
+        dispatch_res = dispatch.loc[res_index]
+        grouper_res = assets[assets.index.isin(res_index)][bus].map(n.buses.country).rename("country")
+        dispatch_res_cc += dispatch_res.groupby(grouper_res).sum()
+
+    if res_target["country_share_target"]:
+        logger.info("Setting country-specific RPS constraints")
+        gen_res_cc, gen_tot_cc, shares_cc = linopy.align(dispatch_res_cc, dispatch_tot_cc, res_shares_xr)
+        n.model.add_constraints(
+            gen_res_cc >=  shares_cc *gen_tot_cc,
+            name="rps_constraints_country",
+        )
+
+    if res_target["system_share_target"]:
+        # Create EU+ aggregate for renewable dispatch
+        logger.info("Setting system-wide (EU+) RPS constraints")
+        dispatch_res_eu_sum = dispatch_res_cc.sum().expand_dims(country=["EU+"])
+        dispatch_tot_eu_sum = dispatch_tot_cc.sum().expand_dims(country=["EU+"])
+        gen_res_eu, gen_tot_eu, shares_eu = linopy.align(dispatch_res_eu_sum, dispatch_tot_eu_sum, res_shares_xr)
+        n.model.add_constraints(
+            gen_res_eu >= shares_eu * gen_tot_eu,
+            name="rps_constraints_system",
+        )
+
 
 def add_virtual_ppl_matching(n):
     from scripts.add_certificate import get_virtual_ppl_dataframe
@@ -1845,7 +1900,8 @@ def calculate_grid_score(n: pypsa.Network, include_techs: list, name: str) -> No
     grid_carriers = ["electricity distribution grid", "AC", "DC"]
     exclude_carriers = grid_carriers + negative_carriers
 
-    def get_values(n, df, df_t, bus_col, include_techs):
+    def get_values(n, df, df_t, bus_col, includ
+                   e_techs):
         # Map low-voltage bus to main grid bus
         grid_buses = n.buses[n.buses.carrier == "AC"].index
         low_voltage_map = (
