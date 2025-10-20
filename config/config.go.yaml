@@ -9,8 +9,9 @@ run:
   name:
   #- baseline-3H
   #- baseline-co2-price-low-3H
-  - baseline-co2-price-medium-3H
+  #- baseline-co2-price-medium-3H
   #- baseline-co2-price-high-3H
+  - baseline-rps-3H
   scenarios:
     enable: true
     file: config/scenarios.go-3H.yaml
@@ -109,8 +110,8 @@ strip_network:
   snapshots_end: false
 
 res_target:
-  system_share_target: true
-  country_share_target: true
+  system_share_target: false
+  country_share_target: false
   tyndp_data:
     enable: true # If false, use manual entries below
     tyndp_scenario: "National Trends" # {"National Trends", "Distributed Energy"}
@@ -149,7 +150,7 @@ res_target:
     SE: 0.
     SI: 0.
     SK: 0.
-    XK: 0.
+    XK: 0.43 # 2030 target (https://ember-energy.org/data/global-renewable-power-sector-targets-2030/)
 
 grid_policy:
   renewable_carriers: [green_ocgt, adv_firm_tech, offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop]

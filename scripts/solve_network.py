@@ -1354,6 +1354,11 @@ def add_rps_constraints(n, planning_horizons):
         source = "manual"
         res_shares = pd.DataFrame([res_target["res_shares_default"]]).T
     
+    # Add missing countries from res_shares_default to res_shares DataFrame
+    for cc in res_target["res_shares_default"].keys():
+        if cc not in res_shares.index:
+            res_shares.loc[cc] = res_target["res_shares_default"][cc]
+    
     res_shares.columns = [f'RES_target_{planning_horizons}']
     country_names = ["System" if code == "not found" else code for code in coco.CountryConverter().convert(res_shares.index, to="short_name")]
     res_shares_log = res_shares.copy()
@@ -1675,7 +1680,7 @@ def extra_functionality(
         custom_extra_functionality = getattr(module, module_name)
         custom_extra_functionality(n, snapshots, snakemake)  # pylint: disable=E0601
 
-    if config.get("res_target", False) and planning_horizons != "2025":
+    if config.get("res_target", False) and (config["res_target"].get("system_share_target", False) or config["res_target"].get("country_share_target", False)) and planning_horizons != "2025":
         add_rps_constraints(n, planning_horizons)
 
     if config["enable"].get("certificate"):
@@ -1900,8 +1905,7 @@ def calculate_grid_score(n: pypsa.Network, include_techs: list, name: str) -> No
     grid_carriers = ["electricity distribution grid", "AC", "DC"]
     exclude_carriers = grid_carriers + negative_carriers
 
-    def get_values(n, df, df_t, bus_col, includ
-                   e_techs):
+    def get_values(n, df, df_t, bus_col, include_techs):
         # Map low-voltage bus to main grid bus
         grid_buses = n.buses[n.buses.carrier == "AC"].index
         low_voltage_map = (
@@ -2033,7 +2037,7 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "solve_sector_network_myopic",
-            run="baseline-3H",
+            run="baseline-rps-3H",
             opts="",
             clusters="39",
             configfiles="config/config.go.yaml",
