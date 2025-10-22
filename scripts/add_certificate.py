@@ -598,23 +598,23 @@ def add_demand(n, load, cert_demand, cert_map, name):
     # 247-go is defined as hourly_matching = 100%, where vol-match is defined as hourly_matching = 0%
     if hourly_matching != 1:
         df_buffer = pd.DataFrame(n.snapshot_weightings.objective @ df_load)
-        df_buffer["e_nom"] = df_buffer["objective"] * (1 - hourly_matching)
+        df_buffer["match_limit"] = df_buffer["objective"] * (1 - hourly_matching)
         df_buffer["bus"] = df_buffer.index
         df_buffer.rename(index=lambda i: i.replace("Demand", "Buffer"), inplace=True)
 
-        n.add(
-            "Store",
-            df_buffer.index,
-            bus=df_buffer["bus"],
-            carrier="GoO",
-            e_nom=df_buffer["e_nom"],
-            e_min_pu=-1,
-            e_cyclic=True,
-        )
+        for sign, direction in {1: "discharger", -1: "charger"}.items():
 
-        logger.info(
-            f"GO Buffer added proportion to {(1 - hourly_matching) * 100}% of GO demand"
-        )
+            n.add(
+                "Generator",
+                df_buffer.index,
+                suffix=f" {direction}",
+                bus=df_buffer["bus"],
+                carrier="GoO",
+                sign=sign,
+                p_nom=df_buffer["match_limit"],
+            )
+
+        logger.info("GO Buffer added")
 
 
 def add_go_market(n, cert_demand, cert_map, name):

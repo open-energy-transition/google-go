@@ -1517,13 +1517,23 @@ def add_virtual_storage_matching(n):
 
 def add_buffer_matching(n):
     weights = n.snapshot_weightings["stores"]
-    df = n.stores.filter(like="GO Buffer", axis=0)
+    df = n.generators.filter(like="GO Buffer", axis=0)
 
     if df.empty:
         return
+    
+    charger = n.model["Generator-p"].loc[:, df[df.sign == -1].index].sum(dim="snapshot")
+    discharger = n.model["Generator-p"].loc[:, df[df.sign == 1].index].sum(dim="snapshot")
 
-    lhs = weights * n.model["Store-p"].loc[:, df.index].sum(dim="snapshot")
-    rhs = df["e_nom"]
+    # 1st Constraint: the sum of buffer discharger must be the same as the sum of buffer charger
+    n.model.add_constraints(
+        charger == discharger,
+        name="buffer_balance_constraints",
+    )
+
+    # 2nd Constraint: the buffer discharge must not exceed the hourly matching limit
+    lhs = weights * discharger
+    rhs = df.loc[df.sign == 1,"p_nom"]
 
     n.model.add_constraints(
         lhs <= rhs,
@@ -1531,70 +1541,6 @@ def add_buffer_matching(n):
     )
 
     logger.info("Activate: buffer_matching_constraints")
-
-
-# def add_go_annual_matching_constraints(n, snapshots):
-#     certificate = n.config["certificate"]
-#     weights = n.snapshot_weightings["stores"]
-#     energy_matching = certificate["energy_matching"] / 100
-
-#     demand_list = n.stores.filter(like="GO Demand", axis=0).index
-#     df = n.loads_t.p_set.copy()
-
-#     if certificate["scope"] == "national":
-#         go_list = n.stores.loc[demand_list].bus.map(n.buses.location)
-#         go_list = pd.Series(go_list.index, index=go_list.values)
-#         df.columns = df.columns.map(n.loads.bus).map(n.buses.country).map(go_list)
-#         df = df.T.groupby(df.columns).sum().T
-#     else:
-#         df["GO Demand"] = df.T.sum()
-#         df = df[["GO Demand"]]
-
-#     df.columns.name = "Store"
-#     rhs = weights @ df
-
-#     last_i = snapshots[-1]
-#     lhs = n.model["Store-e"].loc[last_i, demand_list]
-
-#     n.model.add_constraints(
-#         lhs == energy_matching * rhs,
-#         name="go_annual_matching_constraint",
-#     )
-
-#     logger.info("Activate: add_go_annual_matching_constraints")
-
-
-# def add_247_go_matching_constraints(n):
-#     certificate = n.config["certificate"]
-#     weights = n.snapshot_weightings["stores"]
-#     energy_matching = certificate["energy_matching"] / 100
-
-#     demand_list = n.stores.filter(like="GO Demand", axis=0).index
-#     df = n.loads_t.p_set.copy()
-
-#     if certificate["scope"] == "national":
-#         go_list = n.stores.loc[demand_list].bus.map(n.buses.location)
-#         go_list = pd.Series(go_list.index, index=go_list.values)
-#         df.columns = df.columns.map(n.loads.bus).map(n.buses.country).map(go_list)
-#         df = df.T.groupby(df.columns).sum().T
-#     else:
-#         df["GO Demand"] = df.T.sum()
-#         df = df[["GO Demand"]]
-
-#     df.columns.name = "Store"
-#     rhs = weights @ df
-
-#     lhs = n.model["Store-p"].loc[:, demand_list].sum(dim="snapshot")
-
-#     n.model.add_constraints(
-#         lhs == energy_matching * rhs,
-#         name="247_go_matching_constraint",
-#     )
-
-#     logger.info("Activate: add_247_go_matching_constraints")
-
-
-
 
 
 def extra_functionality(
