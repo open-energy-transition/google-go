@@ -12,6 +12,7 @@ run:
   #- baseline-co2-price-medium-3H
   #- baseline-co2-price-high-3H
   - baseline-rps-3H
+  #- energy-match-3H
   scenarios:
     enable: true
     file: config/scenarios.go-3H.yaml
@@ -81,6 +82,29 @@ electricity:
 clustering:
   temporal:
     resolution_sector: 3H
+
+adjustments:
+  sector:
+    absolute:
+      Link:
+        DC:
+          marginal_cost: 1.0
+        electricity distribution grid:
+          marginal_cost: 1.0
+      StorageUnit:
+        PHS:
+          marginal_cost: 1.0
+        li-ion:
+          marginal_cost: 1.0
+        iron-air:
+          marginal_cost: 1.0
+      Store:
+        li-ion:
+          marginal_cost: 1.0
+        iron-air:
+          marginal_cost: 1.0
+        home battery:
+          marginal_cost: 1.0
 
 sector:
   co2_network: false
