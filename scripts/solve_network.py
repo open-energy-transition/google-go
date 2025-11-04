@@ -1334,7 +1334,7 @@ def add_buffer_matching(n):
     )
 
     # 2nd Constraint: the buffer discharge must not exceed the hourly matching limit
-    lhs = weights * discharger
+    lhs = (weights * n.model["Generator-p"].loc[:, df[df.sign == 1].index]).sum(dim="snapshot")
     rhs = df.loc[df.sign == 1,"p_nom"]
 
     n.model.add_constraints(
@@ -1782,7 +1782,7 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "solve_sector_network_myopic",
-            run="baseline-3H",
+            run="hourly-match-90-3H",
             opts="",
             clusters="39",
             configfiles="config/config.go.yaml",
