@@ -46,6 +46,14 @@ baseline-co2-price-high-3H:
     emission_prices:
       co2: 100
 
+# RPS targets
+baseline-rps-3H:
+  enable:
+    certificate: false
+    
+  res_target:
+    system_share_target: true
+    country_share_target: true
 
 # only existing AIB GO Market factors towards decarbonization
 baseline-AIB-3H:

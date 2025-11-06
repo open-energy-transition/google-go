@@ -82,6 +82,29 @@ clustering:
   temporal:
     resolution_sector: 3H
 
+adjustments:
+  sector:
+    absolute:
+      Link:
+        DC:
+          marginal_cost: 1.0
+        electricity distribution grid:
+          marginal_cost: 1.0
+      StorageUnit:
+        PHS:
+          marginal_cost: 1.0
+        li-ion:
+          marginal_cost: 1.0
+        iron-air:
+          marginal_cost: 1.0
+      Store:
+        li-ion:
+          marginal_cost: 1.0
+        iron-air:
+          marginal_cost: 1.0
+        home battery:
+          marginal_cost: 1.0
+
 sector:
   co2_network: false
   H2_network: false
@@ -108,6 +131,49 @@ strip_network:
   merge_load: true
   snapshots_start: false
   snapshots_end: false
+
+res_target:
+  system_share_target: false
+  country_share_target: false
+  tyndp_data:
+    enable: true # If false, use manual entries below
+    tyndp_scenario: "National Trends" # {"National Trends", "Distributed Energy"}
+  res_shares_default:
+    AL: 0.
+    AT: 0.
+    BA: 0.
+    BE: 0.
+    BG: 0.
+    CH: 0.
+    CZ: 0.
+    DE: 0.
+    DK: 0.
+    EE: 0.
+    ES: 0.
+    EU+: 0.
+    FI: 0.
+    FR: 0.
+    GB: 0.
+    GR: 0.
+    HR: 0.
+    HU: 0.
+    IE: 0.
+    IT: 0.
+    LT: 0.
+    LU: 0.
+    LV: 0.
+    ME: 0.
+    MK: 0.
+    NL: 0.
+    'NO': 0.
+    PL: 0.
+    PT: 0.
+    RO: 0.
+    RS: 0.
+    SE: 0.
+    SI: 0.
+    SK: 0.
+    XK: 0.43 # 2030 target (https://ember-energy.org/data/global-renewable-power-sector-targets-2030/)
 
 grid_policy:
   renewable_carriers: [green_ocgt, adv_firm_tech, offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop]

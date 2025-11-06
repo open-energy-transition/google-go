@@ -866,11 +866,10 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "add_certificate",
-            run="",
+            run="energy-match-3H",
             opts="",
             clusters="39",
             configfiles="config/config.go.yaml",
-            ll="",
             sector_opts="",
             planning_horizons="2030",
         )
