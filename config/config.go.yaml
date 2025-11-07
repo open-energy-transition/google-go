@@ -205,7 +205,7 @@ certificate:
       carrier: false
     market_name: AIB
     go_profile: historical # {"historical", "total_daily_avg", "total", "baseload"}
-    participant: load
+    participant: load # load: the entire grid participates, ci: only commercials & industries (CI) participate
     energy_matching: 100 # in percent relative to historical GO demand
     hourly_matching: 0
 
@@ -218,8 +218,8 @@ certificate:
       carrier: false
     market_name: ""
     go_profile: total # {"total_daily_avg", "total", "baseload"}
-    participant: ci
-    energy_matching: 10 # in percent relative to country electricity load
+    participant: ci # load: the entire grid participates, ci: only commercials & industries (CI) participate
+    energy_matching: 50 # in percent relative to participant
     hourly_matching: 90 # 80 # in percent
 
   map:

@@ -1,0 +1,237 @@
+# -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
+#
+# SPDX-License-Identifier: MIT
+
+# This file is used to define the scenarios that are run by snakemake. Each entry on the first level is a scenario. Each scenario can contain configuration overrides with respect to the config/config.yaml settings.
+#
+# Example
+#
+# custom-scenario: # name of the scenario
+#   electricity:
+#       renewable_carriers: [wind, solar] # override the list of renewable carriers
+
+# ===================== Main Tree =====================
+# =====================================================
+
+baseline:
+  enable:
+    certificate: false
+
+energy-match-50:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 0
+
+hourly-match-50-90:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+hourly-match-50-95:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 95
+
+hourly-match-50-98:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 98
+
+hourly-match-50-100:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 100
+
+# ============== Technology Sensitivities ==============
+# ======================================================
+
+# No LDES
+hourly-match-no-LDES-50-90:
+  certificate:
+    storage_carriers: [li-ion]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+hourly-match-no-LDES-50-98:
+  certificate:
+    storage_carriers: [li-ion]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 98
+
+# No clean firms
+hourly-match-no-clean-firm-50-90:
+  certificate:
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
+                    ror, hydro, urban central solid biomass CHP, geothermal, 
+                    solar, solar-hsat, solar rooftop, nuclear]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+hourly-match-no-clean-firm-50-98:
+  certificate:
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
+                    ror, hydro, urban central solid biomass CHP, geothermal, 
+                    solar, solar-hsat, solar rooftop, nuclear]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 98
+
+# =========== Decarbonization Sensitivities ===========
+# =====================================================
+
+# RES target
+baseline-rps:
+  enable:
+    certificate: false
+    
+  res_target:
+    system_share_target: true
+    country_share_target: true
+
+hourly-match-rps-target-50-90:
+  res_target:
+    system_share_target: true
+    country_share_target: true
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+hourly-match-rps-target-50-98:
+  res_target:
+    system_share_target: true
+    country_share_target: true
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 98
+
+# CO2 price (medium)
+baseline-co2-price:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 50
+
+hourly-match-co2-price-50-90:
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+hourly-match-co2-price-50-98:
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 98
+
+# =========== CI Participation Sensitivities ===========
+# ======================================================
+
+# 10% CI participation
+hourly-match-no-LDES-10-90:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 10
+      hourly_matching: 90
+
+hourly-match-no-LDES-10-98:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 10
+      hourly_matching: 98
+
+# 90% CI participation
+hourly-match-no-LDES-90-90:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 90
+      hourly_matching: 90
+
+hourly-match-no-LDES-90-98:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 90
+      hourly_matching: 98
+
+# ====================== Archived ======================
+# ======================================================
+
+# low CO2 prices
+baseline-co2-price-low:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 25
+
+# high CO2 prices
+baseline-co2-price-high:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 100
+
+# only existing AIB GO Market factors towards decarbonization
+baseline-AIB:
+  certificate:
+    background_demand:
+      enable: true
