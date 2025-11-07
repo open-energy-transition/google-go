@@ -393,6 +393,138 @@ def extract_AIB_statistics(output):
     df.to_csv(output)
 
 
+def retrieve_ci_load(load):
+    # 1 EUROSTAT data in GWh
+    import os
+
+    import requests
+
+    url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/3.0/data/dataflow/ESTAT/nrg_cb_e/1.0/*.*.*.*.*?c[freq]=A&c[nrg_bal]=FC,FC_IND_E,FC_OTH_CP_E&c[siec]=E7000&c[unit]=GWH&c[geo]=EU27_2020,EA20,BE,BG,CZ,DK,DE,EE,IE,EL,ES,FR,HR,IT,CY,LV,LT,LU,HU,MT,NL,AT,PL,PT,RO,SI,SK,FI,SE,IS,LI,NO,UK,BA,ME,MD,MK,GE,AL,RS,TR,UA,XK&c[TIME_PERIOD]=2023,2022,2021,2020&compress=false&format=csvdata&formatVersion=2.0&lang=en&labels=name"
+    file_path = load["load_path_1"]
+
+    if os.path.exists(file_path):
+        data = pd.read_csv(file_path)
+    else:
+        try:
+            response = requests.get(url)
+            with open(file_path, "wb") as file:
+                file.write(response.content)
+            data = pd.read_csv(file_path)
+        except requests.ConnectionError:
+            logger.warning("No internet connection and file not found locally.")
+            raise FileNotFoundError(
+                f"File {file_path} not found and cannot download from the internet."
+            )
+
+    # Ensure data for the specified year exists for all countries
+    data["reference_year"] = int(load["load_year"])
+    years = list(data["TIME_PERIOD"].unique())
+    years.reverse()
+    for geo in data["geo"].unique():
+        if not (
+            (data["TIME_PERIOD"] == int(load["load_year"])) & (data["geo"] == geo)
+        ).any():
+            for fallback_year in years[1:]:
+                if (
+                    (data["TIME_PERIOD"] == fallback_year) & (data["geo"] == geo)
+                ).any():
+                    fallback_row = data[
+                        (data["TIME_PERIOD"] == fallback_year) & (data["geo"] == geo)
+                    ].copy()
+                    fallback_row["TIME_PERIOD"] = int(load["load_year"])
+                    data = pd.concat([data, fallback_row], ignore_index=True)
+                    data.loc[
+                        (data["TIME_PERIOD"] == int(load["load_year"]))
+                        & (data["geo"] == geo),
+                        "reference_year",
+                    ] = fallback_year
+                    break
+
+    filtered_data = data[(data["TIME_PERIOD"] == int(load["load_year"]))]
+
+    demand_map = {
+        "FC": "total_demand",
+        "FC_IND_E": "industrial_demand",
+        "FC_OTH_CP_E": "commercial_demand",
+    }
+    dfs = []
+    for code, label in demand_map.items():
+        df_part = (
+            filtered_data[filtered_data["nrg_bal"] == code][
+                ["geo", "OBS_VALUE", "reference_year"]
+            ]
+            .rename(columns={"geo": "country", "OBS_VALUE": label})
+            .groupby("country")
+            .sum()
+        )
+        dfs.append(df_part)
+
+    # Merge all load data into a single DataFrame
+    load_year_eurostat = pd.concat(dfs, axis=1).loc[
+        :, ~pd.concat(dfs, axis=1).columns.duplicated()
+    ]  # remove reference_year duplicatated columns
+    load_year_eurostat.rename(
+        index={"EL": "GR"}, inplace=True
+    )  # Rename EL (Eurostat) to GR (PyPSA)
+    load_year_eurostat["ci_demand"] = (
+        load_year_eurostat["industrial_demand"]
+        + load_year_eurostat["commercial_demand"]
+    )
+    load_year_eurostat["ci_share"] = (
+        load_year_eurostat["ci_demand"] / load_year_eurostat["total_demand"]
+    )
+
+    # 2 IEA data for Switzerland (CH) and Great Britain (GB) in PJ
+    years = list(range(1971, 2023)) + [str(2023) + " Provisional"]
+    country_map = {"Switzerland": "CH", "United Kingdom": "GB"}
+    demand_map = {
+        "Total final consumption (PJ)": "total_demand",
+        "Industry (PJ)": "industrial_demand",
+        "Commercial and public services (PJ)": "commercial_demand",
+    }
+    data = pd.read_excel(
+        load["load_path_2"], sheet_name="TimeSeries_1971-2023", skiprows=1
+    )  #
+    filtered_data = data[
+        (data["Product"] == "Electricity") & (data["Country"].isin(country_map.keys()))
+    ]
+
+    # Determine the most recent available year in the 'iea' DataFrame
+    for y in years[::-1]:
+        if (
+            y in filtered_data.columns and not (filtered_data[y] == "..").any()
+        ):  # Check if at least one value is '..'
+            most_recent_year = y
+            break
+    filtered_data = filtered_data[["Country", "Flow", most_recent_year]]
+    dfs = []
+    for code, label in demand_map.items():
+        df_part = (
+            filtered_data[filtered_data["Flow"] == code][["Country", most_recent_year]]
+            .rename(columns={"Country": "country", most_recent_year: label})
+            .groupby("country")
+            .sum()
+            * 1
+            / 0.0036  # Convert PJ to GWh
+        )
+        dfs.append(df_part)
+
+    # Merge all load data into a single DataFrame
+    load_year_missing = pd.concat(dfs, axis=1).rename(index=country_map)
+    load_year_missing["reference_year"] = most_recent_year
+    load_year_missing["ci_demand"] = (
+        load_year_missing["industrial_demand"] + load_year_missing["commercial_demand"]
+    )
+    load_year_missing["ci_share"] = (
+        load_year_missing["ci_demand"] / load_year_missing["total_demand"]
+    )
+
+    # 3 Merge Eurostat and IEA data
+    load_year_countries = pd.concat([load_year_eurostat, load_year_missing], axis=0)
+
+    return load_year_countries
+
+
 def get_load_demand(n, profile="", set_logger=True):
     """
     Extracts and optionally processes the electricity load demand from a PyPSA network object.
@@ -581,6 +713,12 @@ def add_demand(n, load, cert_demand, cert_map, name):
     )
 
     df_load = load * energy_matching
+
+    if cert_demand["participant"] == "ci":
+        df_ci = retrieve_ci_load(snakemake.params.ci_load)["ci_share"]
+        df_ci = df_ci[df_load.columns]
+        df_load *= df_ci
+
     df_load.columns = [f"GO Demand {c}" for c in df_load.columns]
     df_load = df_load.astype("float64")
 

@@ -78,6 +78,12 @@ electricity:
     share: 0.18
     increment: 1.0
 
+  ci_load:
+    load_path_1: data/CI-load.csv # path to Eurostat CI load input data (from https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en (CSV 2.0))
+    load_path_2: data/CI-load-missing.xlsx # path to IEA CI load input data (from https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights)
+    load_year: 2023
+    profile: "baseload" # type of load profile (e.g., "baseload", "industry", "total_daily_avg", "total")
+
 clustering:
   temporal:
     resolution_sector: 3H
@@ -198,6 +204,7 @@ certificate:
       carrier: false
     market_name: AIB
     go_profile: historical # {"historical", "total_daily_avg", "total", "baseload"}
+    participant: load
     energy_matching: 100 # in percent relative to historical GO demand
     hourly_matching: 0
 
@@ -210,8 +217,9 @@ certificate:
       carrier: false
     market_name: ""
     go_profile: total # {"total_daily_avg", "total", "baseload"}
+    participant: ci
     energy_matching: 10 # in percent relative to country electricity load
-    hourly_matching: 90 # 80 # in percent    
+    hourly_matching: 90 # 80 # in percent
 
   map:
     supply: [-0.5, -0.5]
