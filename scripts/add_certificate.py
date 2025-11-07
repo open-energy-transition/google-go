@@ -393,6 +393,93 @@ def extract_AIB_statistics(output):
     df.to_csv(output)
 
 
+def retrieve_ci_load(load):
+    # 1 EUROSTAT data in GWh
+    import os
+
+    import requests
+
+    url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/3.0/data/dataflow/ESTAT/nrg_cb_e/1.0/*.*.*.*.*?c[freq]=A&c[nrg_bal]=FC,FC_IND_E,FC_OTH_CP_E&c[siec]=E7000&c[unit]=GWH&c[geo]=EU27_2020,EA20,BE,BG,CZ,DK,DE,EE,IE,EL,ES,FR,HR,IT,CY,LV,LT,LU,HU,MT,NL,AT,PL,PT,RO,SI,SK,FI,SE,IS,LI,NO,UK,BA,ME,MD,MK,GE,AL,RS,TR,UA,XK&c[TIME_PERIOD]=2023,2022,2021,2020&compress=false&format=csvdata&formatVersion=2.0&lang=en&labels=name"
+    file_path = load["load_path"]
+
+    if os.path.exists(file_path):
+        data = pd.read_csv(file_path)
+    else:
+        try:
+            response = requests.get(url)
+            with open(file_path, "wb") as file:
+                file.write(response.content)
+            data = pd.read_csv(file_path)
+        except requests.ConnectionError:
+            logger.warning("No internet connection and file not found locally.")
+            raise FileNotFoundError(
+                f"File {file_path} not found and cannot download from the internet."
+            )
+
+    # Ensure data for the specified year exists for all countries
+    data["reference_year"] = int(load["load_year"])
+    years = list(data["TIME_PERIOD"].unique())
+    years.reverse()
+    for geo in data["geo"].unique():
+        if not (
+            (data["TIME_PERIOD"] == int(load["load_year"])) & (data["geo"] == geo)
+        ).any():
+            for fallback_year in years[1:]:
+                if (
+                    (data["TIME_PERIOD"] == fallback_year) & (data["geo"] == geo)
+                ).any():
+                    fallback_row = data[
+                        (data["TIME_PERIOD"] == fallback_year) & (data["geo"] == geo)
+                    ].copy()
+                    fallback_row["TIME_PERIOD"] = int(load["load_year"])
+                    data = pd.concat([data, fallback_row], ignore_index=True)
+                    data.loc[
+                        (data["TIME_PERIOD"] == int(load["load_year"]))
+                        & (data["geo"] == geo),
+                        "reference_year",
+                    ] = fallback_year
+                    break
+
+    filtered_data = data[(data["TIME_PERIOD"] == int(load["load_year"]))]
+
+    demand_map = {
+        "FC": "total_demand",
+        "FC_IND_E": "industrial_demand",
+        "FC_OTH_CP_E": "commercial_demand",
+    }
+    dfs = []
+    for code, label in demand_map.items():
+        df_part = (
+            filtered_data[filtered_data["nrg_bal"] == code][
+                ["geo", "OBS_VALUE", "reference_year"]
+            ]
+            .rename(columns={"geo": "country", "OBS_VALUE": label})
+            .groupby("country")
+            .sum()
+        )
+        dfs.append(df_part)
+
+    # Merge all load data into a single DataFrame
+    load_year = pd.concat(dfs, axis=1).loc[
+        :, ~pd.concat(dfs, axis=1).columns.duplicated()
+    ]  # remove reference_year duplicatated columns
+    load_year.rename(
+        index={"EL": "GR"}, inplace=True
+    )  # Rename EL (Eurostat) to GR (PyPSA)
+    load_year["ci_demand"] = (
+        load_year["industrial_demand"]
+        + load_year["commercial_demand"]
+    )
+    load_year["ci_share"] = (
+        load_year["ci_demand"] / load_year["total_demand"]
+    )
+
+    for country, value in load["ci_share_overwrite"].items():
+        load_year.loc[country, "ci_share"] = value
+
+    return load_year
+
+
 def get_load_demand(n, profile="", set_logger=True):
     """
     Extracts and optionally processes the electricity load demand from a PyPSA network object.
@@ -581,6 +668,12 @@ def add_demand(n, load, cert_demand, cert_map, name):
     )
 
     df_load = load * energy_matching
+
+    if cert_demand["participant"] == "ci":
+        df_ci = retrieve_ci_load(snakemake.params.ci_load)["ci_share"]
+        df_ci = df_ci[df_load.columns]
+        df_load *= df_ci
+
     df_load.columns = [f"GO Demand {c}" for c in df_load.columns]
     df_load = df_load.astype("float64")
 

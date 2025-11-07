@@ -138,6 +138,7 @@ rule strip_network:
 rule add_certificate:
     params:
         certificate=config_provider("certificate"),
+        ci_load=config_provider("electricity","ci_load"),
     input:
         network=branch(
             config_provider("strip_network", "enable"),
