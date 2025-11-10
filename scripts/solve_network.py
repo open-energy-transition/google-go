@@ -1433,13 +1433,11 @@ def add_virtual_ppl_matching(n):
 
     # Explode VPP DataFrame by 'ppl' column, reset index, and re-index on 'ppl'
     df = vpp.explode("ppl").reset_index().set_index("ppl")
+    df.index.name = "name"
 
     # Split into links and generators
     df_links = df[df["component"] == "links"].copy()
-    df_links.index.name = "Link"
-
     df_gens = df[df["component"] == "generators"].copy()
-    df_gens.index.name = "Generator"
 
     # Compute RHS: aggregated power per virtual_ppl from links and generators
     rhs = 0
@@ -1463,7 +1461,7 @@ def add_virtual_ppl_matching(n):
 
     # Prepare VPP DataFrame to get LHS: generator power per virtual_ppl
     df_vpp = vpp.reset_index().set_index("virtual_ppl", drop=False)
-    df_vpp.index.name = "Generator"
+    df_vpp.index.name = "name"
 
     lhs = n.model["Generator-p"].loc[:, df_vpp.index].groupby(df_vpp.virtual_ppl).sum()
 
@@ -1499,11 +1497,11 @@ def add_virtual_storage_matching(n):
         df_vs = df_vs.reset_index(level=["country", "carrier", "direction"])
         lhs = n.model["Generator-p"].loc[:, df_vs.index]
 
-        df.index.name = "Link"
-        df.rename(columns={"virtual_storage": "Generator"}, inplace=True)
+        df.index.name = "name"
+        df.rename(columns={"virtual_storage": "name"}, inplace=True)
         rhs = (
             (n.model["Link-p"].loc[:, df.index] * df.efficiency)
-            .groupby(df.Generator)
+            .groupby(df.name)
             .sum()
         )
 
