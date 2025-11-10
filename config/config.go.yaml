@@ -7,14 +7,10 @@
 run:
   prefix: ""
   name:
-  #- baseline-3H
-  #- baseline-co2-price-low-3H
-  #- baseline-co2-price-medium-3H
-  #- baseline-co2-price-high-3H
-  - hourly-match-90-3H
+  - baseline
   scenarios:
     enable: true
-    file: config/scenarios.go-3H.yaml
+    file: config/scenarios.go.yaml
   disable_progressbar: false
   shared_resources:
     policy: false
