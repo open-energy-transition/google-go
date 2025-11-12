@@ -69,9 +69,13 @@ electricity:
     li-ion: 6
     iron-air: 100
 
-  heating_factors:
+  heating_demand:
     enable: true # [true, false ] If true, model exogenous electricity demand for heating
     share: 0.18
+
+  hydrogen_demand:
+    enable: false # [true, false ] If true, model exogenous electricity demand for h2 production
+    share: 0.
 
   ci_load:
     load_path: data/CI-load.csv # path to Eurostat CI load input data (from https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en (CSV 2.0))
@@ -231,7 +235,7 @@ overwrite_years:
         green_ocgt: 444.7
     
     electricity:
-      heating_factors:
+      heating_demand:
         share: 0.18
 
   2030:
@@ -240,7 +244,7 @@ overwrite_years:
         green_ocgt: 371.1
     
     electricity:
-      heating_factors:
+      heating_demand:
         share: 0.20
 
   2035:
@@ -249,7 +253,7 @@ overwrite_years:
         green_ocgt: 297.5
 
     electricity:
-      heating_factors:
+      heating_demand:
         share: 0.21
 
   2040:
@@ -258,5 +262,5 @@ overwrite_years:
         green_ocgt: 223.8
     
     electricity:
-      heating_factors:
+      heating_demand:
         share: 0.23

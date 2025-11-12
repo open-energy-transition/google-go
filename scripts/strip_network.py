@@ -183,10 +183,18 @@ def merge_load(n, config_elec):
     p_set = p_set.rename({v: k for k, v in n.loads.bus.items()})
     n.loads_t.p_set[p_set.index] += p_set
 
+    # Add exogenous electricity demand for heating
     if config_elec["heating_factors"].get("enable", False):
+        logger.info("Adding exogenous electricity demand for heating")
         heat_share = config_elec["heating_factors"]["share"]
         heat_elc_load = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
         n.loads_t.p_set[p_set.index] += heat_elc_load
+
+    if config_elec["hydrogen_factors"].get("enable", False):
+        logger.info("Adding exogenous electricity demand for hydrogen production")
+        hydrogen_share = config_elec["hydrogen_factors"]["share"]
+        hydrogen_elc_load = n.loads_t.p_set[p_set.index] * hydrogen_share / (1-hydrogen_share)
+        n.loads_t.p_set[p_set.index] += hydrogen_elc_load
 
     logger.info("Merge electricity demand loads to one electricity loads per bus")
 
@@ -197,7 +205,7 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "strip_network",
-            run="baseline-3H",
+            run="baseline",
             opts="",
             clusters="39",
             configfiles="config/config.go.yaml",
