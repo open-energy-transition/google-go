@@ -69,10 +69,13 @@ electricity:
     li-ion: 6
     iron-air: 100
 
-  heating_factors:
+  heating_demand:
     enable: true # [true, false ] If true, model exogenous electricity demand for heating
     share: 0.18
-    increment: 1.0
+
+  hydrogen_demand:
+    enable: false # [true, false ] If true, model exogenous electricity demand for h2 production
+    share: 0.
 
   ci_load:
     load_path: data/CI-load.csv # path to Eurostat CI load input data (from https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en (CSV 2.0))
@@ -90,23 +93,23 @@ adjustments:
     absolute:
       Link:
         DC:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         electricity distribution grid:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
       StorageUnit:
         PHS:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         li-ion:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         iron-air:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
       Store:
         li-ion:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         iron-air:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         home battery:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
 
 sector:
   co2_network: false
@@ -141,41 +144,7 @@ res_target:
   tyndp_data:
     enable: true # If false, use manual entries below
     tyndp_scenario: "National Trends" # {"National Trends", "Distributed Energy"}
-  res_shares_default:
-    AL: 0.
-    AT: 0.
-    BA: 0.
-    BE: 0.
-    BG: 0.
-    CH: 0.
-    CZ: 0.
-    DE: 0.
-    DK: 0.
-    EE: 0.
-    ES: 0.
-    EU+: 0.
-    FI: 0.
-    FR: 0.
-    GB: 0.
-    GR: 0.
-    HR: 0.
-    HU: 0.
-    IE: 0.
-    IT: 0.
-    LT: 0.
-    LU: 0.
-    LV: 0.
-    ME: 0.
-    MK: 0.
-    NL: 0.
-    'NO': 0.
-    PL: 0.
-    PT: 0.
-    RO: 0.
-    RS: 0.
-    SE: 0.
-    SI: 0.
-    SK: 0.
+  res_shares_overwrite: # Note: in order to overwrite system-wide share, one should use "EU+" as country code
     XK: 0.43 # 2030 target (https://ember-energy.org/data/global-renewable-power-sector-targets-2030/)
 
 grid_policy:
@@ -230,34 +199,18 @@ overwrite_years:
     costs:
       marginal_cost:
         green_ocgt: 444.7
-    
-    electricity:
-      heating_factors:
-        share: 0.18
 
   2030:
     costs:
       marginal_cost:
         green_ocgt: 371.1
-    
-    electricity:
-      heating_factors:
-        share: 0.20
 
   2035:
     costs:
       marginal_cost:
         green_ocgt: 297.5
 
-    electricity:
-      heating_factors:
-        share: 0.21
-
   2040:
     costs:
       marginal_cost:
         green_ocgt: 223.8
-    
-    electricity:
-      heating_factors:
-        share: 0.23

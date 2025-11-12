@@ -172,6 +172,102 @@ hourly-match-co2-price-50-98:
       energy_matching: 50
       hourly_matching: 98
 
+# H2 demand
+baseline-h2-demand:
+  enable:
+    certificate: false
+
+  electricity:
+    hydrogen_demand:
+      enable: true # [true, false ] If true, model exogenous electricity demand for h2 production
+
+  overwrite_years:
+    2025:
+      electricity:
+        hydrogen_demand:
+          share: 0.04
+
+    2030:
+      electricity:
+        hydrogen_demand:
+          share: 0.07
+
+    2035:
+      electricity:
+        hydrogen_demand:
+          share: 0.14
+
+    2040:
+      electricity:
+        hydrogen_demand:
+          share: 0.21
+
+hourly-match-h2-demand-50-90:
+  electricity:
+    hydrogen_demand:
+      enable: true # [true, false ] If true, model exogenous electricity demand for h2 production
+
+  overwrite_years:
+    2025:
+      electricity:
+        hydrogen_demand:
+          share: 0.04
+
+    2030:
+      electricity:
+        hydrogen_demand:
+          share: 0.07
+
+    2035:
+      electricity:
+        hydrogen_demand:
+          share: 0.14
+
+    2040:
+      electricity:
+        hydrogen_demand:
+          share: 0.21
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+hourly-match-h2-demand-50-98:
+  electricity:
+    hydrogen_demand:
+      enable: true # [true, false ] If true, model exogenous electricity demand for h2 production
+
+  overwrite_years:
+    2025:
+      electricity:
+        hydrogen_demand:
+          share: 0.04
+
+    2030:
+      electricity:
+        hydrogen_demand:
+          share: 0.07
+
+    2035:
+      electricity:
+        hydrogen_demand:
+          share: 0.14
+
+    2040:
+      electricity:
+        hydrogen_demand:
+          share: 0.21
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 98
+
 # =========== CI Participation Sensitivities ===========
 # ======================================================
 

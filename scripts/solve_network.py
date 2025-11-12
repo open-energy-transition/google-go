@@ -1352,12 +1352,12 @@ def add_rps_constraints(n, planning_horizons):
         res_shares = retrieve_tyndp_data(tyndp_scenario, planning_horizons)
     else:
         source = "manual"
-        res_shares = pd.DataFrame([res_target["res_shares_default"]]).T
+        res_shares = pd.DataFrame([res_target["res_shares_overwrite"]]).T
     
-    # Add missing countries from res_shares_default to res_shares DataFrame
-    for cc in res_target["res_shares_default"].keys():
+    # Add missing countries from res_shares_overwrite to res_shares DataFrame
+    for cc in res_target["res_shares_overwrite"].keys():
         if cc not in res_shares.index:
-            res_shares.loc[cc] = res_target["res_shares_default"][cc]
+            res_shares.loc[cc] = res_target["res_shares_overwrite"][cc]
     
     res_shares.columns = [f'RES_target_{planning_horizons}']
     country_names = ["System" if code == "not found" else code for code in coco.CountryConverter().convert(res_shares.index, to="short_name")]
