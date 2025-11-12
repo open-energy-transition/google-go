@@ -90,23 +90,23 @@ adjustments:
     absolute:
       Link:
         DC:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         electricity distribution grid:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
       StorageUnit:
         PHS:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         li-ion:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         iron-air:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
       Store:
         li-ion:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         iron-air:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
         home battery:
-          marginal_cost: 1.0
+          marginal_cost: 0.1
 
 sector:
   co2_network: false
