@@ -185,12 +185,8 @@ def merge_load(n, config_elec):
 
     if config_elec["heating_factors"].get("enable", False):
         heat_share = config_elec["heating_factors"]["share"]
-        heat_increment = config_elec["heating_factors"]["increment"]
-
-        heat_elc_load_base = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
-        heat_elc_load_new = heat_elc_load_base * heat_increment
-        
-        n.loads_t.p_set[p_set.index] += heat_elc_load_new
+        heat_elc_load = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
+        n.loads_t.p_set[p_set.index] += heat_elc_load
 
     logger.info("Merge electricity demand loads to one electricity loads per bus")
 

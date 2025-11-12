@@ -72,7 +72,6 @@ electricity:
   heating_factors:
     enable: true # [true, false ] If true, model exogenous electricity demand for heating
     share: 0.18
-    increment: 1.0
 
   ci_load:
     load_path: data/CI-load.csv # path to Eurostat CI load input data (from https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en (CSV 2.0))
