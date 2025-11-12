@@ -144,41 +144,7 @@ res_target:
   tyndp_data:
     enable: true # If false, use manual entries below
     tyndp_scenario: "National Trends" # {"National Trends", "Distributed Energy"}
-  res_shares_default:
-    AL: 0.
-    AT: 0.
-    BA: 0.
-    BE: 0.
-    BG: 0.
-    CH: 0.
-    CZ: 0.
-    DE: 0.
-    DK: 0.
-    EE: 0.
-    ES: 0.
-    EU+: 0.
-    FI: 0.
-    FR: 0.
-    GB: 0.
-    GR: 0.
-    HR: 0.
-    HU: 0.
-    IE: 0.
-    IT: 0.
-    LT: 0.
-    LU: 0.
-    LV: 0.
-    ME: 0.
-    MK: 0.
-    NL: 0.
-    'NO': 0.
-    PL: 0.
-    PT: 0.
-    RO: 0.
-    RS: 0.
-    SE: 0.
-    SI: 0.
-    SK: 0.
+  res_shares_overwrite: # Note: in order to overwrite system-wide share, one should use "EU+" as country code
     XK: 0.43 # 2030 target (https://ember-energy.org/data/global-renewable-power-sector-targets-2030/)
 
 grid_policy:
