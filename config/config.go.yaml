@@ -71,7 +71,7 @@ electricity:
 
   heating_demand:
     enable: true # [true, false ] If true, model exogenous electricity demand for heating
-    share: 0.18
+    share: 0.16
 
   hydrogen_demand:
     enable: false # [true, false ] If true, model exogenous electricity demand for h2 production
