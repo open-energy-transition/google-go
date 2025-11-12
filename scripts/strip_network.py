@@ -128,17 +128,18 @@ def strip_network(n, carriers):  # , country=None):
     ].index
     m.remove("Bus", n.buses.index.symmetric_difference(nodes_to_keep))
 
-    for c in m.iterate_components(
-        ["Generator", "Link", "Line", "Store", "StorageUnit", "Load"]
-    ):
+    for c in n.components:
+        if c.name not in ["Generator", "Link", "Line", "Store", "StorageUnit", "Load"]:
+            continue
+
         if c.name in ["Link", "Line"]:
-            location_boolean = c.df.bus0.isin(nodes_to_keep) & c.df.bus1.isin(
+            location_boolean = c.static.bus0.isin(nodes_to_keep) & c.static.bus1.isin(
                 nodes_to_keep
             )
         else:
-            location_boolean = c.df.bus.isin(nodes_to_keep)
-        to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier)]
-        to_drop = c.df.index.symmetric_difference(to_keep)
+            location_boolean = c.static.bus.isin(nodes_to_keep)
+        to_keep = c.static.index[location_boolean & c.static.carrier.isin(carrier)]
+        to_drop = c.static.index.symmetric_difference(to_keep)
         m.remove(c.name, to_drop)
 
     m.links.loc[m.links.carrier.isin(["H2 Electrolysis", "H2 Fuel Cell"]), "bus2"] = ""

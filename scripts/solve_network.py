@@ -1632,11 +1632,6 @@ def extra_functionality(
         add_buffer_matching(n)
         add_virtual_storage_matching(n)
 
-        # if strategy == "vol-match":
-        #     add_go_annual_matching_constraints(n, snapshots)
-        # if strategy == "247-go":
-        #     add_247_go_matching_constraints(n)
-
 
 def check_objective_value(n: pypsa.Network, solving: dict) -> None:
     """
