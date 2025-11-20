@@ -120,12 +120,13 @@ costs:
   marginal_cost:
     green_ocgt: 223.8
     adv_firm_tech: 13.6
-  capital_cost:
-    green_ocgt: 72790
-    adv_firm_tech: 585153
-  lifetime:
-    green_ocgt: 25
-    adv_firm_tech: 40
+  overwrites:
+    capital_cost:
+      green_ocgt: 72790
+      adv_firm_tech: 585153
+    lifetime:
+      green_ocgt: 25
+      adv_firm_tech: 40
 
   emission_prices:
     enable: true

@@ -50,6 +50,7 @@ hourly-match-50-98:
       energy_matching: 50
       hourly_matching: 98
 
+# Constraint issue (please check equality/inequality of the GO constraints)
 hourly-match-50-100:
   certificate:
     new_demand:
@@ -57,6 +58,14 @@ hourly-match-50-100:
       participant: ci
       energy_matching: 50
       hourly_matching: 100
+
+hourly-match-50-99:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
 
 # ============== Technology Sensitivities ==============
 # ======================================================
