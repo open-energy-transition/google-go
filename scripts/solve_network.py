@@ -859,7 +859,7 @@ def add_TES_energy_to_power_ratio_constraints(n: pypsa.Network) -> None:
     n : pypsa.Network
         A PyPSA network with TES and heating sectors enabled.
 
-    Raises
+    Raisesresources/baseline-3H
     ------
     ValueError
         If no valid TES storage or charger links are found.
@@ -1976,7 +1976,7 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "solve_sector_network_myopic",
-            run="hourly-match-90-3H",
+            run="baseline",
             opts="",
             clusters="39",
             configfiles="config/config.go.yaml",
