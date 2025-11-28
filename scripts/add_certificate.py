@@ -617,7 +617,7 @@ def get_go_background_demand(n, aib_filepath, profile=""):
     return load
 
 
-def add_demand(n, load, cert_demand, cert_map, name):
+def add_demand(n, load, cert_demand, cert_map, name, GO_penalty):
     """
     Adds Guarantee of Origin (GO) demand to the PyPSA network.
 
@@ -709,6 +709,23 @@ def add_demand(n, load, cert_demand, cert_map, name):
 
         logger.info("GO Buffer added")
 
+    # If the GOs cannot be fulfilled, then a penalty can be incured just for the GOs
+    if GO_penalty:
+        n.add("Carrier", "GO penalty", color="#dd2e23")
+        if not np.isscalar(GO_penalty):
+            GO_penalty = 1e5
+
+        n.add(
+            "Generator",
+            df_load.columns,
+            " penalty",
+            bus=df_load.columns,
+            carrier="GO penalty",
+            marginal_cost=GO_penalty,  # Eur/GO MWh
+            p_nom=1e6,
+        )
+
+        logger.info("GO Penalty added")
 
 def add_go_market(n, cert_demand, cert_map, name):
     """
@@ -1004,6 +1021,7 @@ if __name__ == "__main__":
             certificate["background_demand"],
             certificate["map"]["background_demand"],
             "Background",
+            GO_penalty=certificate["GO_penalty"]
         )
         add_go_market(
             n, certificate["background_demand"], certificate["map"], "Background"
@@ -1019,6 +1037,7 @@ if __name__ == "__main__":
             certificate["new_demand"],
             certificate["map"]["new_demand"],
             "New",
+            GO_penalty=certificate["GO_penalty"]
         )
         add_go_market(n, certificate["new_demand"], certificate["map"], "New")
 
