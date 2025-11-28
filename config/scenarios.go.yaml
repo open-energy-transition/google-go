@@ -50,6 +50,14 @@ hourly-match-50-98:
       energy_matching: 50
       hourly_matching: 98
 
+hourly-match-50-99:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
 # Constraint issue (please check equality/inequality of the GO constraints)
 hourly-match-50-100:
   certificate:
@@ -59,27 +67,11 @@ hourly-match-50-100:
       energy_matching: 50
       hourly_matching: 100
 
-hourly-match-50-99:
-  certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 99.9
+# ============== Sensitivities ==============
+# ===========================================
 
-# ============== Technology Sensitivities ==============
-# ======================================================
-
-# No LDES
-hourly-match-no-LDES-50-90:
-  certificate:
-    storage_carriers: [li-ion]
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 90
-
+# 1) additionality, EU GO market (C&I 50%; 99.9% hourly matching)
+# 2) additionality, no Advanced Clean Firm (C&I 50%; 99.9% hourly matching)
 hourly-match-no-LDES-50-98:
   certificate:
     storage_carriers: [li-ion]
@@ -87,10 +79,10 @@ hourly-match-no-LDES-50-98:
       enable: true
       participant: ci
       energy_matching: 50
-      hourly_matching: 98
+      hourly_matching: 99.9
 
-# No clean firms
-hourly-match-no-clean-firm-50-90:
+# 3) additionality, no LDES (iron-air) (C&I 50%; 99.9% hourly matching)
+hourly-match-no-clean-firm-50-99:
   certificate:
     plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
                     ror, hydro, urban central solid biomass CHP, geothermal, 
@@ -99,244 +91,34 @@ hourly-match-no-clean-firm-50-90:
       enable: true
       participant: ci
       energy_matching: 50
-      hourly_matching: 90
+      hourly_matching: 99.9
 
-hourly-match-no-clean-firm-50-98:
+# 4) no additionality (C&I 50%, 99.9% hourly matching)
+hourly-match-noadd-50-99:
   certificate:
-    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
-                    ror, hydro, urban central solid biomass CHP, geothermal, 
-                    solar, solar-hsat, solar rooftop, nuclear]
+    plant_status: [new, existing]
     new_demand:
       enable: true
       participant: ci
       energy_matching: 50
-      hourly_matching: 98
+      hourly_matching: 99.9
 
-# =========== Decarbonization Sensitivities ===========
-# =====================================================
-
-# RES target
-baseline-rps:
-  enable:
-    certificate: false
-    
-  res_target:
-    system_share_target: true
-    country_share_target: true
-
-hourly-match-rps-target-50-90:
-  res_target:
-    system_share_target: true
-    country_share_target: true
-
+# 5) no additionality, low C&I participation 10%, 99.9% hourly matching
+hourly-match-noadd-10-99:
   certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 90
-
-hourly-match-rps-target-50-98:
-  res_target:
-    system_share_target: true
-    country_share_target: true
-
-  certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 98
-
-# CO2 price (medium)
-baseline-co2-price:
-  enable:
-    certificate: false
-
-  costs:
-    emission_prices:
-      co2: 50
-
-hourly-match-co2-price-50-90:
-  costs:
-    emission_prices:
-      co2: 25
-
-  certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 90
-
-hourly-match-co2-price-50-98:
-  costs:
-    emission_prices:
-      co2: 25
-
-  certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 98
-
-# H2 demand
-baseline-h2-demand:
-  enable:
-    certificate: false
-
-  electricity:
-    hydrogen_demand:
-      enable: true # [true, false ] If true, model exogenous electricity demand for h2 production
-
-  overwrite_years:
-    2025:
-      electricity:
-        hydrogen_demand:
-          share: 0.04
-
-    2030:
-      electricity:
-        hydrogen_demand:
-          share: 0.07
-
-    2035:
-      electricity:
-        hydrogen_demand:
-          share: 0.14
-
-    2040:
-      electricity:
-        hydrogen_demand:
-          share: 0.21
-
-hourly-match-h2-demand-50-90:
-  electricity:
-    hydrogen_demand:
-      enable: true # [true, false ] If true, model exogenous electricity demand for h2 production
-
-  overwrite_years:
-    2025:
-      electricity:
-        hydrogen_demand:
-          share: 0.04
-
-    2030:
-      electricity:
-        hydrogen_demand:
-          share: 0.07
-
-    2035:
-      electricity:
-        hydrogen_demand:
-          share: 0.14
-
-    2040:
-      electricity:
-        hydrogen_demand:
-          share: 0.21
-
-  certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 90
-
-hourly-match-h2-demand-50-98:
-  electricity:
-    hydrogen_demand:
-      enable: true # [true, false ] If true, model exogenous electricity demand for h2 production
-
-  overwrite_years:
-    2025:
-      electricity:
-        hydrogen_demand:
-          share: 0.04
-
-    2030:
-      electricity:
-        hydrogen_demand:
-          share: 0.07
-
-    2035:
-      electricity:
-        hydrogen_demand:
-          share: 0.14
-
-    2040:
-      electricity:
-        hydrogen_demand:
-          share: 0.21
-
-  certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 50
-      hourly_matching: 98
-
-# =========== CI Participation Sensitivities ===========
-# ======================================================
-
-# 10% CI participation
-hourly-match-no-LDES-10-90:
-  certificate:
+    plant_status: [new, existing]
     new_demand:
       enable: true
       participant: ci
       energy_matching: 10
-      hourly_matching: 90
-
-hourly-match-no-LDES-10-98:
+      hourly_matching: 99.9
+  
+# 6) no additionality, high C&I participation 90%, 99.9% hourly matching
+hourly-match-noadd-90-99:
   certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 10
-      hourly_matching: 98
-
-# 90% CI participation
-hourly-match-no-LDES-90-90:
-  certificate:
+    plant_status: [new, existing]
     new_demand:
       enable: true
       participant: ci
       energy_matching: 90
-      hourly_matching: 90
-
-hourly-match-no-LDES-90-98:
-  certificate:
-    new_demand:
-      enable: true
-      participant: ci
-      energy_matching: 90
-      hourly_matching: 98
-
-# ====================== Archived ======================
-# ======================================================
-
-# low CO2 prices
-baseline-co2-price-low:
-  enable:
-    certificate: false
-
-  costs:
-    emission_prices:
-      co2: 25
-
-# high CO2 prices
-baseline-co2-price-high:
-  enable:
-    certificate: false
-
-  costs:
-    emission_prices:
-      co2: 100
-
-# only existing AIB GO Market factors towards decarbonization
-baseline-AIB:
-  certificate:
-    background_demand:
-      enable: true
+      hourly_matching: 99.9
