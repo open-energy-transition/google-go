@@ -61,9 +61,10 @@ def create_layout(data_loader):
                             id='ci25-plot-type-selector',
                             options=[
                                 {'label': 'Bar Chart', 'value': 'bar'},
+                                {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
                                 {'label': 'Stacked Area', 'value': 'area'},
                                 {'label': 'Pie Chart', 'value': 'pie'},
-                                {'label': 'Time Series', 'value': 'timeseries'}
+                                {'label': 'Year Comparison', 'value': 'year_comparison'}
                             ],
                             value='bar',
                             clearable=False

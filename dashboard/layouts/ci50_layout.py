@@ -63,7 +63,8 @@ def create_layout(data_loader):
                                 {'label': 'Bar Chart', 'value': 'bar'},
                                 {'label': 'Stacked Area', 'value': 'area'},
                                 {'label': 'Pie Chart', 'value': 'pie'},
-                                {'label': 'Time Series', 'value': 'timeseries'}
+                                {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
+                                {'label': 'Year Comparison', 'value': 'year_comparison'}
                             ],
                             value='bar',
                             clearable=False

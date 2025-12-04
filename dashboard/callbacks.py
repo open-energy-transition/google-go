@@ -240,6 +240,10 @@ def create_plot(scenario, year, scenario_name, metric, plot_type, carriers, data
         # Create plot based on type
         if plot_type == 'bar':
             fig = create_bar_plot(data_series, metric, color_mapper)
+        elif plot_type == 'stacked_bar':
+            fig = create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
+        elif plot_type == 'year_comparison':
+            fig = create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
         elif plot_type == 'area':
             fig = create_area_plot(data_series, metric, color_mapper)
         elif plot_type == 'pie':
@@ -554,6 +558,137 @@ def create_comparison_table(year, metric, scenarios, data_loader):
 
     except Exception as e:
         return html.P(f"Error: {str(e)}")
+
+
+def create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data_loader, color_mapper):
+    """Create stacked bar plot comparing all years for a scenario"""
+    try:
+        stats = data_loader.get_summary_stats(scenario)
+        years = stats.get('years', [])
+
+        if not years or not scenario_name or not metric:
+            return create_empty_figure("Select scenario and metric")
+
+        fig = go.Figure()
+
+        # Get data for each year
+        for year in years:
+            df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+
+            if df is None or df.empty:
+                continue
+
+            # Filter by carriers if specified
+            if carriers:
+                df = df[df.index.get_level_values(2).isin(carriers)]
+
+            if isinstance(df.columns, pd.MultiIndex):
+                data_series = df.iloc[:, 0]
+            else:
+                data_series = df.iloc[:, 0] if len(df.columns) > 0 else df
+
+            # Get carriers and values
+            year_carriers = data_series.index.get_level_values(2).tolist()
+            values = data_series.values
+
+            # Add stacked bars for this year
+            for i, carrier in enumerate(year_carriers):
+                color = color_mapper.get_color(carrier, metric)
+
+                fig.add_trace(go.Bar(
+                    name=carrier,
+                    x=[str(year)],
+                    y=[values[i]],
+                    marker_color=color,
+                    legendgroup=carrier,
+                    showlegend=(year == years[0]),  # Only show legend for first year
+                    hovertemplate=f"{carrier}: %{{y:.2f}}<extra></extra>"
+                ))
+
+        fig.update_layout(
+            title=f"{metric} - All Years Comparison",
+            xaxis_title="Year",
+            yaxis_title="Value",
+            barmode='stack',
+            template="plotly_white",
+            hovermode='x unified',
+            legend=dict(
+                title="Carrier",
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02
+            )
+        )
+
+        return fig
+
+    except Exception as e:
+        return create_empty_figure(f"Error: {str(e)}")
+
+
+def create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper):
+    """Create grouped bar plot comparing carriers across years"""
+    try:
+        stats = data_loader.get_summary_stats(scenario)
+        years = stats.get('years', [])
+
+        if not years or not scenario_name or not metric:
+            return create_empty_figure("Select scenario and metric")
+
+        # Collect data for all years
+        year_data = {}
+        all_carriers = set()
+
+        for year in years:
+            df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+
+            if df is None or df.empty:
+                continue
+
+            # Filter by carriers if specified
+            if carriers:
+                df = df[df.index.get_level_values(2).isin(carriers)]
+
+            if isinstance(df.columns, pd.MultiIndex):
+                data_series = df.iloc[:, 0]
+            else:
+                data_series = df.iloc[:, 0] if len(df.columns) > 0 else df
+
+            year_carriers = data_series.index.get_level_values(2).tolist()
+            all_carriers.update(year_carriers)
+            year_data[year] = {carrier: val for carrier, val in zip(year_carriers, data_series.values)}
+
+        # Create grouped bar plot
+        fig = go.Figure()
+
+        for year in years:
+            carrier_vals = []
+            for carrier in sorted(all_carriers):
+                carrier_vals.append(year_data.get(year, {}).get(carrier, 0))
+
+            fig.add_trace(go.Bar(
+                name=str(year),
+                x=sorted(list(all_carriers)),
+                y=carrier_vals,
+                hovertemplate=f"{year}: %{{y:.2f}}<extra></extra>"
+            ))
+
+        fig.update_layout(
+            title=f"{metric} - Year Comparison",
+            xaxis_title="Carrier",
+            yaxis_title="Value",
+            barmode='group',
+            template="plotly_white",
+            hovermode='x unified',
+            legend=dict(title="Year")
+        )
+
+        return fig
+
+    except Exception as e:
+        return create_empty_figure(f"Error: {str(e)}")
 
 
 def create_empty_figure(message):
