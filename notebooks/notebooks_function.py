@@ -146,6 +146,22 @@ def prepare_network(n):
 
     return n
 
+plot_formats = {
+    "Energy mix": {"letter": "(a)", "y_label": "Net generation (TWh)"},
+    "Energy mix - GO Market": {"letter": "(b)", "y_label": "Net generation (TWh-GoO)"},
+    "Capacity mix": {"letter": "(c)", "y_label": "Capacity (GW)"},
+    "Capacity mix - new technologies (proxy of GO Market)": {"letter": "(d)", "y_label": "Capacity (GW)"},
+    "Storage in GO Market - Energy capacity": {"letter": "(e)", "y_label": "Energy capacity (GWh)"},
+    "Storage in GO Market - Power capacity": {"letter": "(e)", "y_label": "Power capacity (GW)"},
+    "Total system cost": {"letter": "(f)", "y_label": "Total system cost (b€)"},
+    "Total system cost - new technologies (proxy of GO Market)": {"letter": "(g)", "y_label": "Total system cost (b€)"},
+    "GO Market revenue by technology": {"letter": "(h)", "y_label": "Market size (b€)"},
+    "Marginal price of GoO consumers": {"letter": "(i)", "y_label": "Marginal price (€/MWh)"},
+    "CO2 emissions": {"letter": "(j)", "y_label": "CO2 emissions (MtCO2)"},
+    "CFE curtailment": {"letter": "(k)", "y_label": "Curtailment (TWh)"},
+    "CFE utilization": {"letter": "(l)", "y_label": "Utilization factor (-)"},
+}
+
 def rename_year(n, year):
 
     # Change snapshotdate to year
