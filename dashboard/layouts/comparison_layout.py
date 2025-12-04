@@ -3,6 +3,7 @@ Layout for Comparison tab (comparing CI_25, CI_50, CI_noadd)
 """
 from dash import dcc, html
 import dash_bootstrap_components as dbc
+from utils.colors import format_scenario_name
 
 
 def create_layout(data_loader):
@@ -57,7 +58,7 @@ def create_layout(data_loader):
                         html.Label("Sub-Scenario:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
                             id='comp-subscenario-selector',
-                            options=[{'label': s, 'value': s} for s in sub_scenarios],
+                            options=[{'label': format_scenario_name(s), 'value': s} for s in sub_scenarios],
                             value='baseline' if 'baseline' in sub_scenarios else (sub_scenarios[0] if sub_scenarios else None),
                             clearable=False
                         )

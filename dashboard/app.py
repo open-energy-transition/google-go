@@ -15,7 +15,7 @@ from pathlib import Path
 # Import utilities
 from utils.data_loader import DataLoader
 from utils.colors import ColorMapper
-from layouts import ci25_layout, ci50_layout, cinoadd_layout, comparison_layout
+from layouts import ci25_layout, ci50_layout, cinoadd_layout, comparison_layout, within_scenario_layout
 from callbacks import register_callbacks
 
 # Initialize the Dash app
@@ -60,6 +60,8 @@ app.layout = dbc.Container([
                        style={'fontWeight': 'bold'}),
                 dcc.Tab(label='Comparison', value='comparison-tab',
                        style={'fontWeight': 'bold'}),
+                dcc.Tab(label='Within-Scenario', value='within-scenario-tab',
+                       style={'fontWeight': 'bold'}),
             ], style={'fontSize': '16px'})
         ])
     ]),
@@ -90,6 +92,8 @@ def render_tab_content(tab):
         return cinoadd_layout.create_layout(data_loader)
     elif tab == 'comparison-tab':
         return comparison_layout.create_layout(data_loader)
+    elif tab == 'within-scenario-tab':
+        return within_scenario_layout.create_within_scenario_layout(data_loader)
     return html.Div("Select a tab")
 
 # Register all callbacks

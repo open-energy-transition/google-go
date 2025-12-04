@@ -3,6 +3,7 @@ Layout for CI_noadd scenario tab
 """
 from dash import dcc, html
 import dash_bootstrap_components as dbc
+from utils.colors import format_scenario_name
 
 
 def create_layout(data_loader):
@@ -37,7 +38,7 @@ def create_layout(data_loader):
                         html.Label("Scenario:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
                             id='cinoadd-scenario-selector',
-                            options=[{'label': s, 'value': s} for s in scenarios],
+                            options=[{'label': format_scenario_name(s), 'value': s} for s in scenarios],
                             value=scenarios[0] if scenarios else None,
                             clearable=False
                         )
@@ -64,7 +65,8 @@ def create_layout(data_loader):
                                 {'label': 'Stacked Area', 'value': 'area'},
                                 {'label': 'Pie Chart', 'value': 'pie'},
                                 {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
-                                {'label': 'Year Comparison', 'value': 'year_comparison'}
+                                {'label': 'Year Comparison', 'value': 'year_comparison'},
+                                {'label': 'Technology Trajectory', 'value': 'trajectory'}
                             ],
                             value='bar',
                             clearable=False
