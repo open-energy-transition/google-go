@@ -18,13 +18,19 @@ def create_layout(data_loader):
     # Get common years and metrics across all scenarios
     all_years = set()
     all_metrics = set()
+    all_sub_scenarios = set()
 
     for stats in scenarios_data.values():
         all_years.update(stats.get('years', []))
         all_metrics.update(stats.get('metrics', []))
+        all_sub_scenarios.update(stats.get('scenarios', []))
 
     years = sorted(list(all_years))
     metrics = sorted(list(all_metrics))
+
+    # Show ALL sub-scenarios from all main scenarios
+    # (since naming is different, user can pick the ones they want to compare)
+    sub_scenarios = sorted(list(all_sub_scenarios))
 
     return dbc.Container([
         html.H3("Cross-Scenario Comparison", className="mb-4"),
@@ -46,6 +52,17 @@ def create_layout(data_loader):
                         )
                     ], width=2),
 
+                    # Sub-scenario selector (NEW)
+                    dbc.Col([
+                        html.Label("Sub-Scenario:", style={'fontWeight': 'bold'}),
+                        dcc.Dropdown(
+                            id='comp-subscenario-selector',
+                            options=[{'label': s, 'value': s} for s in sub_scenarios],
+                            value='baseline' if 'baseline' in sub_scenarios else (sub_scenarios[0] if sub_scenarios else None),
+                            clearable=False
+                        )
+                    ], width=3),
+
                     # Metric selector
                     dbc.Col([
                         html.Label("Metric:", style={'fontWeight': 'bold'}),
@@ -55,11 +72,11 @@ def create_layout(data_loader):
                             value=metrics[0] if metrics else None,
                             clearable=False
                         )
-                    ], width=4),
+                    ], width=3),
 
                     # Scenarios to compare
                     dbc.Col([
-                        html.Label("Scenarios:", style={'fontWeight': 'bold'}),
+                        html.Label("Main Scenarios:", style={'fontWeight': 'bold'}),
                         dcc.Checklist(
                             id='comp-scenarios-selector',
                             options=[
@@ -69,26 +86,10 @@ def create_layout(data_loader):
                             ],
                             value=['CI_25', 'CI_50', 'CI_noadd'],
                             inline=True,
-                            labelStyle={'marginRight': '20px'},
+                            labelStyle={'marginRight': '15px'},
                             inputStyle={'marginRight': '5px'}
                         )
-                    ], width=3),
-
-                    # Plot type selector
-                    dbc.Col([
-                        html.Label("Plot Type:", style={'fontWeight': 'bold'}),
-                        dcc.Dropdown(
-                            id='comp-plot-type-selector',
-                            options=[
-                                {'label': 'Side-by-Side Bars', 'value': 'bar'},
-                                {'label': 'Grouped Bars', 'value': 'grouped'},
-                                {'label': 'Line Chart', 'value': 'line'},
-                                {'label': 'Heatmap', 'value': 'heatmap'}
-                            ],
-                            value='bar',
-                            clearable=False
-                        )
-                    ], width=3),
+                    ], width=4),
                 ])
             ])
         ], className="mb-4"),
