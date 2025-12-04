@@ -1,0 +1,103 @@
+/* Custom styling for the Energy System Dashboard */
+
+/* Header styling */
+h1 {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h3 {
+    color: #2c3e50;
+    margin-top: 20px;
+}
+
+/* Card styling */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* Dropdown styling */
+.Select-control {
+    border-radius: 4px;
+}
+
+/* Tab styling */
+.tab {
+    font-size: 16px !important;
+}
+
+.tab--selected {
+    color: #1f77b4 !important;
+    border-bottom: 3px solid #1f77b4 !important;
+}
+
+/* Loading spinner */
+._dash-loading {
+    margin: auto;
+}
+
+/* Graph containers */
+.js-plotly-plot {
+    border-radius: 4px;
+}
+
+/* Checklist styling */
+input[type="checkbox"] {
+    cursor: pointer;
+}
+
+label {
+    cursor: pointer;
+}
+
+/* Table styling */
+table {
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table th {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    font-weight: bold;
+}
+
+table td {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+}
+
+table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Summary stats styling */
+#ci25-summary-stats p,
+#ci50-summary-stats p,
+#cinoadd-summary-stats p {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    h3 {
+        font-size: 20px;
+    }
+}
