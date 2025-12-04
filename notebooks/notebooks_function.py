@@ -160,6 +160,7 @@ plot_formats = {
     "CO2 emissions": {"letter": "(j)", "y_label": "CO2 emissions (MtCO2)"},
     "CFE curtailment": {"letter": "(k)", "y_label": "Curtailment (TWh)"},
     "CFE utilization": {"letter": "(l)", "y_label": "Utilization factor (-)"},
+    "CO2 abatement cost": {"letter": "(m)", "y_label": "Abatement cost (€/tCO2)"},
 }
 
 def rename_year(n, year):
