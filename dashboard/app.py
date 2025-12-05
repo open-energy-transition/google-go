@@ -15,7 +15,7 @@ from pathlib import Path
 # Import utilities
 from utils.data_loader import DataLoader
 from utils.colors import ColorMapper
-from layouts import ci25_layout, ci50_layout, cinoadd_layout, comparison_layout, within_scenario_layout
+from layouts import single_scenario_layout, cross_scenario_layout
 from callbacks import register_callbacks
 
 # Initialize the Dash app
@@ -51,50 +51,42 @@ app.layout = dbc.Container([
     # Tabs
     dbc.Row([
         dbc.Col([
-            dcc.Tabs(id='main-tabs', value='ci25-tab', children=[
-                dcc.Tab(label='CI_25', value='ci25-tab',
+            dcc.Tabs(id='main-tabs', value='single-tab', children=[
+                dcc.Tab(label='Single Scenario Analysis', value='single-tab',
                        style={'fontWeight': 'bold'}),
-                dcc.Tab(label='CI_50', value='ci50-tab',
-                       style={'fontWeight': 'bold'}),
-                dcc.Tab(label='CI_noadd', value='cinoadd-tab',
-                       style={'fontWeight': 'bold'}),
-                dcc.Tab(label='Comparison', value='comparison-tab',
-                       style={'fontWeight': 'bold'}),
-                dcc.Tab(label='Within-Scenario', value='within-scenario-tab',
+                dcc.Tab(label='Cross-Scenario Comparison', value='cross-scenario-tab',
                        style={'fontWeight': 'bold'}),
             ], style={'fontSize': '16px'})
         ])
     ]),
 
-    # Tab content
+    # Tab content - ALL LAYOUTS PRELOADED
     dbc.Row([
         dbc.Col([
-            html.Div(id='tab-content', className='mt-4')
+            html.Div([
+                html.Div(single_scenario_layout.create_layout(data_loader),
+                        id='single-content', style={'display': 'block'}),
+                html.Div(cross_scenario_layout.create_cross_scenario_layout(data_loader),
+                        id='cross-scenario-content', style={'display': 'none'}),
+            ], id='tab-content', className='mt-4')
         ])
     ]),
 
-    # Store data loader in a hidden div (for callbacks to access)
-    html.Div(id='data-store', style={'display': 'none'})
-
 ], fluid=True, style={"maxWidth": "1800px"})
 
-# Callback to render tab content
+# Callback to show/hide tab content
 @app.callback(
-    Output('tab-content', 'children'),
+    [Output('single-content', 'style'),
+     Output('cross-scenario-content', 'style')],
     Input('main-tabs', 'value')
 )
 def render_tab_content(tab):
-    if tab == 'ci25-tab':
-        return ci25_layout.create_layout(data_loader)
-    elif tab == 'ci50-tab':
-        return ci50_layout.create_layout(data_loader)
-    elif tab == 'cinoadd-tab':
-        return cinoadd_layout.create_layout(data_loader)
-    elif tab == 'comparison-tab':
-        return comparison_layout.create_layout(data_loader)
-    elif tab == 'within-scenario-tab':
-        return within_scenario_layout.create_within_scenario_layout(data_loader)
-    return html.Div("Select a tab")
+    styles = [{'display': 'none'}] * 2
+    if tab == 'single-tab':
+        styles[0] = {'display': 'block'}
+    elif tab == 'cross-scenario-tab':
+        styles[1] = {'display': 'block'}
+    return styles
 
 # Register all callbacks
 register_callbacks(app, data_loader)

@@ -1,1 +1,1 @@
-# Layouts package
+# Layout modules

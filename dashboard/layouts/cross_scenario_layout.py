@@ -1,13 +1,13 @@
 """
-Layout for within-scenario comparison (comparing sub-scenarios within same main scenario)
+Layout for cross-scenario comparison (comparing sub-scenarios across main scenarios)
 """
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 from utils.colors import format_scenario_name
 
 
-def create_within_scenario_layout(data_loader):
-    """Create layout for within-scenario comparison tab"""
+def create_cross_scenario_layout(data_loader):
+    """Create layout for cross-scenario comparison tab"""
 
     # Get data for all scenarios
     scenarios_data = {
@@ -20,40 +20,37 @@ def create_within_scenario_layout(data_loader):
     years = scenarios_data['CI_25'].get('years', [])
     metrics = scenarios_data['CI_25'].get('metrics', [])
 
-    # Get initial sub-scenarios for CI_50 (default main scenario)
-    ci50_subscenarios = scenarios_data['CI_50'].get('scenarios', [])
-    subscenario_options = [{'label': format_scenario_name(s), 'value': s} for s in ci50_subscenarios]
-    default_sub1 = ci50_subscenarios[0] if len(ci50_subscenarios) > 0 else None
-    default_sub2 = ci50_subscenarios[1] if len(ci50_subscenarios) > 1 else None
+    # Build a map of subscenario -> main_scenario for later lookup
+    # And collect ALL unique sub-scenarios across all main scenarios
+    subscenario_to_main = {}
+    all_subscenarios = []
+
+    for main_scenario, stats in scenarios_data.items():
+        for subscenario in stats.get('scenarios', []):
+            if subscenario not in subscenario_to_main:
+                subscenario_to_main[subscenario] = main_scenario
+                all_subscenarios.append(subscenario)
+
+    # Create dropdown options with formatted names
+    subscenario_options = [{'label': format_scenario_name(s), 'value': s} for s in all_subscenarios]
+
+    # Set defaults - explicitly set to trigger callback
+    default_sub1 = all_subscenarios[0] if len(all_subscenarios) > 0 else 'baseline'
+    default_sub2 = all_subscenarios[1] if len(all_subscenarios) > 1 else 'energy-match-50'
 
     return dbc.Container([
-        html.H2("Within-Scenario Comparison", className="mb-4"),
-        html.P("Compare two sub-scenarios within the same main scenario (e.g., compare Hourly 90% vs Hourly 95% within CI 50%)"),
+        html.H2("Cross-Scenario Comparison", className="mb-4"),
+        html.P("Compare two sub-scenarios across different main scenarios (e.g., compare Baseline in CI_25 vs Baseline in CI_50)"),
 
         # Control panel
         dbc.Card([
             dbc.CardBody([
                 dbc.Row([
-                    # Main scenario selector
-                    dbc.Col([
-                        html.Label("Main Scenario:", style={'fontWeight': 'bold'}),
-                        dcc.Dropdown(
-                            id='within-main-scenario-selector',
-                            options=[
-                                {'label': 'CI 25%', 'value': 'CI_25'},
-                                {'label': 'CI 50%', 'value': 'CI_50'},
-                                {'label': 'No Additional Constraints', 'value': 'CI_noadd'}
-                            ],
-                            value='CI_50',
-                            clearable=False
-                        )
-                    ], width=3),
-
                     # Year selector
                     dbc.Col([
                         html.Label("Year:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
-                            id='within-year-selector',
+                            id='cross-year-selector',
                             options=[{'label': str(y), 'value': y} for y in years],
                             value=years[-1] if years else None,
                             clearable=False
@@ -64,18 +61,33 @@ def create_within_scenario_layout(data_loader):
                     dbc.Col([
                         html.Label("Metric:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
-                            id='within-metric-selector',
+                            id='cross-metric-selector',
                             options=[{'label': m, 'value': m} for m in metrics],
                             value=metrics[0] if metrics else None,
                             clearable=False
                         )
                     ], width=3),
 
+                    # Plot type selector
+                    dbc.Col([
+                        html.Label("Plot Type:", style={'fontWeight': 'bold'}),
+                        dcc.Dropdown(
+                            id='cross-plot-type-selector',
+                            options=[
+                                {'label': 'Side-by-Side', 'value': 'comparison'},
+                                {'label': 'Year Comparison', 'value': 'year_comparison'},
+                                {'label': 'Year on Year Evolution', 'value': 'year_on_year_evolution'}
+                            ],
+                            value='comparison',
+                            clearable=False
+                        )
+                    ], width=2),
+
                     # Sub-scenario 1 selector
                     dbc.Col([
                         html.Label("Sub-Scenario 1:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
-                            id='within-subscenario1-selector',
+                            id='cross-subscenario1-selector',
                             options=subscenario_options,
                             value=default_sub1,
                             clearable=False
@@ -86,12 +98,12 @@ def create_within_scenario_layout(data_loader):
                     dbc.Col([
                         html.Label("Sub-Scenario 2:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
-                            id='within-subscenario2-selector',
+                            id='cross-subscenario2-selector',
                             options=subscenario_options,
                             value=default_sub2,
                             clearable=False
                         )
-                    ], width=2),
+                    ], width=3),
                 ])
             ])
         ], className="mb-4"),
@@ -100,7 +112,7 @@ def create_within_scenario_layout(data_loader):
         dbc.Card([
             dbc.CardBody([
                 html.H4("Side-by-Side Comparison", className="mb-3"),
-                dcc.Graph(id='within-comparison-plot', style={'height': '500px'})
+                dcc.Graph(id='cross-comparison-plot', style={'height': '500px'})
             ])
         ], className="mb-4"),
 
@@ -109,7 +121,7 @@ def create_within_scenario_layout(data_loader):
             dbc.CardBody([
                 html.H4("Difference Analysis", className="mb-3"),
                 html.P("Shows the difference between Sub-Scenario 2 and Sub-Scenario 1 (positive = higher in Scenario 2)"),
-                dcc.Graph(id='within-difference-plot', style={'height': '400px'})
+                dcc.Graph(id='cross-difference-plot', style={'height': '400px'})
             ])
         ], className="mb-4"),
 
@@ -117,7 +129,7 @@ def create_within_scenario_layout(data_loader):
         dbc.Card([
             dbc.CardBody([
                 html.H4("Comparison Statistics", className="mb-3"),
-                html.Div(id='within-summary-stats')
+                html.Div(id='cross-summary-stats')
             ])
         ])
     ], fluid=True, className="p-4")
