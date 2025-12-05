@@ -48,7 +48,7 @@ def create_layout(data_loader):
                         html.Label("Year:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
                             id='single-year-selector',
-                            options=[{'label': str(y), 'value': y} for y in years],
+                            options=[{'label': 'All', 'value': 'all'}] + [{'label': str(y), 'value': y} for y in years],
                             value=years[0] if years else None,
                             clearable=False
                         )

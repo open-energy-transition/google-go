@@ -51,7 +51,7 @@ def create_cross_scenario_layout(data_loader):
                         html.Label("Year:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
                             id='cross-year-selector',
-                            options=[{'label': str(y), 'value': y} for y in years],
+                            options=[{'label': 'All', 'value': 'all'}] + [{'label': str(y), 'value': y} for y in years],
                             value=years[-1] if years else None,
                             clearable=False
                         )

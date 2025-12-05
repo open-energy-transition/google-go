@@ -34,6 +34,30 @@ def register_callbacks(app, data_loader):
         return options, scenarios[0] if scenarios else None
 
     @app.callback(
+        [Output('single-plot-type-selector', 'options'),
+         Output('single-plot-type-selector', 'value')],
+        [Input('single-year-selector', 'value')]
+    )
+    def update_single_plot_types(year):
+        """Update available plot types based on selected year"""
+        if year == 'all':
+            # Multi-year plots only
+            options = [
+                {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
+                {'label': 'Year Comparison', 'value': 'year_comparison'},
+                {'label': 'Year on Year Evolution', 'value': 'year_on_year_evolution'}
+            ]
+            return options, 'stacked_bar'
+        else:
+            # Single-year plots
+            options = [
+                {'label': 'Bar Chart', 'value': 'bar'},
+                {'label': 'Stacked Area', 'value': 'area'},
+                {'label': 'Pie Chart', 'value': 'pie'}
+            ]
+            return options, 'bar'
+
+    @app.callback(
         [Output('single-carrier-selector', 'options'),
          Output('single-carrier-selector', 'value')],
         [Input('single-main-scenario-selector', 'value'),
@@ -98,6 +122,28 @@ def register_callbacks(app, data_loader):
         return create_summary_stats(main_scenario, year, scenario, metric, data_loader)
 
     # ==================== Cross-Scenario Comparison Callbacks ====================
+    @app.callback(
+        [Output('cross-plot-type-selector', 'options'),
+         Output('cross-plot-type-selector', 'value')],
+        [Input('cross-year-selector', 'value')]
+    )
+    def update_cross_plot_types(year):
+        """Update available plot types based on selected year"""
+        if year == 'all':
+            # Multi-year plots only
+            options = [
+                {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
+                {'label': 'Year Comparison', 'value': 'year_comparison'},
+                {'label': 'Year on Year Evolution', 'value': 'year_on_year_evolution'}
+            ]
+            return options, 'stacked_bar'
+        else:
+            # Single-year plots
+            options = [
+                {'label': 'Side-by-Side', 'value': 'comparison'}
+            ]
+            return options, 'comparison'
+
     # Helper to find which main scenario a sub-scenario belongs to
     def find_main_scenario(subscenario):
         """Find which main scenario contains this sub-scenario"""
@@ -164,6 +210,16 @@ def register_callbacks(app, data_loader):
 def create_plot(scenario, year, scenario_name, metric, plot_type, carriers, data_loader, color_mapper):
     """Create a plot based on parameters"""
     try:
+        # Handle multi-year plots (year='all')
+        if year == 'all' or plot_type in ['stacked_bar', 'year_comparison', 'year_on_year_evolution']:
+            if plot_type == 'stacked_bar':
+                return create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
+            elif plot_type == 'year_comparison':
+                return create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
+            elif plot_type == 'year_on_year_evolution':
+                return create_year_on_year_evolution_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
+
+        # Single year plots
         # Get data
         df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
 
@@ -184,12 +240,6 @@ def create_plot(scenario, year, scenario_name, metric, plot_type, carriers, data
         # Create plot based on type
         if plot_type == 'bar':
             fig = create_bar_plot(data_series, metric, color_mapper)
-        elif plot_type == 'stacked_bar':
-            fig = create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
-        elif plot_type == 'year_comparison':
-            fig = create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
-        elif plot_type == 'year_on_year_evolution':
-            fig = create_year_on_year_evolution_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
         elif plot_type == 'area':
             fig = create_area_plot(data_series, metric, color_mapper)
         elif plot_type == 'pie':
@@ -715,23 +765,24 @@ def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscen
             print("Same subscenarios selected!")
             return create_empty_figure("Please select two different sub-scenarios")
 
-        # Handle different plot types
-        if plot_type == 'stacked_bar':
-            return create_cross_stacked_bar_plot(main1 or main_scenario, main2 or main_scenario,
-                                                metric, subscenario1, subscenario2,
-                                                data_loader, color_mapper, main1, main2)
-        elif plot_type == 'year_comparison':
-            return create_cross_year_comparison_plot(main1 or main_scenario, main2 or main_scenario,
-                                                     metric, subscenario1, subscenario2,
-                                                     data_loader, color_mapper, main1, main2)
-        elif plot_type == 'year_on_year_evolution':
-            return create_cross_evolution_plot(main1 or main_scenario, main2 or main_scenario,
-                                               metric, subscenario1, subscenario2,
-                                               data_loader, color_mapper, main1, main2)
+        # Handle multi-year plot types
+        if year == 'all' or plot_type in ['stacked_bar', 'year_comparison', 'year_on_year_evolution']:
+            if plot_type == 'stacked_bar':
+                return create_cross_stacked_bar_plot(main1 or main_scenario, main2 or main_scenario,
+                                                    metric, subscenario1, subscenario2,
+                                                    data_loader, color_mapper, main1, main2)
+            elif plot_type == 'year_comparison':
+                return create_cross_year_comparison_plot(main1 or main_scenario, main2 or main_scenario,
+                                                         metric, subscenario1, subscenario2,
+                                                         data_loader, color_mapper, main1, main2)
+            elif plot_type == 'year_on_year_evolution':
+                return create_cross_evolution_plot(main1 or main_scenario, main2 or main_scenario,
+                                                   metric, subscenario1, subscenario2,
+                                                   data_loader, color_mapper, main1, main2)
 
-        # Default: side-by-side comparison
-        if not year:
-            return create_empty_figure("Please select a year")
+        # Default: side-by-side comparison (single year required)
+        if not year or year == 'all':
+            return create_empty_figure("Please select a specific year for side-by-side comparison")
 
         fig = go.Figure()
 
@@ -838,17 +889,26 @@ def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subs
 
 
 def create_cross_summary_stats(main_scenario, year, metric, subscenario1, subscenario2, data_loader, main1=None, main2=None):
-    """Create summary statistics comparing two sub-scenarios"""
+    """Create summary statistics comparing two sub-scenarios with 6 key takeaways"""
     try:
-        if not all([year, metric, subscenario1, subscenario2]):
+        # Handle 'all' year case - use latest year for summary stats
+        display_year = year
+        if year == 'all':
+            stats = data_loader.get_summary_stats(main1 or main_scenario)
+            years = stats.get('years', [])
+            display_year = years[-1] if years else None
+            if not display_year:
+                return html.P("No year data available")
+
+        if not all([display_year, metric, subscenario1, subscenario2]):
             return html.P("Please select all parameters")
 
         if subscenario1 == subscenario2:
             return html.P("Please select two different sub-scenarios")
 
         # Get data for both sub-scenarios from their respective main scenarios
-        df1 = data_loader.get_data(main1 or main_scenario, year=year, scenario_name=subscenario1, metric=metric)
-        df2 = data_loader.get_data(main2 or main_scenario, year=year, scenario_name=subscenario2, metric=metric)
+        df1 = data_loader.get_data(main1 or main_scenario, year=display_year, scenario_name=subscenario1, metric=metric)
+        df2 = data_loader.get_data(main2 or main_scenario, year=display_year, scenario_name=subscenario2, metric=metric)
 
         if df1 is None or df1.empty or df2 is None or df2.empty:
             return html.P("No data available for selected parameters")
@@ -868,95 +928,168 @@ def create_cross_summary_stats(main_scenario, year, metric, subscenario1, subsce
         values1 = data1.values
         values2 = data2.values
 
-        # Find carriers with biggest absolute differences
-        abs_diffs = np.abs(values2 - values1)
-        top_diff_indices = np.argsort(abs_diffs)[-3:][::-1]  # Top 3
+        # Fetch emissions data separately
+        emissions_metric = "(j) CO2 emissions"
+        df1_emissions = data_loader.get_data(main1 or main_scenario, year=display_year, scenario_name=subscenario1, metric=emissions_metric)
+        df2_emissions = data_loader.get_data(main2 or main_scenario, year=display_year, scenario_name=subscenario2, metric=emissions_metric)
 
-        # Find carriers with biggest percentage changes
-        pct_changes = np.where(values1 != 0, ((values2 - values1) / values1) * 100, 0)
+        emissions1 = 0
+        emissions2 = 0
+        emissions_diff = 0
+        emissions_pct = 0
+        has_emissions = False
 
-        # Filter to only carriers with significant absolute values (> 1% of total)
-        significant_mask = np.abs(values1) > (abs(total1) * 0.01)
-        significant_indices = np.where(significant_mask)[0]
+        if df1_emissions is not None and not df1_emissions.empty and df2_emissions is not None and not df2_emissions.empty:
+            emissions_data1 = df1_emissions.iloc[:, 0] if isinstance(df1_emissions.columns, pd.MultiIndex) else df1_emissions.iloc[:, 0]
+            emissions_data2 = df2_emissions.iloc[:, 0] if isinstance(df2_emissions.columns, pd.MultiIndex) else df2_emissions.iloc[:, 0]
+            emissions1 = emissions_data1.sum()
+            emissions2 = emissions_data2.sum()
+            emissions_diff = emissions2 - emissions1
+            emissions_pct = (emissions_diff / emissions1 * 100) if emissions1 != 0 else 0
+            has_emissions = True
 
-        if len(significant_indices) > 0:
-            significant_pct_changes = pct_changes[significant_indices]
-            significant_carriers = [carriers1[i] for i in significant_indices]
-            top_pct_indices = significant_indices[np.argsort(np.abs(significant_pct_changes))[-3:][::-1]]
-        else:
-            top_pct_indices = []
+        # Calculate various metrics
+        abs_diffs = values2 - values1
+        renewables_mask = np.array(['solar' in c.lower() or 'wind' in c.lower() for c in carriers1])
+        clean_mask = np.array(['nuclear' in c.lower() or 'carbon' in c.lower() for c in carriers1])
 
-        # Count carriers
-        num_carriers = len(carriers1)
-        num_increased = np.sum(values2 > values1)
-        num_decreased = np.sum(values2 < values1)
-        num_unchanged = np.sum(values2 == values1)
+        renewables_build1 = values1[renewables_mask].sum() if renewables_mask.any() else 0
+        renewables_build2 = values2[renewables_mask].sum() if renewables_mask.any() else 0
+        renewables_diff = renewables_build2 - renewables_build1
 
+        clean_firm1 = values1[clean_mask].sum() if clean_mask.any() else 0
+        clean_firm2 = values2[clean_mask].sum() if clean_mask.any() else 0
+        clean_diff = clean_firm2 - clean_firm1
+
+        # Find top movers (resource shifts)
+        top_increase_idx = np.argmax(abs_diffs) if len(abs_diffs) > 0 else 0
+        top_decrease_idx = np.argmin(abs_diffs) if len(abs_diffs) > 0 else 0
+
+        # Create 6-category key takeaways styled like the screenshot
         return html.Div([
-            # Overall totals
+            html.H4(f"Key Takeaways", style={'marginBottom': '20px', 'fontWeight': 'bold', 'color': '#1e3a8a'}),
+
+            # Year indicator if showing 'all'
+            html.P(f"Year {display_year}", style={'marginBottom': '20px', 'color': '#64748b', 'fontSize': '14px'}) if year == 'all' else html.Div(),
+
             html.Div([
                 html.Div([
-                    html.H5(format_scenario_name(subscenario1), className="text-primary mb-1"),
-                    html.H3(f"{total1:,.2f}", className="mb-0")
-                ], className="col-md-4 text-center p-3", style={'backgroundColor': '#e3f2fd', 'borderRadius': '8px', 'margin': '5px'}),
+                    html.Span("SCENARIO A", style={'fontSize': '12px', 'color': '#64748b', 'fontWeight': '600'}),
+                    html.Div([
+                        html.Label(format_scenario_name(subscenario1),
+                                 style={'fontSize': '14px', 'fontWeight': '500', 'color': '#1e293b'})
+                    ], style={'marginTop': '5px'})
+                ], style={'flex': '1'}),
 
                 html.Div([
-                    html.H5(format_scenario_name(subscenario2), className="text-success mb-1"),
-                    html.H3(f"{total2:,.2f}", className="mb-0")
-                ], className="col-md-4 text-center p-3", style={'backgroundColor': '#e8f5e9', 'borderRadius': '8px', 'margin': '5px'}),
+                    html.Span("SCENARIO B", style={'fontSize': '12px', 'color': '#64748b', 'fontWeight': '600'}),
+                    html.Div([
+                        html.Label(format_scenario_name(subscenario2),
+                                 style={'fontSize': '14px', 'fontWeight': '500', 'color': '#1e293b'})
+                    ], style={'marginTop': '5px'})
+                ], style={'flex': '1'}),
 
                 html.Div([
-                    html.H5("Difference", className="mb-1", style={'color': '#666'}),
-                    html.H3(f"{diff:+,.2f}", className="mb-0",
-                           style={'color': 'green' if diff > 0 else 'red' if diff < 0 else 'gray'}),
-                    html.P(f"({pct_change:+.1f}%)", className="mb-0", style={'fontSize': '14px'})
-                ], className="col-md-4 text-center p-3", style={'backgroundColor': '#fff3e0', 'borderRadius': '8px', 'margin': '5px'}),
-            ], className="row mb-3"),
+                    html.Span("COMPARING", style={'fontSize': '12px', 'color': '#64748b', 'fontWeight': '600'}),
+                    html.Div([
+                        html.Span(format_scenario_name(subscenario1),
+                                style={'padding': '4px 12px', 'backgroundColor': '#3b82f6', 'color': 'white',
+                                       'borderRadius': '4px', 'fontSize': '12px', 'fontWeight': '500', 'marginRight': '5px'}),
+                        html.Span(format_scenario_name(subscenario2),
+                                style={'padding': '4px 12px', 'backgroundColor': '#10b981', 'color': 'white',
+                                       'borderRadius': '4px', 'fontSize': '12px', 'fontWeight': '500'})
+                    ], style={'marginTop': '5px'})
+                ], style={'flex': '1'})
+            ], style={'display': 'flex', 'gap': '20px', 'marginBottom': '30px'}),
 
-            # Key insights as bullet points
+            # 6 Key categories in 2 rows of 3
             html.Div([
-                html.H6("Key Insights:", style={'fontWeight': 'bold', 'marginBottom': '15px'}),
-                html.Ul([
-                    html.Li([
-                        html.Strong("Overall change: "),
-                        html.Span(f"{format_scenario_name(subscenario2)} is ", style={'color': '#666'}),
-                        html.Span(f"{abs(pct_change):.1f}% {'higher' if pct_change > 0 else 'lower' if pct_change < 0 else 'the same'}",
-                                 style={'color': 'green' if pct_change > 0 else 'red' if pct_change < 0 else 'gray', 'fontWeight': 'bold'}),
-                        html.Span(f" than {format_scenario_name(subscenario1)}", style={'color': '#666'})
-                    ]),
-                    html.Li([
-                        html.Strong("Carrier changes: "),
-                        html.Span(f"{num_increased} increased", style={'color': 'green', 'marginRight': '10px'}),
-                        html.Span(f"{num_decreased} decreased", style={'color': 'red', 'marginRight': '10px'}),
-                        html.Span(f"{num_unchanged} unchanged", style={'color': 'gray'})
-                    ]),
-                    html.Li([
-                        html.Strong("Largest absolute changes: "),
-                        html.Ul([
-                            html.Li([
-                                html.Span(f"{carriers1[idx]}: ", style={'fontFamily': 'monospace'}),
-                                html.Span(f"{values2[idx] - values1[idx]:+,.2f}",
-                                         style={'color': 'green' if values2[idx] > values1[idx] else 'red' if values2[idx] < values1[idx] else 'gray'})
-                            ])
-                            for idx in top_diff_indices if abs(values2[idx] - values1[idx]) > 0.01
-                        ], style={'marginTop': '5px', 'marginBottom': '5px'})
-                    ]),
-                    html.Li([
-                        html.Strong("Largest percentage changes: "),
-                        html.Ul([
-                            html.Li([
-                                html.Span(f"{carriers1[idx]}: ", style={'fontFamily': 'monospace'}),
-                                html.Span(f"{pct_changes[idx]:+.1f}%",
-                                         style={'color': 'green' if pct_changes[idx] > 0 else 'red' if pct_changes[idx] < 0 else 'gray'}),
-                                html.Span(f" ({values1[idx]:.1f} → {values2[idx]:.1f})",
-                                         style={'color': '#888', 'fontSize': '12px', 'marginLeft': '5px'})
-                            ])
-                            for idx in top_pct_indices if abs(pct_changes[idx]) > 0.1
-                        ] if len(top_pct_indices) > 0 else [html.Li("No significant changes", style={'color': '#888'})],
-                        style={'marginTop': '5px'})
-                    ])
-                ], style={'lineHeight': '1.8'})
-            ], className="mt-3")
+                # Row 1
+                html.Div([
+                    # Total generation
+                    html.Div([
+                        html.Div([
+                            html.Span("⚡", style={'fontSize': '32px'}),
+                            html.H6("Total generation", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                        ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                        html.H4(f"{diff:+.0f} {metric.split('(')[-1].split(')')[0] if '(' in metric else 'units'}",
+                               style={'color': '#10b981' if diff > 0 else '#ef4444' if diff < 0 else '#64748b', 'fontSize': '20px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                        html.P(f"({pct_change:+.0f}%)", style={'fontSize': '14px', 'color': '#64748b', 'textAlign': 'center', 'margin': '0'}),
+                        html.P(f"{format_scenario_name(subscenario1)}: {total1:.0f} → {format_scenario_name(subscenario2)}: {total2:.0f}",
+                              style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center', 'marginTop': '8px'})
+                    ], className="col-md-4 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0'}),
+
+                    # Emissions
+                    html.Div([
+                        html.Div([
+                            html.Span("📉", style={'fontSize': '32px'}),
+                            html.H6("Emissions", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                        ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                        html.H4(f"{emissions_diff:+.0f} Mt CO₂" if has_emissions else "N/A",
+                               style={'color': '#10b981' if emissions_diff < 0 else '#ef4444' if emissions_diff > 0 else '#64748b', 'fontSize': '20px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                        html.P(f"({emissions_pct:+.0f}%)" if has_emissions else "Emissions data not available",
+                              style={'fontSize': '14px', 'color': '#64748b', 'textAlign': 'center', 'margin': '0'}),
+                        html.P(f"{format_scenario_name(subscenario1)}: {emissions1:.0f} Mt → {format_scenario_name(subscenario2)}: {emissions2:.0f} Mt" if has_emissions else "",
+                              style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center', 'marginTop': '8px'})
+                    ], className="col-md-4 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0', 'marginLeft': '10px'}),
+
+                    # Clean share (% of clean/renewable)
+                    html.Div([
+                        html.Div([
+                            html.Span("🌱", style={'fontSize': '32px'}),
+                            html.H6("Clean share", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                        ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                        html.H4(f"{(renewables_build2 + clean_firm2) / total2 * 100 - (renewables_build1 + clean_firm1) / total1 * 100:+.1f}pp" if total1 > 0 and total2 > 0 else "N/A",
+                               style={'color': '#10b981' if (renewables_build2 + clean_firm2) / total2 > (renewables_build1 + clean_firm1) / total1 else '#ef4444', 'fontSize': '20px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                        html.P(f"{format_scenario_name(subscenario1)}: {(renewables_build1 + clean_firm1) / total1 * 100:.0f}% → {format_scenario_name(subscenario2)}: {(renewables_build2 + clean_firm2) / total2 * 100:.0f}%" if total1 > 0 and total2 > 0 else "",
+                              style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center'})
+                    ], className="col-md-4 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0', 'marginLeft': '10px'})
+                ], style={'display': 'flex', 'gap': '0px', 'marginBottom': '15px'}),
+
+                # Row 2
+                html.Div([
+                    # Renewables build
+                    html.Div([
+                        html.Div([
+                            html.Span("☀️", style={'fontSize': '32px'}),
+                            html.H6("Renewables build", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                        ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                        html.H4(f"{renewables_diff:+.0f} {metric.split('(')[-1].split(')')[0] if '(' in metric else 'units'}",
+                               style={'color': '#10b981' if renewables_diff > 0 else '#ef4444' if renewables_diff < 0 else '#64748b', 'fontSize': '20px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                        html.P(f"({renewables_diff / renewables_build1 * 100:+.0f}%)" if renewables_build1 > 0 else "(new capacity)",
+                              style={'fontSize': '14px', 'color': '#64748b', 'textAlign': 'center', 'margin': '0'}),
+                        html.P(f"Solar + Wind", style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center', 'marginTop': '8px'})
+                    ], className="col-md-4 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0'}),
+
+                    # Clean firm
+                    html.Div([
+                        html.Div([
+                            html.Span("⚛️", style={'fontSize': '32px'}),
+                            html.H6("Clean firm", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                        ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                        html.H4(f"{clean_diff:+.0f} {metric.split('(')[-1].split(')')[0] if '(' in metric else 'units'}",
+                               style={'color': '#10b981' if clean_diff > 0 else '#ef4444' if clean_diff < 0 else '#64748b', 'fontSize': '20px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                        html.P(f"({clean_diff / clean_firm1 * 100:+.0f}%)" if clean_firm1 > 0 else "(new capacity)",
+                              style={'fontSize': '14px', 'color': '#64748b', 'textAlign': 'center', 'margin': '0'}),
+                        html.P(f"Nuclear + CCS", style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center', 'marginTop': '8px'})
+                    ], className="col-md-4 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0', 'marginLeft': '10px'}),
+
+                    # Top moves (resource shifts)
+                    html.Div([
+                        html.Div([
+                            html.Span("🔍", style={'fontSize': '32px'}),
+                            html.H6("Top moves", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                        ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                        html.H6("Resource shifts", style={'color': '#3b82f6', 'fontSize': '16px', 'fontWeight': '600', 'textAlign': 'center', 'marginBottom': '10px'}),
+                        html.Div([
+                            html.P(f"Largest build: {carriers1[top_increase_idx]} (+{abs_diffs[top_increase_idx]:.0f})",
+                                  style={'fontSize': '12px', 'margin': '4px 0'}),
+                            html.P(f"Largest reduction: {carriers1[top_decrease_idx]} ({abs_diffs[top_decrease_idx]:.0f})",
+                                  style={'fontSize': '12px', 'margin': '4px 0'})
+                        ], style={'textAlign': 'center', 'color': '#64748b'})
+                    ], className="col-md-4 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0', 'marginLeft': '10px'})
+                ], style={'display': 'flex', 'gap': '0px'})
+            ])
         ])
 
     except Exception as e:
