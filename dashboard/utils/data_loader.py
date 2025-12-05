@@ -14,12 +14,17 @@ class DataLoader:
         self.results_dir = Path(results_dir)
         self.data = {}
         self.scenarios = ['CI_25', 'CI_50', 'CI_noadd']
+        self.frontier_data = None
 
     def load_all_data(self):
         """Load data from all scenarios"""
         for scenario in self.scenarios:
             print(f"Loading {scenario}...")
             self.data[scenario] = self.load_scenario_data(scenario)
+
+        # Load frontier data
+        print("Loading frontier data...")
+        self.frontier_data = self.load_frontier_data()
 
     def load_scenario_data(self, scenario):
         """Load data for a specific scenario"""
@@ -156,3 +161,119 @@ class DataLoader:
             'metrics': data.get('metrics', []),
             'num_countries': len(data.get('countries', {}))
         }
+
+    def load_frontier_data(self):
+        """Load the frontier results from results_frontier.csv"""
+        frontier_file = self.results_dir / "results_frontier.csv"
+        if not frontier_file.exists():
+            print("  Warning: results_frontier.csv not found")
+            return None
+
+        try:
+            # Read the CSV
+            df = pd.read_csv(frontier_file)
+
+            # The column headers (except first) are scenario names (but pandas adds .1, .2, etc. for duplicates)
+            # Row 0: years
+            # Row 1: countries
+            # Row 2+: data points (frontier values)
+
+            # Extract metadata from first 2 rows
+            years_row = df.iloc[0, 1:]  # Skip first column 'scenario'
+            countries_row = df.iloc[1, 1:]
+
+            # Build column multi-index from scenario (column name), year, country
+            columns_tuples = []
+            for col_name in df.columns[1:]:  # Skip first column 'scenario'
+                col_idx = df.columns.get_loc(col_name)
+                year = df.iloc[0, col_idx]
+                country = df.iloc[1, col_idx]
+                # Remove pandas-added suffixes (.1, .2, etc.) from scenario name
+                scenario = col_name.split('.')[0] if '.' in col_name else col_name
+                columns_tuples.append((scenario, str(year), str(country)))
+
+            # Create new dataframe with multi-index columns, starting from row 2
+            frontier_df = pd.DataFrame(
+                df.iloc[2:, 1:].values,  # Skip first 2 rows (metadata) and first column
+                columns=pd.MultiIndex.from_tuples(columns_tuples, names=['scenario', 'year', 'country'])
+            )
+
+            # Convert to numeric
+            frontier_df = frontier_df.apply(pd.to_numeric, errors='coerce')
+
+            print(f"  Loaded frontier data: {frontier_df.shape[0]} points, {len(frontier_df.columns)} scenario-year-country combinations")
+            return frontier_df
+
+        except Exception as e:
+            print(f"  Error loading frontier data: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    def get_frontier_data(self, main_scenario, year, country='EU'):
+        """
+        Get frontier data for a specific main scenario, year, and country
+
+        Parameters:
+        -----------
+        main_scenario : str
+            One of 'CI_25', 'CI_50', 'CI_noadd' (not currently used for filtering)
+        year : int or str
+            Year to filter
+        country : str
+            Country/region name (default: 'EU' for system level)
+
+        Returns:
+        --------
+        dict: Dictionary mapping scenario names to frontier arrays
+        """
+        if self.frontier_data is None:
+            return {}
+
+        try:
+            # Get all columns matching the year and country using idx slicing
+            idx = pd.IndexSlice
+
+            # Filter by year and country
+            matching_data = self.frontier_data.loc[:, idx[:, str(year), str(country)]]
+
+            # Extract data for each scenario
+            result = {}
+            for col in matching_data.columns:
+                scenario, yr, ctry = col
+                # Get the data column and remove NaN values
+                data = matching_data[col].dropna().values
+                if len(data) > 0:
+                    result[scenario] = data
+
+            return result
+
+        except Exception as e:
+            print(f"Error getting frontier data: {e}")
+            import traceback
+            traceback.print_exc()
+            return {}
+
+    def get_frontier_countries(self, main_scenario, year):
+        """Get list of available countries for a given main scenario and year"""
+        if self.frontier_data is None:
+            return []
+
+        try:
+            countries = set()
+            for col in self.frontier_data.columns:
+                scenario, yr, ctry = col
+                if str(yr) == str(year):
+                    countries.add(str(ctry))
+
+            # Return sorted list with EU first
+            countries_list = sorted(list(countries))
+            if 'EU' in countries_list:
+                countries_list.remove('EU')
+                countries_list.insert(0, 'EU')
+
+            return countries_list
+
+        except Exception as e:
+            print(f"Error getting frontier countries: {e}")
+            return []

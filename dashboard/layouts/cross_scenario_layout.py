@@ -37,10 +37,12 @@ def create_cross_scenario_layout(data_loader):
     # Set defaults - explicitly set to trigger callback
     default_sub1 = all_subscenarios[0] if len(all_subscenarios) > 0 else 'baseline'
     default_sub2 = all_subscenarios[1] if len(all_subscenarios) > 1 else 'energy-match-50'
+    default_sub3 = all_subscenarios[2] if len(all_subscenarios) > 2 else None
+    default_sub4 = all_subscenarios[3] if len(all_subscenarios) > 3 else None
 
     return dbc.Container([
         html.H2("Cross-Scenario Comparison", className="mb-4"),
-        html.P("Compare two sub-scenarios across different main scenarios (e.g., compare Baseline in CI_25 vs Baseline in CI_50)"),
+        html.P("Compare up to 4 sub-scenarios across different main scenarios"),
 
         # Control panel
         dbc.Card([
@@ -85,6 +87,24 @@ def create_cross_scenario_layout(data_loader):
                         )
                     ], width=2),
 
+                    # Grouping toggle
+                    dbc.Col([
+                        html.Label("Group By:", style={'fontWeight': 'bold'}),
+                        dcc.RadioItems(
+                            id='cross-grouping-selector',
+                            options=[
+                                {'label': 'Year', 'value': 'year'},
+                                {'label': 'Scenario', 'value': 'scenario'}
+                            ],
+                            value='year',
+                            inline=True,
+                            labelStyle={'marginRight': '15px'}
+                        )
+                    ], width=3),
+                ]),
+
+                # Second row for sub-scenarios
+                dbc.Row([
                     # Sub-scenario 1 selector
                     dbc.Col([
                         html.Label("Sub-Scenario 1:", style={'fontWeight': 'bold'}),
@@ -94,7 +114,7 @@ def create_cross_scenario_layout(data_loader):
                             value=default_sub1,
                             clearable=False
                         )
-                    ], width=2),
+                    ], width=3),
 
                     # Sub-scenario 2 selector
                     dbc.Col([
@@ -106,7 +126,31 @@ def create_cross_scenario_layout(data_loader):
                             clearable=False
                         )
                     ], width=3),
-                ])
+
+                    # Sub-scenario 3 selector
+                    dbc.Col([
+                        html.Label("Sub-Scenario 3 (optional):", style={'fontWeight': 'bold'}),
+                        dcc.Dropdown(
+                            id='cross-subscenario3-selector',
+                            options=subscenario_options,
+                            value=default_sub3,
+                            clearable=True,
+                            placeholder="Select (optional)"
+                        )
+                    ], width=3),
+
+                    # Sub-scenario 4 selector
+                    dbc.Col([
+                        html.Label("Sub-Scenario 4 (optional):", style={'fontWeight': 'bold'}),
+                        dcc.Dropdown(
+                            id='cross-subscenario4-selector',
+                            options=subscenario_options,
+                            value=default_sub4,
+                            clearable=True,
+                            placeholder="Select (optional)"
+                        )
+                    ], width=3),
+                ], className="mt-2")
             ])
         ], className="mb-4"),
 

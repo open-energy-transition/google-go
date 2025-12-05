@@ -93,3 +93,22 @@ def format_main_scenario_name(main_scenario):
         'CI_noadd': 'No Additionality'
     }
     return mapping.get(main_scenario, main_scenario)
+
+
+def clean_carrier_name(carrier_name):
+    """Remove 'virtual' prefix and other artifacts from carrier names"""
+    if not carrier_name:
+        return carrier_name
+
+    # Remove 'virtual' prefix (case-insensitive)
+    cleaned = carrier_name
+    if cleaned.lower().startswith('virtual '):
+        cleaned = cleaned[8:]  # Remove 'virtual ' (8 characters)
+    elif cleaned.lower().startswith('virtual_'):
+        cleaned = cleaned[8:]  # Remove 'virtual_' (8 characters)
+
+    # Capitalize first letter
+    if cleaned:
+        cleaned = cleaned[0].upper() + cleaned[1:]
+
+    return cleaned

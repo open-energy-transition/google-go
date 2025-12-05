@@ -15,7 +15,7 @@ from pathlib import Path
 # Import utilities
 from utils.data_loader import DataLoader
 from utils.colors import ColorMapper
-from layouts import single_scenario_layout, cross_scenario_layout
+from layouts import single_scenario_layout, cross_scenario_layout, deadzone_layout
 from callbacks import register_callbacks
 
 # Initialize the Dash app
@@ -56,6 +56,8 @@ app.layout = dbc.Container([
                        style={'fontWeight': 'bold'}),
                 dcc.Tab(label='Cross-Scenario Comparison', value='cross-scenario-tab',
                        style={'fontWeight': 'bold'}),
+                dcc.Tab(label='Dead Zone Analysis', value='deadzone-tab',
+                       style={'fontWeight': 'bold'}),
             ], style={'fontSize': '16px'})
         ])
     ]),
@@ -68,6 +70,8 @@ app.layout = dbc.Container([
                         id='single-content', style={'display': 'block'}),
                 html.Div(cross_scenario_layout.create_cross_scenario_layout(data_loader),
                         id='cross-scenario-content', style={'display': 'none'}),
+                html.Div(deadzone_layout.create_deadzone_layout(data_loader),
+                        id='deadzone-content', style={'display': 'none'}),
             ], id='tab-content', className='mt-4')
         ])
     ]),
@@ -77,15 +81,18 @@ app.layout = dbc.Container([
 # Callback to show/hide tab content
 @app.callback(
     [Output('single-content', 'style'),
-     Output('cross-scenario-content', 'style')],
+     Output('cross-scenario-content', 'style'),
+     Output('deadzone-content', 'style')],
     Input('main-tabs', 'value')
 )
 def render_tab_content(tab):
-    styles = [{'display': 'none'}] * 2
+    styles = [{'display': 'none'}] * 3
     if tab == 'single-tab':
         styles[0] = {'display': 'block'}
     elif tab == 'cross-scenario-tab':
         styles[1] = {'display': 'block'}
+    elif tab == 'deadzone-tab':
+        styles[2] = {'display': 'block'}
     return styles
 
 # Register all callbacks
