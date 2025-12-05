@@ -76,6 +76,7 @@ def create_cross_scenario_layout(data_loader):
                             options=[
                                 {'label': 'Side-by-Side', 'value': 'comparison'},
                                 {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
+                                {'label': 'Stacked Bar + Total Line', 'value': 'stacked_with_total'},
                                 {'label': 'Year Comparison', 'value': 'year_comparison'},
                                 {'label': 'Year on Year Evolution', 'value': 'year_on_year_evolution'}
                             ],
@@ -109,15 +110,35 @@ def create_cross_scenario_layout(data_loader):
             ])
         ], className="mb-4"),
 
-        # Comparison plot
-        dbc.Card([
-            dbc.CardBody([
-                html.H4("Side-by-Side Comparison", className="mb-3"),
-                dcc.Graph(id='cross-comparison-plot', style={'height': '500px'})
-            ])
+        # Carrier selection and plot area
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Carrier Selection"),
+                    dbc.CardBody([
+                        dcc.Checklist(
+                            id='cross-carrier-selector',
+                            options=[],  # Will be populated by callback
+                            value=[],
+                            labelStyle={'display': 'block', 'margin': '5px'},
+                            inputStyle={'marginRight': '10px'}
+                        )
+                    ])
+                ])
+            ], width=3),
+
+            dbc.Col([
+                # Comparison plot
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H4("Side-by-Side Comparison", className="mb-3"),
+                        dcc.Graph(id='cross-comparison-plot', style={'height': '500px'})
+                    ])
+                ])
+            ], width=9)
         ], className="mb-4"),
 
-        # Difference plot
+        # Difference plot (full width)
         dbc.Card([
             dbc.CardBody([
                 html.H4("Difference Analysis", className="mb-3"),

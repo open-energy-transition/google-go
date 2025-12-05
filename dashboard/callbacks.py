@@ -44,7 +44,7 @@ def register_callbacks(app, data_loader):
             # Multi-year plots only
             options = [
                 {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
-                {'label': 'Year Comparison', 'value': 'year_comparison'},
+                {'label': 'Side by Side Bar Plot', 'value': 'year_comparison'},
                 {'label': 'Year on Year Evolution', 'value': 'year_on_year_evolution'}
             ]
             return options, 'stacked_bar'
@@ -133,7 +133,7 @@ def register_callbacks(app, data_loader):
             # Multi-year plots only
             options = [
                 {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
-                {'label': 'Year Comparison', 'value': 'year_comparison'},
+                {'label': 'Side by Side Bar Plot', 'value': 'year_comparison'},
                 {'label': 'Year on Year Evolution', 'value': 'year_on_year_evolution'}
             ]
             return options, 'stacked_bar'
@@ -157,14 +157,35 @@ def register_callbacks(app, data_loader):
         return None
 
     @app.callback(
+        [Output('cross-carrier-selector', 'options'),
+         Output('cross-carrier-selector', 'value')],
+        [Input('cross-metric-selector', 'value'),
+         Input('cross-subscenario1-selector', 'value')]
+    )
+    def update_cross_carriers(metric, subscenario1):
+        """Update available carriers based on selected metric and first subscenario"""
+        if not metric or not subscenario1:
+            return [], []
+
+        main_scenario = find_main_scenario(subscenario1)
+        if not main_scenario:
+            return [], []
+
+        carriers = data_loader.get_carriers_for_metric(main_scenario, metric)
+        options = [{'label': c, 'value': c} for c in carriers]
+        # Select all by default
+        return options, carriers
+
+    @app.callback(
         Output('cross-comparison-plot', 'figure'),
         [Input('cross-year-selector', 'value'),
          Input('cross-metric-selector', 'value'),
          Input('cross-plot-type-selector', 'value'),
          Input('cross-subscenario1-selector', 'value'),
-         Input('cross-subscenario2-selector', 'value')]
+         Input('cross-subscenario2-selector', 'value'),
+         Input('cross-carrier-selector', 'value')]
     )
-    def update_cross_comparison(year, metric, plot_type, subscenario1, subscenario2):
+    def update_cross_comparison(year, metric, plot_type, subscenario1, subscenario2, carriers):
         """Update cross-scenario comparison plot"""
         print(f"\n!!! UPDATE_CROSS_COMPARISON CALLED !!!")
         print(f"Params: {year}, {metric}, {plot_type}, {subscenario1}, {subscenario2}")
@@ -174,21 +195,22 @@ def register_callbacks(app, data_loader):
         print(f"Main scenarios: {subscenario1} -> {main1}, {subscenario2} -> {main2}")
 
         return create_cross_comparison_plot(main1 or main2, year, metric, plot_type, subscenario1, subscenario2,
-                                            data_loader, color_mapper, main1, main2)
+                                            data_loader, color_mapper, main1, main2, carriers)
 
     @app.callback(
         Output('cross-difference-plot', 'figure'),
         [Input('cross-year-selector', 'value'),
          Input('cross-metric-selector', 'value'),
          Input('cross-subscenario1-selector', 'value'),
-         Input('cross-subscenario2-selector', 'value')]
+         Input('cross-subscenario2-selector', 'value'),
+         Input('cross-carrier-selector', 'value')]
     )
-    def update_cross_difference(year, metric, subscenario1, subscenario2):
+    def update_cross_difference(year, metric, subscenario1, subscenario2, carriers):
         """Update cross-scenario difference plot"""
         main1 = find_main_scenario(subscenario1) if subscenario1 else None
         main2 = find_main_scenario(subscenario2) if subscenario2 else None
         return create_cross_difference_plot(main1 or main2, year, metric, subscenario1, subscenario2,
-                                           data_loader, color_mapper, main1, main2)
+                                           data_loader, color_mapper, main1, main2, carriers)
 
     @app.callback(
         Output('cross-summary-stats', 'children'),
@@ -747,7 +769,7 @@ def create_year_on_year_evolution_plot(scenario, scenario_name, metric, carriers
 
 # ==================== Helper Functions ====================
 
-def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None):
+def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None, carriers=None):
     """Create comparison plot for two sub-scenarios"""
     try:
         print(f"\n=== Cross-Scenario Comparison Debug ===")
@@ -766,19 +788,23 @@ def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscen
             return create_empty_figure("Please select two different sub-scenarios")
 
         # Handle multi-year plot types
-        if year == 'all' or plot_type in ['stacked_bar', 'year_comparison', 'year_on_year_evolution']:
+        if year == 'all' or plot_type in ['stacked_bar', 'stacked_with_total', 'year_comparison', 'year_on_year_evolution']:
             if plot_type == 'stacked_bar':
                 return create_cross_stacked_bar_plot(main1 or main_scenario, main2 or main_scenario,
                                                     metric, subscenario1, subscenario2,
-                                                    data_loader, color_mapper, main1, main2)
+                                                    data_loader, color_mapper, main1, main2, carriers)
+            elif plot_type == 'stacked_with_total':
+                return create_cross_stacked_with_total_plot(main1 or main_scenario, main2 or main_scenario,
+                                                           metric, subscenario1, subscenario2,
+                                                           data_loader, color_mapper, main1, main2, carriers)
             elif plot_type == 'year_comparison':
                 return create_cross_year_comparison_plot(main1 or main_scenario, main2 or main_scenario,
                                                          metric, subscenario1, subscenario2,
-                                                         data_loader, color_mapper, main1, main2)
+                                                         data_loader, color_mapper, main1, main2, carriers)
             elif plot_type == 'year_on_year_evolution':
                 return create_cross_evolution_plot(main1 or main_scenario, main2 or main_scenario,
                                                    metric, subscenario1, subscenario2,
-                                                   data_loader, color_mapper, main1, main2)
+                                                   data_loader, color_mapper, main1, main2, carriers)
 
         # Default: side-by-side comparison (single year required)
         if not year or year == 'all':
@@ -801,21 +827,26 @@ def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscen
         data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
         data2 = df2.iloc[:, 0] if isinstance(df2.columns, pd.MultiIndex) else df2.iloc[:, 0]
 
-        carriers = data1.index.get_level_values(2).tolist()
+        # Filter by selected carriers if provided
+        if carriers:
+            data1 = data1[data1.index.get_level_values(2).isin(carriers)]
+            data2 = data2[data2.index.get_level_values(2).isin(carriers)]
+
+        carrier_list = data1.index.get_level_values(2).tolist()
         values1 = data1.values
         values2 = data2.values
 
         # Add bars for both scenarios
         fig.add_trace(go.Bar(
             name=format_scenario_name(subscenario1),
-            x=carriers,
+            x=carrier_list,
             y=values1,
             marker_color='lightblue'
         ))
 
         fig.add_trace(go.Bar(
             name=format_scenario_name(subscenario2),
-            x=carriers,
+            x=carrier_list,
             y=values2,
             marker_color='lightcoral'
         ))
@@ -836,18 +867,27 @@ def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscen
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None):
+def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None, carriers=None):
     """Create difference plot between two sub-scenarios"""
     try:
-        if not all([year, metric, subscenario1, subscenario2]):
+        # Handle 'all' year case - use latest year for difference plot
+        display_year = year
+        if year == 'all':
+            stats = data_loader.get_summary_stats(main1 or main_scenario)
+            years = stats.get('years', [])
+            display_year = years[-1] if years else None
+            if not display_year:
+                return create_empty_figure("No year data available")
+
+        if not all([display_year, metric, subscenario1, subscenario2]):
             return create_empty_figure("Please select all parameters")
 
         if subscenario1 == subscenario2:
             return create_empty_figure("Please select two different sub-scenarios")
 
         # Get data for both sub-scenarios from their respective main scenarios
-        df1 = data_loader.get_data(main1 or main_scenario, year=year, scenario_name=subscenario1, metric=metric)
-        df2 = data_loader.get_data(main2 or main_scenario, year=year, scenario_name=subscenario2, metric=metric)
+        df1 = data_loader.get_data(main1 or main_scenario, year=display_year, scenario_name=subscenario1, metric=metric)
+        df2 = data_loader.get_data(main2 or main_scenario, year=display_year, scenario_name=subscenario2, metric=metric)
 
         if df1 is None or df1.empty or df2 is None or df2.empty:
             return create_empty_figure("No data available for selected parameters")
@@ -856,7 +896,12 @@ def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subs
         data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
         data2 = df2.iloc[:, 0] if isinstance(df2.columns, pd.MultiIndex) else df2.iloc[:, 0]
 
-        carriers = data1.index.get_level_values(2).tolist()
+        # Filter by selected carriers if provided
+        if carriers:
+            data1 = data1[data1.index.get_level_values(2).isin(carriers)]
+            data2 = data2[data2.index.get_level_values(2).isin(carriers)]
+
+        carrier_list = data1.index.get_level_values(2).tolist()
         diff = data2.values - data1.values
 
         # Color bars based on positive/negative
@@ -864,15 +909,17 @@ def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subs
 
         fig = go.Figure()
         fig.add_trace(go.Bar(
-            x=carriers,
+            x=carrier_list,
             y=diff,
             marker_color=colors,
             text=[f"{d:+.2f}" for d in diff],
             textposition='outside'
         ))
 
+        year_label = f"Year {display_year}" if year == 'all' else display_year
+
         fig.update_layout(
-            title=f"Difference: {format_scenario_name(subscenario2)} - {format_scenario_name(subscenario1)}<br><sub>{format_main_scenario_name(main_scenario)}: {metric} ({year})</sub>",
+            title=f"Difference: {format_scenario_name(subscenario2)} - {format_scenario_name(subscenario1)}<br><sub>{format_main_scenario_name(main_scenario)}: {metric} ({year_label})</sub>",
             xaxis_title="Carrier",
             yaxis_title="Difference (Positive = Higher in Scenario 2)",
             template="plotly_white",
@@ -1096,7 +1143,7 @@ def create_cross_summary_stats(main_scenario, year, metric, subscenario1, subsce
         return html.P(f"Error: {str(e)}")
 
 
-def create_cross_stacked_bar_plot(main_scenario1, main_scenario2, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None):
+def create_cross_stacked_bar_plot(main_scenario1, main_scenario2, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None, carriers=None):
     """Create stacked bar plot comparing two sub-scenarios across all years"""
     try:
         if not all([metric, subscenario1, subscenario2]):
@@ -1136,61 +1183,53 @@ def create_cross_stacked_bar_plot(main_scenario1, main_scenario2, metric, subsce
         if not all_carriers:
             return create_empty_figure("No data available")
 
+        # Filter carriers if selection is provided
+        if carriers:
+            all_carriers = all_carriers.intersection(set(carriers))
+
+        if not all_carriers:
+            return create_empty_figure("No carriers selected")
+
         fig = go.Figure()
 
-        # Add stacked bars for subscenario1 - one group per year
+        # Interleave bars by year so both scenarios for each year appear together
         for carrier in sorted(all_carriers):
-            carrier_years1 = []
-            carrier_values1 = []
+            x_labels = []
+            y_values = []
+            opacities = []
 
             for year in years:
-                if carrier in year_data1.get(year, {}):
-                    carrier_years1.append(f"{year}\n{format_scenario_name(subscenario1)}")
-                    carrier_values1.append(year_data1[year][carrier])
-                else:
-                    carrier_years1.append(f"{year}\n{format_scenario_name(subscenario1)}")
-                    carrier_values1.append(0)
+                # Add subscenario1 bar for this year
+                x_labels.append(f"{year} - {format_scenario_name(subscenario1)}")
+                y_values.append(year_data1.get(year, {}).get(carrier, 0))
+                opacities.append(1.0)
+
+                # Add subscenario2 bar for this year (right after subscenario1)
+                x_labels.append(f"{year} - {format_scenario_name(subscenario2)}")
+                y_values.append(year_data2.get(year, {}).get(carrier, 0))
+                opacities.append(0.6)
 
             color = color_mapper.get_color(carrier, metric) if color_mapper else None
-            fig.add_trace(go.Bar(
-                name=carrier,
-                x=carrier_years1,
-                y=carrier_values1,
-                marker_color=color,
-                legendgroup=carrier,
-                showlegend=True,
-                hovertemplate=f"{carrier}: %{{y:.2f}}<extra></extra>"
-            ))
 
-        # Add stacked bars for subscenario2
-        for carrier in sorted(all_carriers):
-            carrier_years2 = []
-            carrier_values2 = []
-
-            for year in years:
-                if carrier in year_data2.get(year, {}):
-                    carrier_years2.append(f"{year}\n{format_scenario_name(subscenario2)}")
-                    carrier_values2.append(year_data2[year][carrier])
-                else:
-                    carrier_years2.append(f"{year}\n{format_scenario_name(subscenario2)}")
-                    carrier_values2.append(0)
-
-            color = color_mapper.get_color(carrier, metric) if color_mapper else None
-            fig.add_trace(go.Bar(
-                name=carrier,
-                x=carrier_years2,
-                y=carrier_values2,
-                marker_color=color,
-                legendgroup=carrier,
-                showlegend=False,  # Don't duplicate legend
-                hovertemplate=f"{carrier}: %{{y:.2f}}<extra></extra>"
-            ))
+            # Create a trace for each carrier with interleaved data
+            # We need to create separate traces for different opacities
+            for i, (x, y, opacity) in enumerate(zip(x_labels, y_values, opacities)):
+                fig.add_trace(go.Bar(
+                    name=carrier,
+                    x=[x],
+                    y=[y],
+                    marker=dict(color=color, opacity=opacity),
+                    legendgroup=carrier,
+                    showlegend=(i == 0),  # Only show legend for first occurrence
+                    hovertemplate=f"{carrier}: %{{y:.2f}}<extra></extra>"
+                ))
 
         fig.update_layout(
-            title=f"Stacked Bar - All Years: {metric}<br><sub>{format_scenario_name(subscenario1)} vs {format_scenario_name(subscenario2)}</sub>",
+            title=f"Stacked Bar - All Years: {metric}<br><sub>{format_scenario_name(subscenario1)} (solid) vs {format_scenario_name(subscenario2)} (lighter)</sub>",
             xaxis_title="Year and Scenario",
             yaxis_title="Value",
             barmode='stack',
+            bargap=0.3,  # Add gap between bars for better separation
             template="plotly_white",
             hovermode='x unified',
             legend=dict(
@@ -1209,7 +1248,145 @@ def create_cross_stacked_bar_plot(main_scenario1, main_scenario2, metric, subsce
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_year_comparison_plot(main_scenario1, main_scenario2, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None):
+def create_cross_stacked_with_total_plot(main_scenario1, main_scenario2, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None, carriers=None):
+    """Create stacked bar plot with total line overlay comparing two sub-scenarios across all years"""
+    try:
+        if not all([metric, subscenario1, subscenario2]):
+            return create_empty_figure("Please select all parameters")
+
+        if subscenario1 == subscenario2:
+            return create_empty_figure("Please select two different sub-scenarios")
+
+        # Get available years
+        stats1 = data_loader.get_summary_stats(main1 or main_scenario1)
+        years = stats1.get('years', [])
+
+        if not years:
+            return create_empty_figure("No years available")
+
+        # Collect data for all years for both subscenarios
+        all_carriers = set()
+        year_data1 = {}
+        year_data2 = {}
+
+        for year in years:
+            df1 = data_loader.get_data(main1 or main_scenario1, year=year, scenario_name=subscenario1, metric=metric)
+            df2 = data_loader.get_data(main2 or main_scenario2, year=year, scenario_name=subscenario2, metric=metric)
+
+            if df1 is not None and not df1.empty:
+                data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
+                carriers1 = data1.index.get_level_values(2).tolist()
+                all_carriers.update(carriers1)
+                year_data1[year] = {carrier: val for carrier, val in zip(carriers1, data1.values)}
+
+            if df2 is not None and not df2.empty:
+                data2 = df2.iloc[:, 0] if isinstance(df2.columns, pd.MultiIndex) else df2.iloc[:, 0]
+                carriers2 = data2.index.get_level_values(2).tolist()
+                all_carriers.update(carriers2)
+                year_data2[year] = {carrier: val for carrier, val in zip(carriers2, data2.values)}
+
+        if not all_carriers:
+            return create_empty_figure("No data available")
+
+        # Filter carriers if selection is provided
+        if carriers:
+            all_carriers = all_carriers.intersection(set(carriers))
+
+        if not all_carriers:
+            return create_empty_figure("No carriers selected")
+
+        # Create figure with secondary y-axis
+        from plotly.subplots import make_subplots
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+        # Interleave bars by year so both scenarios for each year appear together
+        for carrier in sorted(all_carriers):
+            x_labels = []
+            y_values = []
+            opacities = []
+
+            for year in years:
+                # Add subscenario1 bar for this year
+                x_labels.append(f"{year} - {format_scenario_name(subscenario1)}")
+                y_values.append(year_data1.get(year, {}).get(carrier, 0))
+                opacities.append(1.0)
+
+                # Add subscenario2 bar for this year (right after subscenario1)
+                x_labels.append(f"{year} - {format_scenario_name(subscenario2)}")
+                y_values.append(year_data2.get(year, {}).get(carrier, 0))
+                opacities.append(0.6)
+
+            color = color_mapper.get_color(carrier, metric) if color_mapper else None
+
+            # Create a trace for each carrier with interleaved data
+            for i, (x, y, opacity) in enumerate(zip(x_labels, y_values, opacities)):
+                fig.add_trace(go.Bar(
+                    name=carrier,
+                    x=[x],
+                    y=[y],
+                    marker=dict(color=color, opacity=opacity),
+                    legendgroup=carrier,
+                    showlegend=(i == 0),
+                    hovertemplate=f"{carrier}: %{{y:.2f}}<extra></extra>"
+                ), secondary_y=False)
+
+        # Calculate totals for line plot
+        totals_x = []
+        totals_y = []
+
+        for year in years:
+            # Total for subscenario1
+            total1 = sum(year_data1.get(year, {}).get(carrier, 0) for carrier in all_carriers)
+            totals_x.append(f"{year} - {format_scenario_name(subscenario1)}")
+            totals_y.append(total1)
+
+            # Total for subscenario2
+            total2 = sum(year_data2.get(year, {}).get(carrier, 0) for carrier in all_carriers)
+            totals_x.append(f"{year} - {format_scenario_name(subscenario2)}")
+            totals_y.append(total2)
+
+        # Add total line on secondary y-axis
+        fig.add_trace(go.Scatter(
+            x=totals_x,
+            y=totals_y,
+            mode='lines+markers',
+            name='Total',
+            line=dict(color='black', width=3),
+            marker=dict(size=8, color='black'),
+            hovertemplate='Total: %{y:.2f}<extra></extra>',
+            text=[f"{(y/max(totals_y)*100):.1f}%" for y in totals_y],
+            textposition='top center',
+            textfont=dict(size=10)
+        ), secondary_y=True)
+
+        fig.update_layout(
+            title=f"Stacked Bar with Total: {metric}<br><sub>{format_scenario_name(subscenario1)} (solid) vs {format_scenario_name(subscenario2)} (lighter)</sub>",
+            xaxis_title="Year and Scenario",
+            barmode='stack',
+            bargap=0.3,
+            template="plotly_white",
+            hovermode='x unified',
+            legend=dict(
+                title="Carrier",
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02
+            )
+        )
+
+        # Set y-axes titles
+        fig.update_yaxes(title_text="Value", secondary_y=False)
+        fig.update_yaxes(title_text="Total (%)", secondary_y=True)
+
+        return fig
+
+    except Exception as e:
+        return create_empty_figure(f"Error: {str(e)}")
+
+
+def create_cross_year_comparison_plot(main_scenario1, main_scenario2, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None, carriers=None):
     """Create year comparison plot for two sub-scenarios (grouped bars across years)"""
     try:
         if not all([metric, subscenario1, subscenario2]):
@@ -1249,47 +1426,59 @@ def create_cross_year_comparison_plot(main_scenario1, main_scenario2, metric, su
         if not all_carriers:
             return create_empty_figure("No data available")
 
-        # Create grouped bar plot
+        # Filter carriers if selection is provided
+        if carriers:
+            all_carriers = all_carriers.intersection(set(carriers))
+
+        if not all_carriers:
+            return create_empty_figure("No carriers selected")
+
+        # Create grouped bar plot with year-carrier combinations on x-axis
         fig = go.Figure()
 
-        # Add traces for subscenario1 across all years
+        # Create x-axis labels combining year and carrier
+        x_labels = []
         for year in years:
-            carrier_vals = []
             for carrier in sorted(all_carriers):
-                carrier_vals.append(year_data1.get(year, {}).get(carrier, 0))
+                x_labels.append(f"{year}<br>{carrier}")
 
-            fig.add_trace(go.Bar(
-                name=f"{format_scenario_name(subscenario1)} - {year}",
-                x=sorted(list(all_carriers)),
-                y=carrier_vals,
-                legendgroup='sub1',
-                marker_pattern_shape="",
-                hovertemplate=f"{format_scenario_name(subscenario1)} ({year}): %{{y:.2f}}<extra></extra>"
-            ))
-
-        # Add traces for subscenario2 across all years
+        # Collect all values for subscenario1
+        y_vals1 = []
         for year in years:
-            carrier_vals = []
             for carrier in sorted(all_carriers):
-                carrier_vals.append(year_data2.get(year, {}).get(carrier, 0))
+                y_vals1.append(year_data1.get(year, {}).get(carrier, 0))
 
-            fig.add_trace(go.Bar(
-                name=f"{format_scenario_name(subscenario2)} - {year}",
-                x=sorted(list(all_carriers)),
-                y=carrier_vals,
-                legendgroup='sub2',
-                marker_pattern_shape="/",
-                hovertemplate=f"{format_scenario_name(subscenario2)} ({year}): %{{y:.2f}}<extra></extra>"
-            ))
+        # Collect all values for subscenario2
+        y_vals2 = []
+        for year in years:
+            for carrier in sorted(all_carriers):
+                y_vals2.append(year_data2.get(year, {}).get(carrier, 0))
+
+        # Add traces for both scenarios
+        fig.add_trace(go.Bar(
+            name=format_scenario_name(subscenario1),
+            x=x_labels,
+            y=y_vals1,
+            marker_pattern_shape="",
+            hovertemplate=f"{format_scenario_name(subscenario1)}: %{{y:.2f}}<extra></extra>"
+        ))
+
+        fig.add_trace(go.Bar(
+            name=format_scenario_name(subscenario2),
+            x=x_labels,
+            y=y_vals2,
+            marker_pattern_shape="/",
+            hovertemplate=f"{format_scenario_name(subscenario2)}: %{{y:.2f}}<extra></extra>"
+        ))
 
         fig.update_layout(
-            title=f"Year Comparison: {metric}<br><sub>{format_scenario_name(subscenario1)} vs {format_scenario_name(subscenario2)}</sub>",
-            xaxis_title="Carrier",
+            title=f"Side by Side Bar Plot: {metric}<br><sub>{format_scenario_name(subscenario1)} vs {format_scenario_name(subscenario2)}</sub>",
+            xaxis_title="Year - Carrier",
             yaxis_title="Value",
             barmode='group',
             template="plotly_white",
             hovermode='x unified',
-            legend=dict(title="Scenario - Year")
+            legend=dict(title="Scenario")
         )
 
         return fig
@@ -1298,7 +1487,7 @@ def create_cross_year_comparison_plot(main_scenario1, main_scenario2, metric, su
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_evolution_plot(main_scenario1, main_scenario2, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None):
+def create_cross_evolution_plot(main_scenario1, main_scenario2, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None, carriers=None):
     """Create year on year evolution plot for two sub-scenarios (line plot over time)"""
     try:
         if not all([metric, subscenario1, subscenario2]):
@@ -1337,6 +1526,13 @@ def create_cross_evolution_plot(main_scenario1, main_scenario2, metric, subscena
 
         if not all_carriers:
             return create_empty_figure("No data available")
+
+        # Filter carriers if selection is provided
+        if carriers:
+            all_carriers = all_carriers.intersection(set(carriers))
+
+        if not all_carriers:
+            return create_empty_figure("No carriers selected")
 
         # Create line plot - each carrier gets two lines (one per subscenario)
         fig = go.Figure()

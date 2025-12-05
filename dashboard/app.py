@@ -42,7 +42,7 @@ app.layout = dbc.Container([
             html.H1("Google-Go Analysis Dashboard",
                    className="text-center mb-2 mt-4",
                    style={"color": "#1f77b4", "fontWeight": "bold"}),
-            html.H5("Interactive Visualization of CI_25, CI_50, and CI_noadd Scenarios",
+            html.H5("Interactive Visualization Energy System Modelling Results",
                    className="text-center mb-4",
                    style={"color": "#666"})
         ])
