@@ -75,6 +75,7 @@ def create_cross_scenario_layout(data_loader):
                             id='cross-plot-type-selector',
                             options=[
                                 {'label': 'Side-by-Side', 'value': 'comparison'},
+                                {'label': 'Stacked Bar (All Years)', 'value': 'stacked_bar'},
                                 {'label': 'Year Comparison', 'value': 'year_comparison'},
                                 {'label': 'Year on Year Evolution', 'value': 'year_on_year_evolution'}
                             ],

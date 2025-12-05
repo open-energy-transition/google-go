@@ -90,6 +90,6 @@ def format_main_scenario_name(main_scenario):
     mapping = {
         'CI_25': 'CI 25%',
         'CI_50': 'CI 50%',
-        'CI_noadd': 'No Additional Constraints'
+        'CI_noadd': 'No Additionality'
     }
     return mapping.get(main_scenario, main_scenario)
