@@ -173,7 +173,17 @@ def rename_year(n, year):
     n.snapshots = n.snapshots.map(lambda x: x.replace(year=year))
 
     return n
+
+def drop_year(n):
+
+    # Change snapshotdate to year
+    for c in n.components:
+        for table in c.dynamic:
+            c.dynamic[table].index = c.dynamic[table].index.strftime('%m-%d %H:%M:%S')
     
+    n.snapshots = n.snapshots.strftime('%m-%d %H:%M:%S')
+
+    return n
 
 def strip_network_GoO(n):
     m = n.copy()
