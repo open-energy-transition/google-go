@@ -15,7 +15,7 @@ from pathlib import Path
 # Import utilities
 from utils.data_loader import DataLoader
 from utils.colors import ColorMapper
-from layouts import single_scenario_layout, cross_scenario_layout, deadzone_layout, timeseries_layout
+from layouts import single_scenario_layout, cross_scenario_layout, deadzone_layout, timeseries_layout, insights_layout
 from callbacks import register_callbacks
 
 # Initialize the Dash app
@@ -60,6 +60,8 @@ app.layout = dbc.Container([
                        style={'fontWeight': 'bold'}),
                 dcc.Tab(label='Timeseries Exploration', value='timeseries-tab',
                        style={'fontWeight': 'bold'}),
+                dcc.Tab(label='Key Insights', value='insights-tab',
+                       style={'fontWeight': 'bold'}),
             ], style={'fontSize': '16px'})
         ])
     ]),
@@ -76,6 +78,8 @@ app.layout = dbc.Container([
                         id='deadzone-content', style={'display': 'none'}),
                 html.Div(timeseries_layout.create_timeseries_layout(data_loader),
                         id='timeseries-content', style={'display': 'none'}),
+                html.Div(insights_layout.create_insights_layout(data_loader),
+                        id='insights-content', style={'display': 'none'}),
             ], id='tab-content', className='mt-4')
         ])
     ]),
@@ -87,11 +91,12 @@ app.layout = dbc.Container([
     [Output('single-content', 'style'),
      Output('cross-scenario-content', 'style'),
      Output('deadzone-content', 'style'),
-     Output('timeseries-content', 'style')],
+     Output('timeseries-content', 'style'),
+     Output('insights-content', 'style')],
     Input('main-tabs', 'value')
 )
 def render_tab_content(tab):
-    styles = [{'display': 'none'}] * 4
+    styles = [{'display': 'none'}] * 5
     if tab == 'single-tab':
         styles[0] = {'display': 'block'}
     elif tab == 'cross-scenario-tab':
@@ -100,6 +105,8 @@ def render_tab_content(tab):
         styles[2] = {'display': 'block'}
     elif tab == 'timeseries-tab':
         styles[3] = {'display': 'block'}
+    elif tab == 'insights-tab':
+        styles[4] = {'display': 'block'}
     return styles
 
 # Register all callbacks

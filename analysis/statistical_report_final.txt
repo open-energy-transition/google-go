@@ -1,0 +1,209 @@
+
+================================================================================
+GOOGLE GO STATISTICAL ANALYSIS
+Identifying trends and patterns difficult for manual detection
+================================================================================
+
+================================================================================
+LOADING FRONTIER DATA
+================================================================================
+
+Loaded 3080 scenario runs
+Number of metrics: 120
+
+Scenario types: scenario_type
+hourly-match-25    560
+hourly-match-50    560
+noadd              420
+other              420
+no-clean-firm      280
+no-LDES            280
+baseline           280
+EU-25              140
+EU-50              140
+Name: count, dtype: int64
+
+Years: year
+2025    770
+2030    770
+2035    770
+2040    770
+Name: count, dtype: int64
+
+Countries (top 10): country
+EU                 88
+Norway             88
+Lithuania          88
+Luxembourg         88
+Latvia             88
+Montenegro         88
+North Macedonia    88
+Netherlands        88
+Poland             88
+Ireland            88
+Name: count, dtype: int64
+
+================================================================================
+ANALYZING FRONTIER CURVES
+================================================================================
+
+FRONTIER CURVE ANALYSIS:
+--------------------------------------------------------------------------------
+
+EU-25:
+  Maximum acceleration at threshold: 2%
+  Mean elasticity: -0.091%
+  Largest single-step cost increase: 0.97%
+
+EU-50:
+  Maximum acceleration at threshold: 2%
+  Mean elasticity: -0.097%
+  Largest single-step cost increase: 0.70%
+
+BASELINE:
+  Maximum acceleration at threshold: 105%
+  Mean elasticity: -0.127%
+  Largest single-step cost increase: 0.55%
+
+HOURLY-MATCH-25:
+  Maximum acceleration at threshold: 97%
+  Mean elasticity: -0.140%
+  Largest single-step cost increase: 0.29%
+
+HOURLY-MATCH-50:
+  Maximum acceleration at threshold: 103%
+  Mean elasticity: -0.157%
+  Largest single-step cost increase: 0.18%
+
+NO-LDES:
+  Maximum acceleration at threshold: 108%
+  Mean elasticity: -0.130%
+  Largest single-step cost increase: 1.05%
+
+NO-CLEAN-FIRM:
+  Maximum acceleration at threshold: 117%
+  Mean elasticity: -0.173%
+  Largest single-step cost increase: 0.36%
+
+NOADD:
+  Maximum acceleration at threshold: 101%
+  Mean elasticity: -0.118%
+  Largest single-step cost increase: 0.74%
+
+================================================================================
+CROSS-SCENARIO CORRELATION ANALYSIS
+================================================================================
+
+RELATIVE DIFFERENCE FROM BASELINE:
+--------------------------------------------------------------------------------
+
+hourly-match-25:
+  Mean relative difference: 2.12%
+  Range: [-0.70%, 3.40%]
+
+hourly-match-50:
+  Mean relative difference: 3.26%
+  Range: [-2.70%, 6.41%]
+
+no-LDES:
+  Mean relative difference: 4.24%
+  Range: [0.45%, 7.28%]
+
+noadd:
+  Mean relative difference: 3.19%
+  Range: [0.84%, 4.82%]
+
+================================================================================
+TIPPING POINT ANALYSIS
+================================================================================
+
+TIPPING POINTS DETECTED:
+--------------------------------------------------------------------------------
+
+hourly-match-25:
+  Tipping point at threshold: 10%
+  Cost acceleration: 2.24x
+
+hourly-match-50:
+  Tipping point at threshold: 10%
+  Cost acceleration: 9.22x
+
+no-LDES:
+  Tipping point at threshold: 10%
+  Cost acceleration: 21.60x
+
+no-clean-firm:
+  Tipping point at threshold: 107%
+  Cost acceleration: 1.80x
+
+noadd:
+  Tipping point at threshold: 109%
+  Cost acceleration: 1.61x
+
+================================================================================
+VARIABILITY ANALYSIS
+================================================================================
+
+VARIABILITY BY SCENARIO TYPE:
+--------------------------------------------------------------------------------
+Scenario                  Mean CV      Max CV       Robustness  
+--------------------------------------------------------------------------------
+hourly-match-50                 0.060       0.130       0.943
+no-LDES                         0.067       0.134       0.937
+noadd                           0.082       0.120       0.924
+EU-25                           0.084       0.102       0.922
+hourly-match-25                 0.086       0.139       0.920
+no-clean-firm                   0.090       0.121       0.918
+baseline                        0.095       0.117       0.913
+EU-50                           0.101       0.123       0.908
+
+================================================================================
+SCENARIO CLUSTERING ANALYSIS
+================================================================================
+
+Using 587 scenarios with >=95% complete data
+
+PCA Explained Variance (first 5 components):
+  PC1: 86.56%
+  PC2: 10.23%
+  PC3: 1.93%
+  PC4: 0.54%
+  PC5: 0.37%
+
+Cumulative variance (first 3 PCs): 98.72%
+
+Most similar scenarios:
+  hourly-match-25 vs
+  no-LDES
+  Distance: 0.01
+
+Most different scenarios:
+  no-clean-firm vs
+  no-clean-firm
+  Distance: inf
+
+================================================================================
+KEY FINDINGS SUMMARY
+================================================================================
+
+1. TIPPING POINTS:
+   - Cost curves show non-linear acceleration beyond certain matching thresholds
+   - These represent critical points where additional clean energy becomes disproportionately expensive
+
+2. SCENARIO ROBUSTNESS:
+   - Some scenarios show much higher variability than others
+   - Low variability = more predictable outcomes
+   - High variability = sensitive to local conditions
+
+3. CROSS-SCENARIO PATTERNS:
+   - Correlations reveal which policy interventions have similar effects
+   - Low correlation = policy has fundamentally different impact
+
+4. CLUSTERING:
+   - PCA reveals hidden patterns in scenario outcomes
+   - First few components capture most variation
+
+================================================================================
+Analysis complete!
+================================================================================
+
