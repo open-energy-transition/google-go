@@ -165,55 +165,198 @@ def register_callbacks(app, data_loader):
          Input('deadzone-country-selector', 'value')]
     )
     def update_deadzone_summary(main_scenario, year, scenario, country):
-        """Update dead zone summary text"""
+        """Update dead zone summary with key takeaways"""
         if not main_scenario:
             return html.P("Select parameters to see analysis summary")
 
         # Infer comparison type
         comparison_type = infer_comparison_type(year, scenario, country)
 
-        summaries = {
-            'years': "Comparing frontier curves across different years. " +
-                    "You can select 1-2 scenarios and 1-2 countries to compare how they evolve over time.",
-            'scenarios_years': "Comparing frontier curves across different scenarios and years. " +
-                              "Select specific scenarios or 'All' to see a comprehensive view of how different policies affect the matching tradeoff.",
-            'spatial': "Comparing frontier curves across different spatial scopes (countries/regions). " +
-                      "This reveals geographic variation in the achievable matching levels for a fixed scenario and year."
-        }
+        try:
+            # Get frontier data to analyze
+            stats = data_loader.get_summary_stats(main_scenario)
+            all_years = stats.get('years', [])
 
-        year_text = f"Year: {year}" if year != 'all' else "All years"
-
-        # Handle scenario as list or single value
-        if isinstance(scenario, list):
-            if 'all' in scenario:
-                scenario_text = "All scenarios"
-            elif len(scenario) == 1:
-                scenario_text = f"Scenario: {scenario[0]}"
-            elif len(scenario) == 2:
-                scenario_text = f"Scenarios: {scenario[0]} vs {scenario[1]}"
+            # Process scenarios
+            if isinstance(scenario, list):
+                scenarios_to_use = [s for s in scenario if s != 'all']
+                if not scenarios_to_use or 'all' in scenario:
+                    scenarios_to_use = stats.get('scenarios', [])
             else:
-                scenario_text = f"Scenarios: {', '.join(scenario[:2])}"
-        else:
-            scenario_text = f"Scenario: {scenario}" if scenario != 'all' else "All scenarios"
+                scenarios_to_use = stats.get('scenarios', []) if scenario == 'all' else [scenario]
 
-        # Handle country as list or single value
-        if isinstance(country, list):
-            if 'all' in country:
-                country_text = "All spatial scopes"
-            elif len(country) == 1:
-                country_text = f"Country: {country[0]}"
-            elif len(country) == 2:
-                country_text = f"Countries: {country[0]} vs {country[1]}"
+            # Process countries
+            if isinstance(country, list):
+                countries_to_use = [c for c in country if c != 'all']
+                if not countries_to_use or 'all' in country:
+                    countries_to_use = data_loader.get_frontier_countries(main_scenario, all_years[-1] if all_years else 2035)
             else:
-                country_text = f"Countries: {', '.join(country[:2])}"
-        else:
-            country_text = f"Country: {country}" if country != 'all' else "All spatial scopes"
+                countries_to_use = data_loader.get_frontier_countries(main_scenario, all_years[-1] if all_years else 2035) if country == 'all' else [country]
 
-        return html.Div([
-            html.P(summaries.get(comparison_type, ""), style={'marginBottom': '10px'}),
-            html.P(f"Current selection: {year_text}, {scenario_text}, {country_text}",
-                  style={'fontSize': '14px', 'color': '#666'})
-        ])
+            # Get some frontier data for insights
+            year_for_analysis = all_years[-1] if year == 'all' and all_years else (year if year != 'all' else 2035)
+            country_for_analysis = countries_to_use[0] if countries_to_use else 'EU'
+            scenario_for_analysis = scenarios_to_use[0] if scenarios_to_use else 'baseline'
+
+            frontier_dict = data_loader.get_frontier_data(main_scenario, year_for_analysis, country_for_analysis)
+            frontier_values = frontier_dict.get(scenario_for_analysis, []) if frontier_dict else []
+
+            # Calculate insights - handle numpy arrays
+            if len(frontier_values) > 0:
+                import numpy as np
+                frontier_array = np.array(frontier_values)
+                max_matching = float(np.max(frontier_array))
+                avg_matching = float(np.mean(frontier_array))
+                frontier_points = len(frontier_values)
+            else:
+                max_matching = 0
+                avg_matching = 0
+                frontier_points = 0
+
+            # Emojis based on comparison type
+            comparison_emojis = {
+                'years': '📈',
+                'scenarios_years': '🔄',
+                'spatial': '🌍'
+            }
+
+            comparison_titles = {
+                'years': 'Temporal Evolution',
+                'scenarios_years': 'Policy Comparison',
+                'spatial': 'Geographic Variation'
+            }
+
+            # Build year text
+            year_text = f"Year: {year}" if year != 'all' else "All years"
+
+            # Handle scenario as list or single value
+            if isinstance(scenario, list):
+                if 'all' in scenario:
+                    scenario_text = "All scenarios"
+                elif len(scenario) == 1:
+                    scenario_text = f"{scenario[0]}"
+                else:
+                    scenario_text = f"{', '.join(scenario[:3])}"
+            else:
+                scenario_text = f"{scenario}" if scenario != 'all' else "All scenarios"
+
+            # Handle country as list or single value
+            if isinstance(country, list):
+                if 'all' in country:
+                    country_text = "All countries"
+                elif len(country) == 1:
+                    country_text = f"{country[0]}"
+                else:
+                    country_text = f"{', '.join(country[:3])}"
+            else:
+                country_text = f"{country}" if country != 'all' else "All countries"
+
+            return html.Div([
+                html.H4(f"Key Takeaways", style={'marginBottom': '20px', 'fontWeight': 'bold', 'color': '#1e3a8a'}),
+
+                # Comparison type indicator
+                html.Div([
+                    html.Div([
+                        html.Span("ANALYSIS TYPE", style={'fontSize': '12px', 'color': '#64748b', 'fontWeight': '600'}),
+                        html.Div([
+                            html.Span(comparison_emojis.get(comparison_type, '📊'), style={'fontSize': '20px', 'marginRight': '8px'}),
+                            html.Label(comparison_titles.get(comparison_type, 'Frontier Comparison'),
+                                     style={'fontSize': '14px', 'fontWeight': '500', 'color': '#1e293b'})
+                        ], style={'marginTop': '5px', 'display': 'flex', 'alignItems': 'center'})
+                    ], style={'flex': '1'}),
+
+                    html.Div([
+                        html.Span("CURRENT SELECTION", style={'fontSize': '12px', 'color': '#64748b', 'fontWeight': '600'}),
+                        html.Div([
+                            html.Span(year_text, style={'padding': '4px 12px', 'backgroundColor': '#3b82f6', 'color': 'white',
+                                   'borderRadius': '4px', 'fontSize': '12px', 'fontWeight': '500', 'marginRight': '5px'}),
+                            html.Span(scenario_text, style={'padding': '4px 12px', 'backgroundColor': '#10b981', 'color': 'white',
+                                   'borderRadius': '4px', 'fontSize': '12px', 'fontWeight': '500', 'marginRight': '5px'}),
+                            html.Span(country_text, style={'padding': '4px 12px', 'backgroundColor': '#f59e0b', 'color': 'white',
+                                   'borderRadius': '4px', 'fontSize': '12px', 'fontWeight': '500'})
+                        ], style={'marginTop': '5px'})
+                    ], style={'flex': '2'})
+                ], style={'display': 'flex', 'gap': '20px', 'marginBottom': '30px'}),
+
+                # Key metrics in cards
+                html.Div([
+                    html.Div([
+                        # Max matching achievable
+                        html.Div([
+                            html.Div([
+                                html.Span("🎯", style={'fontSize': '32px'}),
+                                html.H6("Max matching achievable", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                            ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                            html.H4(f"{max_matching:.1f}%",
+                                   style={'color': '#10b981' if max_matching > 90 else '#f59e0b' if max_matching > 70 else '#ef4444',
+                                          'fontSize': '24px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                            html.P(f"Sample: {format_scenario_name(scenario_for_analysis)}, {country_for_analysis}",
+                                  style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center', 'marginTop': '8px'})
+                        ], className="col-md-3 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0'}),
+
+                        # Average matching
+                        html.Div([
+                            html.Div([
+                                html.Span("📊", style={'fontSize': '32px'}),
+                                html.H6("Average matching", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                            ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                            html.H4(f"{avg_matching:.1f}%",
+                                   style={'color': '#3b82f6', 'fontSize': '24px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                            html.P(f"Across all frontier points",
+                                  style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center', 'marginTop': '8px'})
+                        ], className="col-md-3 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0', 'marginLeft': '10px'}),
+
+                        # Frontier points
+                        html.Div([
+                            html.Div([
+                                html.Span("⚡", style={'fontSize': '32px'}),
+                                html.H6("Frontier points", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                            ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                            html.H4(f"{frontier_points}",
+                                   style={'color': '#8b5cf6', 'fontSize': '24px', 'fontWeight': 'bold', 'textAlign': 'center', 'marginBottom': '5px'}),
+                            html.P(f"Energy matching options",
+                                  style={'fontSize': '12px', 'color': '#94a3b8', 'textAlign': 'center', 'marginTop': '8px'})
+                        ], className="col-md-3 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0', 'marginLeft': '10px'}),
+
+                        # Comparison scope
+                        html.Div([
+                            html.Div([
+                                html.Span("🔍", style={'fontSize': '32px'}),
+                                html.H6("Comparison scope", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                            ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                            html.Div([
+                                html.P(f"{len(scenarios_to_use)} scenarios", style={'fontSize': '14px', 'margin': '4px 0', 'fontWeight': '600', 'color': '#3b82f6'}),
+                                html.P(f"{len(countries_to_use)} countries", style={'fontSize': '14px', 'margin': '4px 0', 'fontWeight': '600', 'color': '#10b981'}),
+                                html.P(f"{len(all_years)} years" if year == 'all' else f"Year {year}",
+                                      style={'fontSize': '14px', 'margin': '4px 0', 'fontWeight': '600', 'color': '#f59e0b'})
+                            ], style={'textAlign': 'center'})
+                        ], className="col-md-3 p-4", style={'backgroundColor': '#f8fafc', 'borderRadius': '12px', 'border': '1px solid #e2e8f0', 'marginLeft': '10px'})
+                    ], style={'display': 'flex', 'gap': '0px', 'marginBottom': '15px'}),
+
+                    # Insights row
+                    html.Div([
+                        html.Div([
+                            html.Div([
+                                html.Span("💡", style={'fontSize': '32px'}),
+                                html.H6("Key insights", style={'marginTop': '10px', 'fontWeight': '600', 'fontSize': '14px', 'color': '#475569'})
+                            ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                            html.Div([
+                                html.P("📈 Higher matching requires more flexible energy systems" if comparison_type == 'years' else
+                                      "🔄 Different policies create distinct frontier tradeoffs" if comparison_type == 'scenarios_years' else
+                                      "🌍 Geography strongly influences achievable matching levels",
+                                      style={'fontSize': '13px', 'margin': '8px 0', 'color': '#475569', 'lineHeight': '1.5'}),
+                                html.P("⚡ Frontier curves show Pareto-optimal matching solutions",
+                                      style={'fontSize': '13px', 'margin': '8px 0', 'color': '#475569', 'lineHeight': '1.5'}),
+                                html.P("🎯 Points on the frontier represent different energy matching strategies",
+                                      style={'fontSize': '13px', 'margin': '8px 0', 'color': '#475569', 'lineHeight': '1.5'})
+                            ], style={'textAlign': 'left', 'padding': '0 20px'})
+                        ], className="col-12 p-4", style={'backgroundColor': '#fffbeb', 'borderRadius': '12px', 'border': '1px solid #fcd34d'})
+                    ], style={'display': 'flex', 'gap': '0px'})
+                ])
+            ])
+
+        except Exception as e:
+            return html.P(f"Error generating insights: {str(e)}", style={'color': '#ef4444'})
 
     # ==================== Cross-Scenario Comparison Callbacks ====================
     @app.callback(
@@ -300,8 +443,8 @@ def register_callbacks(app, data_loader):
         Output('cross-difference-plot', 'figure'),
         [Input('cross-year-selector', 'value'),
          Input('cross-metric-selector', 'value'),
-         Input('cross-subscenario1-selector', 'value'),
-         Input('cross-subscenario2-selector', 'value'),
+         Input('diff-scenario-a-selector', 'value'),
+         Input('diff-scenario-b-selector', 'value'),
          Input('cross-carrier-selector', 'value')]
     )
     def update_cross_difference(year, metric, subscenario1, subscenario2, carriers):
@@ -324,6 +467,149 @@ def register_callbacks(app, data_loader):
         main2 = find_main_scenario(subscenario2) if subscenario2 else None
         return create_cross_summary_stats(main1 or main2, year, metric, subscenario1, subscenario2,
                                           data_loader, main1, main2)
+
+    # ==================== Timeseries Exploration Callbacks ====================
+    @app.callback(
+        [Output('ts-year-selector', 'options'),
+         Output('ts-year-selector', 'value')],
+        [Input('ts-main-scenario-selector', 'value')]
+    )
+    def update_ts_years(main_scenario):
+        """Update available years for timeseries"""
+        if not main_scenario:
+            return [], None
+
+        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        years = metadata.get('years', [])
+        options = [{'label': str(y), 'value': y} for y in years]
+        default_value = years[-1] if years else None
+        return options, default_value
+
+    @app.callback(
+        [Output('ts-scenario-selector', 'options'),
+         Output('ts-scenario-selector', 'value')],
+        [Input('ts-main-scenario-selector', 'value')]
+    )
+    def update_ts_scenarios(main_scenario):
+        """Update available scenarios for timeseries"""
+        if not main_scenario:
+            return [], []
+
+        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        scenarios = metadata.get('scenarios', [])
+        options = [{'label': s, 'value': s} for s in scenarios]
+        default_value = [scenarios[0]] if scenarios else []
+        return options, default_value
+
+    @app.callback(
+        [Output('ts-type-selector', 'options'),
+         Output('ts-type-selector', 'value')],
+        [Input('ts-main-scenario-selector', 'value')]
+    )
+    def update_ts_types(main_scenario):
+        """Update available timeseries types"""
+        if not main_scenario:
+            return [], None
+
+        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        types = metadata.get('types', [])
+        options = [{'label': t, 'value': t} for t in types]
+        default_value = types[0] if types else None
+        return options, default_value
+
+    @app.callback(
+        [Output('ts-country-selector', 'options'),
+         Output('ts-country-selector', 'value')],
+        [Input('ts-main-scenario-selector', 'value')]
+    )
+    def update_ts_countries(main_scenario):
+        """Update available countries for timeseries"""
+        if not main_scenario:
+            return [], None
+
+        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        countries = metadata.get('countries', [])
+        options = [{'label': c, 'value': c} for c in countries]
+        # Try to find a reasonable default
+        if 'Germany' in countries:
+            default_value = 'Germany'
+        elif 'France' in countries:
+            default_value = 'France'
+        elif countries:
+            default_value = countries[0]
+        else:
+            default_value = None
+        return options, default_value
+
+    @app.callback(
+        Output('ts-carrier-selector', 'options'),
+        [Input('ts-main-scenario-selector', 'value')]
+    )
+    def update_ts_carriers(main_scenario):
+        """Update available carriers for timeseries"""
+        if not main_scenario:
+            return []
+
+        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        carriers = metadata.get('carriers', [])
+        options = [{'label': c, 'value': c} for c in carriers]
+        return options
+
+    @app.callback(
+        Output('ts-plot-type-selector', 'value'),
+        [Input('ts-type-selector', 'value')],
+        [State('ts-plot-type-selector', 'value')]
+    )
+    def update_ts_plot_type(ts_type, current_plot_type):
+        """Auto-select line plot for Electricity Balance"""
+        if ts_type == 'Electricity Balance':
+            return 'line'
+        return current_plot_type
+
+    @app.callback(
+        Output('ts-plot', 'figure'),
+        [Input('ts-year-selector', 'value'),
+         Input('ts-scenario-selector', 'value'),
+         Input('ts-type-selector', 'value'),
+         Input('ts-country-selector', 'value'),
+         Input('ts-carrier-selector', 'value'),
+         Input('ts-timerange-selector', 'value'),
+         Input('ts-plot-type-selector', 'value')]
+    )
+    def update_ts_plot(year, scenarios, ts_type, country, carriers, time_range, plot_type):
+        """Update timeseries plot"""
+        if not year or not scenarios or not ts_type or not country:
+            return create_empty_figure("Please select year, scenarios, type, and country")
+
+        if not isinstance(scenarios, list):
+            scenarios = [scenarios]
+
+        return create_timeseries_plot(year, scenarios, ts_type, country, carriers,
+                                     time_range, plot_type, data_loader)
+
+    @app.callback(
+        Output('ts-info', 'children'),
+        [Input('ts-year-selector', 'value'),
+         Input('ts-scenario-selector', 'value'),
+         Input('ts-type-selector', 'value'),
+         Input('ts-country-selector', 'value'),
+         Input('ts-carrier-selector', 'value')]
+    )
+    def update_ts_info(year, scenarios, ts_type, country, carriers):
+        """Update timeseries info panel"""
+        if not year or not scenarios or not ts_type or not country:
+            return html.P("Select parameters to see timeseries data")
+
+        num_scenarios = len(scenarios) if isinstance(scenarios, list) else 1
+        num_carriers = len(carriers) if carriers else "All"
+
+        return html.Div([
+            html.P(f"Year: {year}", style={'marginBottom': '5px'}),
+            html.P(f"Scenarios: {num_scenarios} selected", style={'marginBottom': '5px'}),
+            html.P(f"Type: {ts_type}", style={'marginBottom': '5px'}),
+            html.P(f"Country: {country}", style={'marginBottom': '5px'}),
+            html.P(f"Carriers: {num_carriers}", style={'marginBottom': '5px'}),
+        ])
 
 
 # ==================== Helper Functions ====================
@@ -1938,7 +2224,7 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
                     ))
                     trace_idx += 1
 
-            title = f"Spatial Frontier Comparison<br><sub>{format_scenario_name(scenario_to_use)} - {year_to_use}</sub>"
+            title = f"Results Frontier Comparison<br><sub>{format_scenario_name(scenario_to_use)} - {year_to_use}</sub>"
 
         else:
             return create_empty_figure("Invalid comparison type")
@@ -1951,7 +2237,8 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
             title=title,
             xaxis_title="Energy Matching Point",
             yaxis_title="Hourly Matching (%)",
-            yaxis=dict(range=[400, 100]),
+            xaxis=dict(range=[0, 100]),
+            yaxis=dict(range=[40, 100]),
             template="plotly_white",
             hovermode='closest',
             legend=dict(
@@ -1974,3 +2261,186 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
         import traceback
         traceback.print_exc()
         return create_empty_figure(f"Error creating frontier plot: {str(e)}")
+
+
+def create_timeseries_plot(year, scenarios, ts_type, country, carriers, time_range, plot_type, data_loader):
+    """Create timeseries plot for selected parameters - matching notebook style"""
+    try:
+        # Load the timeseries data
+        result = data_loader.load_timeseries_data(year, scenarios, ts_type, country, carriers, time_range)
+
+        if result is None:
+            return create_empty_figure("No timeseries data available for selected parameters")
+
+        df, timestamp_cols = result
+
+        if df.empty:
+            return create_empty_figure("No data found for selected parameters")
+
+        # Create figure
+        fig = go.Figure()
+
+        # Color palette - using Plotly colors
+        colors = px.colors.qualitative.Plotly + px.colors.qualitative.Set2 + px.colors.qualitative.Pastel
+
+        # Group by scenario
+        for scenario_idx, scenario in enumerate(scenarios):
+            scenario_data = df[df['scenario'] == scenario]
+
+            if plot_type == 'area':
+                # Separate positive and negative values for stacked area (like notebook)
+                # Collect all carrier data
+                carrier_data = {}
+                y_label = None
+
+                for _, row in scenario_data.iterrows():
+                    carrier = row['carrier']
+                    y_label = row['y_label']
+                    values = row[timestamp_cols].values.astype(float)
+                    carrier_data[carrier] = values
+
+                # Create traces for positive values (generation)
+                trace_idx = scenario_idx * 20  # Offset for multiple scenarios
+                positive_carriers = []
+                negative_carriers = []
+
+                for carrier, values in carrier_data.items():
+                    # Separate into positive and negative
+                    positive_values = np.maximum(values, 0)
+                    negative_values = np.minimum(values, 0)
+
+                    # Add positive trace
+                    if positive_values.sum() > 0:
+                        label = f"{scenario} - {carrier}" if len(scenarios) > 1 else carrier
+                        fig.add_trace(go.Scatter(
+                            x=list(range(len(timestamp_cols))),
+                            y=positive_values,
+                            mode='lines',
+                            name=label,
+                            stackgroup='positive' + str(scenario_idx),
+                            line=dict(width=0.5, color=colors[trace_idx % len(colors)]),
+                            fillcolor=colors[trace_idx % len(colors)],
+                            hovertemplate=f"{label}<br>Value: %{{y:.2f}} GW<extra></extra>"
+                        ))
+                        positive_carriers.append(carrier)
+                        trace_idx += 1
+
+                    # Add negative trace (charging/consumption)
+                    if negative_values.sum() < 0:
+                        label = f"{scenario} - {carrier}" if len(scenarios) > 1 else carrier
+                        fig.add_trace(go.Scatter(
+                            x=list(range(len(timestamp_cols))),
+                            y=negative_values,
+                            mode='lines',
+                            name=label,
+                            stackgroup='negative' + str(scenario_idx),
+                            line=dict(width=0.5, color=colors[trace_idx % len(colors)]),
+                            fillcolor=colors[trace_idx % len(colors)],
+                            showlegend=False,  # Don't show twice in legend
+                            hovertemplate=f"{label}<br>Value: %{{y:.2f}} GW<extra></extra>"
+                        ))
+                        negative_carriers.append(carrier)
+
+                # Add demand line (negative of 'electricity' carrier)
+                if 'electricity' in carrier_data:
+                    electricity_values = carrier_data['electricity']
+                    demand_values = -electricity_values  # Flip sign to show demand
+                    fig.add_trace(go.Scatter(
+                        x=list(range(len(timestamp_cols))),
+                        y=demand_values,
+                        mode='lines',
+                        name='Demand (electricity)',
+                        line=dict(color='black', width=2, dash='dash'),
+                        hovertemplate="Demand<br>Value: %{y:.2f} GW<extra></extra>"
+                    ))
+
+            else:  # Line plot
+                trace_idx = scenario_idx * 20
+                electricity_values = None
+
+                for _, row in scenario_data.iterrows():
+                    carrier = row['carrier']
+                    y_label = row['y_label']
+                    values = row[timestamp_cols].values.astype(float)
+
+                    # Skip electricity carrier - we'll plot it as demand line instead
+                    if carrier == 'electricity':
+                        electricity_values = values
+                        continue
+
+                    label = f"{scenario} - {carrier}" if len(scenarios) > 1 else carrier
+
+                    fig.add_trace(go.Scatter(
+                        x=list(range(len(timestamp_cols))),
+                        y=values,
+                        mode='lines',
+                        name=label,
+                        line=dict(color=colors[trace_idx % len(colors)], width=2),
+                        hovertemplate=f"{label}<br>Value: %{{y:.2f}}<extra></extra>"
+                    ))
+                    trace_idx += 1
+
+                # Add demand line (negative of 'electricity' carrier) for line plots
+                if electricity_values is not None:
+                    demand_values = -electricity_values  # Flip sign to show demand
+                    fig.add_trace(go.Scatter(
+                        x=list(range(len(timestamp_cols))),
+                        y=demand_values,
+                        mode='lines',
+                        name='Demand',
+                        line=dict(color='black', width=2, dash='dash'),
+                        hovertemplate="Demand<br>Value: %{y:.2f} GW<extra></extra>"
+                    ))
+
+        # Update layout
+        # Create x-axis labels (sample every N timestamps to avoid crowding)
+        num_labels = min(10, len(timestamp_cols))
+        step = max(1, len(timestamp_cols) // num_labels)
+        tickvals = list(range(0, len(timestamp_cols), step))
+        # Format as month-day only (remove year)
+        ticktext = []
+        for i in tickvals:
+            ts = timestamp_cols[i]
+            # Handle both string and Timestamp objects
+            if isinstance(ts, str):
+                # CSV format: "2013-01-01 00:00:00" -> "01-01"
+                ticktext.append('-'.join(ts.split()[0].split('-')[1:]))
+            else:
+                # Parquet Timestamp object -> "01-01"
+                ticktext.append(f"{ts.month:02d}-{ts.day:02d}")
+
+        # Get y_label
+        y_label = df['y_label'].iloc[0] if len(df) > 0 else "Value"
+
+        fig.update_layout(
+            title=f"{ts_type} - {country} ({year})<br><sub>{', '.join(scenarios[:3])}{'...' if len(scenarios) > 3 else ''}</sub>",
+            xaxis_title="Time",
+            yaxis_title=y_label,
+            xaxis=dict(
+                tickmode='array',
+                tickvals=tickvals,
+                ticktext=ticktext,
+                tickangle=-45
+            ),
+            template="plotly_white",
+            hovermode='x unified',
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02,
+                bgcolor="rgba(255, 255, 255, 0.8)"
+            ),
+            margin=dict(l=60, r=150, t=100, b=100)
+        )
+
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+
+        return fig
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return create_empty_figure(f"Error creating timeseries plot: {str(e)}")

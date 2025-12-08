@@ -186,7 +186,30 @@ def create_cross_scenario_layout(data_loader):
         dbc.Card([
             dbc.CardBody([
                 html.H4("Difference Analysis", className="mb-3"),
-                html.P("Shows the difference between Sub-Scenario 2 and Sub-Scenario 1 (positive = higher in Scenario 2)"),
+                dbc.Row([
+                    dbc.Col([
+                        html.Label("Scenario A (baseline):", style={'fontWeight': 'bold'}),
+                        dcc.Dropdown(
+                            id='diff-scenario-a-selector',
+                            options=subscenario_options,
+                            value=default_sub1,
+                            clearable=False
+                        )
+                    ], width=3),
+                    dbc.Col([
+                        html.Label("Scenario B (compare to):", style={'fontWeight': 'bold'}),
+                        dcc.Dropdown(
+                            id='diff-scenario-b-selector',
+                            options=subscenario_options,
+                            value=default_sub2,
+                            clearable=False
+                        )
+                    ], width=3),
+                    dbc.Col([
+                        html.P("Shows difference: Scenario B - Scenario A (positive = higher in B)",
+                               style={'marginTop': '30px', 'fontSize': '14px', 'color': '#666'})
+                    ], width=6)
+                ], className="mb-3"),
                 dcc.Graph(id='cross-difference-plot', style={'height': '400px'})
             ])
         ], className="mb-4"),
