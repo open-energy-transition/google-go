@@ -1951,7 +1951,7 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
             title=title,
             xaxis_title="Energy Matching Point",
             yaxis_title="Hourly Matching (%)",
-            yaxis=dict(range=[0, 100]),
+            yaxis=dict(range=[400, 100]),
             template="plotly_white",
             hovermode='closest',
             legend=dict(
