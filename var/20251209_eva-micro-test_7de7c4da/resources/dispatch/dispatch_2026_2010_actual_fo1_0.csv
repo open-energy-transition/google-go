@@ -1,0 +1,23 @@
+component,carrier,bus,0
+Generator,DSR Explicit,BE00,20111.01521
+Generator,DSR Explicit,FR00,0.04165
+Generator,DSR Explicit,NL00,3343.36799
+Generator,Gas,BE00,53377.57849
+Generator,Gas,FR00,408869.44476
+Generator,Gas,NL00,199468.90932
+Generator,Solar (PV),BE00,39006.8477
+Generator,Solar (PV),FR00,208728.66393
+Generator,Solar (PV),NL00,94051.37919
+Generator,Wind Onshore,BE00,494629.90995
+Generator,Wind Onshore,FR00,2090553.82731
+Generator,Wind Onshore,NL00,547783.19804
+StorageUnit,Batteries,BE00,4530.3609
+StorageUnit,Batteries,FR00,3773.50222
+StorageUnit,Batteries,NL00,12222.39143
+StorageUnit,DSR Implicit,BE00,368.58014
+StorageUnit,DSR Implicit,NL00,2746.1769
+StorageUnit,Hydro - Pondage,FR00,0.01121
+StorageUnit,Hydro - Pump Storage Closed Loop (Pumping),BE00,17233.32448
+StorageUnit,Hydro - Pump Storage Closed Loop (Pumping),FR00,20293.21004
+StorageUnit,Hydro - Pump Storage Open Loop (Pumping),FR00,54517.29246
+StorageUnit,Hydro - Reservoir,FR00,341240.79937

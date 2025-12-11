@@ -1,0 +1,24 @@
+threshold: 0.0
+fail_on_infeasibility: true
+models:
+  day_ahead:
+    model: day_ahead
+    total_horizons: 1
+    infeasible_count: 0
+    infeasible_rate: 0.0
+    exceeds_threshold: false
+    infeasible_horizons: []
+    status: checked
+  intraday:
+    model: intraday
+    total_horizons: 1
+    infeasible_count: 0
+    infeasible_rate: 0.0
+    exceeds_threshold: false
+    infeasible_horizons: []
+    status: checked
+any_threshold_exceeded: false
+combined:
+  total_horizons: 2
+  infeasible_count: 0
+  infeasible_rate: 0.0

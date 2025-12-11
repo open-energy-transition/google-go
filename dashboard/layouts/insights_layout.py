@@ -32,17 +32,28 @@ def create_insights_layout(data_loader):
                         html.P([
                             "Analysis of ", html.Strong("3,080 scenario runs"), " across ",
                             html.Strong("120 performance metrics"), " and ", html.Strong("8,760 hourly timeseries"),
-                            " reveals seven critical findings:"
+                            " reveals ", html.Strong("12 critical findings"), ":"
                         ]),
+
+                        html.H6("Original Statistical Analysis:", style={"fontWeight": "bold", "marginTop": "15px", "color": "#1f77b4"}),
                         html.Ul([
                             html.Li([html.Strong("The 10% Barrier: "), "Universal tipping point with up to 21.6x cost acceleration"]),
-                            html.Li([html.Strong("LDES is Critical: "), "Largest cost driver (+4.24% without it)"]),
+                            html.Li([html.Strong("LDES is Critical: "), "Largest cost driver (+4.24% without it, p<0.001 significant)"]),
                             html.Li([html.Strong("EU Frontier Anomaly: "), "EU scenarios show fundamentally different cost structure (2% vs 97-117% acceleration points)"]),
                             html.Li([html.Strong("Stricter = More Predictable: "), "Counter-intuitively, strict policies reduce uncertainty"]),
                             html.Li([html.Strong("Low-Dimensional Structure: "), "3 factors explain 98.72% of all variation"]),
                             html.Li([html.Strong("Seasonal Storage Gap: "), "Battery vs LDES cycling patterns explain cost differentials"]),
                             html.Li([html.Strong("Policy Substitution: "), "Multiple policy paths achieve similar outcomes"]),
-                        ], style={"fontSize": "15px", "lineHeight": "1.8"})
+                        ], style={"fontSize": "14px", "lineHeight": "1.6"}),
+
+                        html.H6("Deep-Dive Discoveries:", style={"fontWeight": "bold", "marginTop": "15px", "color": "#d62728"}),
+                        html.Ul([
+                            html.Li([html.Strong("Regional Extremes: "), "25x variation - Luxembourg (+25%), Czechia (-7.3% cost reduction!), CV=1.28"]),
+                            html.Li([html.Strong("Statistical Significance: "), "Clean-firm NOT significant (p=0.316), LDES extremely significant (p<0.001)"]),
+                            html.Li([html.Strong("Non-Linear Costs: "), "46% cheaper per percentage point at 25→50% vs 0→25% (increasing returns!)"]),
+                            html.Li([html.Strong("Temporal Patterns: "), "No-LDES peaks 2035 then stabilizes; EU-coord accelerates pre-2030"]),
+                            html.Li([html.Strong("Technology Compensation: "), "Sub-additive effects - removing both LDES+clean-firm less than sum"]),
+                        ], style={"fontSize": "14px", "lineHeight": "1.6"})
                     ])
                 ], className="mb-4", style={"boxShadow": "0 4px 6px rgba(0,0,0,0.1)"})
             ])
@@ -510,7 +521,234 @@ def create_insights_layout(data_loader):
             ])
         ]),
 
-        # Section 7: Policy Recommendations
+        # Section 7: Deep-Dive Findings
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader(html.H4("🔬 Deep-Dive Statistical Findings", style={"fontWeight": "bold"})),
+                    dbc.CardBody([
+                        html.P([
+                            "Advanced statistical analysis of scenario interactions, regional patterns, and temporal dynamics reveals insights invisible in standard visualizations."
+                        ]),
+
+                        html.H5("1. Regional Extremes: 25x Variation in Policy Impact", style={"fontWeight": "bold", "marginTop": "20px"}),
+
+                        dbc.Row([
+                            dbc.Col([
+                                html.Div([
+                                    html.H2("+25%", style={"color": "#d62728", "fontWeight": "bold"}),
+                                    html.P("Luxembourg", style={"fontWeight": "bold"}),
+                                    html.P("Extreme positive sensitivity", style={"fontSize": "12px", "color": "#666"})
+                                ], className="text-center p-3", style={"backgroundColor": "#ffe6e6", "borderRadius": "10px"})
+                            ], width=3),
+                            dbc.Col([
+                                html.Div([
+                                    html.H2("+18%", style={"color": "#ff7f0e", "fontWeight": "bold"}),
+                                    html.P("Kosovo", style={"fontWeight": "bold"}),
+                                    html.P("Very high sensitivity", style={"fontSize": "12px", "color": "#666"})
+                                ], className="text-center p-3", style={"backgroundColor": "#fff3e6", "borderRadius": "10px"})
+                            ], width=3),
+                            dbc.Col([
+                                html.Div([
+                                    html.H2("-7.3%", style={"color": "#2ca02c", "fontWeight": "bold"}),
+                                    html.P("Czechia", style={"fontWeight": "bold"}),
+                                    html.P("Negative impact (cost reduction!)", style={"fontSize": "12px", "color": "#666"})
+                                ], className="text-center p-3", style={"backgroundColor": "#e8f8e8", "borderRadius": "10px"})
+                            ], width=3),
+                            dbc.Col([
+                                html.Div([
+                                    html.H2("CV=1.28", style={"color": "#1f77b4", "fontWeight": "bold"}),
+                                    html.P("Heterogeneity", style={"fontWeight": "bold"}),
+                                    html.P("High regional variation", style={"fontSize": "12px", "color": "#666"})
+                                ], className="text-center p-3", style={"backgroundColor": "#e8f4f8", "borderRadius": "10px"})
+                            ], width=3),
+                        ], className="mb-3"),
+
+                        html.Div([
+                            html.H6("💡 Key Insight:", style={"color": "#1f77b4", "fontWeight": "bold"}),
+                            html.P([
+                                html.Strong("Small countries (Luxembourg, Kosovo) show extreme sensitivity (+18-25%)"), ", likely due to limited domestic resources and high import/export dependence. ",
+                                html.Strong("Two countries (Czechia, Denmark) show NEGATIVE impacts (-7%)"), " - hourly matching actually ", html.Em("reduces"), " their costs!", html.Br(), html.Br(),
+                                html.Strong("Implication: "), "One-size-fits-all policies won't work. Small countries need special provisions. Some countries naturally benefit from hourly matching due to baseload/flexible generation mix."
+                            ], style={"backgroundColor": "#e8f4f8", "padding": "15px", "borderRadius": "5px", "marginTop": "10px"})
+                        ]),
+
+                        html.H5("2. Statistical Significance: Which Policies Actually Matter?", style={"fontWeight": "bold", "marginTop": "25px"}),
+
+                        dbc.Table([
+                            html.Thead([
+                                html.Tr([
+                                    html.Th("Policy Intervention"),
+                                    html.Th("p-value"),
+                                    html.Th("Effect Size"),
+                                    html.Th("Significant?"),
+                                    html.Th("Interpretation")
+                                ])
+                            ]),
+                            html.Tbody([
+                                html.Tr([
+                                    html.Td(html.Strong("no-LDES")),
+                                    html.Td(html.Strong("< 0.001", style={"color": "#d62728"})),
+                                    html.Td("r = 0.312 (large)"),
+                                    html.Td(html.Span("Yes***", className="badge bg-danger")),
+                                    html.Td("Extremely significant")
+                                ], style={"backgroundColor": "#ffe6e6"}),
+                                html.Tr([
+                                    html.Td("noadd"),
+                                    html.Td(html.Strong("< 0.001", style={"color": "#ff7f0e"})),
+                                    html.Td("r = 0.235 (medium)"),
+                                    html.Td(html.Span("Yes***", className="badge bg-warning")),
+                                    html.Td("Highly significant")
+                                ]),
+                                html.Tr([
+                                    html.Td("hourly-match"),
+                                    html.Td("0.005"),
+                                    html.Td("r = 0.147 (small-medium)"),
+                                    html.Td(html.Span("Yes**", className="badge bg-info")),
+                                    html.Td("Significant")
+                                ]),
+                                html.Tr([
+                                    html.Td(html.Strong("no-clean-firm")),
+                                    html.Td(html.Strong("0.316", style={"color": "#2ca02c"})),
+                                    html.Td("r = 0.065 (tiny)"),
+                                    html.Td(html.Span("No", className="badge bg-success")),
+                                    html.Td(html.Strong("NOT significant"))
+                                ], style={"backgroundColor": "#e8f8e8"}),
+                            ])
+                        ], bordered=True, hover=True, className="mt-3"),
+
+                        html.Div([
+                            html.H6("💡 Key Insight:", style={"color": "#1f77b4", "fontWeight": "bold", "marginTop": "20px"}),
+                            html.P([
+                                html.Strong("LDES removal shows the strongest statistical signal (p<0.001, r=0.312)"), " - impact is unmistakable and consistent. ",
+                                html.Strong("Clean-firm removal is NOT statistically significant (p=0.316)"), " - effects are inconsistent or too small to distinguish from noise.", html.Br(), html.Br(),
+                                html.Strong("If you could only implement ONE policy: "), "LDES deployment has highest certainty of impact. Clean-firm technology effects are uncertain."
+                            ], style={"backgroundColor": "#e8f4f8", "padding": "15px", "borderRadius": "5px", "marginTop": "10px"})
+                        ]),
+
+                        html.H5("3. Non-Linear Cost Scaling: Increasing Returns at Higher Matching", style={"fontWeight": "bold", "marginTop": "25px"}),
+
+                        dbc.Row([
+                            dbc.Col([
+                                html.Div([
+                                    html.H1("0.0596", style={"color": "#d62728", "fontWeight": "bold"}),
+                                    html.P("0% → 25% matching", style={"fontWeight": "bold"}),
+                                    html.P("Cost per percentage point", style={"fontSize": "12px", "color": "#666"})
+                                ], className="text-center p-3", style={"backgroundColor": "#ffe6e6", "borderRadius": "10px"})
+                            ], width=4),
+                            dbc.Col([
+                                html.Div([
+                                    html.H1("→", style={"color": "#666", "fontWeight": "bold"}),
+                                    html.P(" ", style={"fontWeight": "bold"}),
+                                    html.P(" ", style={"fontSize": "12px", "color": "#666"})
+                                ], className="text-center p-3")
+                            ], width=4),
+                            dbc.Col([
+                                html.Div([
+                                    html.H1("0.0322", style={"color": "#2ca02c", "fontWeight": "bold"}),
+                                    html.P("25% → 50% matching", style={"fontWeight": "bold"}),
+                                    html.P("46% cheaper!", style={"fontSize": "12px", "color": "#d62728", "fontWeight": "bold"})
+                                ], className="text-center p-3", style={"backgroundColor": "#e8f8e8", "borderRadius": "10px"})
+                            ], width=4),
+                        ], className="mb-3"),
+
+                        html.Div([
+                            html.H6("💡 Key Insight:", style={"color": "#1f77b4", "fontWeight": "bold"}),
+                            html.P([
+                                html.Strong("Counter-intuitive: Costs per percentage point DECREASE at higher matching levels. "),
+                                "Expected: diminishing returns (costs increase). Actual: ", html.Strong("increasing returns"), " (costs decrease 46%)!", html.Br(), html.Br(),
+                                html.Strong("Why? 'Infrastructure Amortization Effect': "), "0-25% requires building new storage, monitoring, flexible generation (high fixed costs). 25-50% uses existing infrastructure more efficiently (lower marginal costs).", html.Br(), html.Br(),
+                                html.Strong("Policy Implication: "), "Don't stop at 25%! Target 40-50% matching for best cost efficiency."
+                            ], style={"backgroundColor": "#fff8e6", "padding": "15px", "borderRadius": "5px", "marginTop": "10px", "borderLeft": "4px solid #ff7f0e"})
+                        ]),
+
+                        html.H5("4. Scenario Divergence Dynamics: Temporal Evolution Patterns", style={"fontWeight": "bold", "marginTop": "25px"}),
+
+                        dbc.Table([
+                            html.Thead([
+                                html.Tr([
+                                    html.Th("Scenario"),
+                                    html.Th("2025"),
+                                    html.Th("2030"),
+                                    html.Th("2035"),
+                                    html.Th("2040"),
+                                    html.Th("Pattern")
+                                ])
+                            ]),
+                            html.Tbody([
+                                html.Tr([
+                                    html.Td(html.Strong("no-LDES")),
+                                    html.Td("3.16%"),
+                                    html.Td("3.98%"),
+                                    html.Td(html.Strong("4.96%", style={"color": "#d62728"})),
+                                    html.Td("4.83%"),
+                                    html.Td("Peak & stabilize")
+                                ]),
+                                html.Tr([
+                                    html.Td("EU-coordination"),
+                                    html.Td("1.26%"),
+                                    html.Td(html.Strong("3.73%", style={"color": "#ff7f0e"})),
+                                    html.Td("4.47%"),
+                                    html.Td("4.16%"),
+                                    html.Td("Early acceleration")
+                                ]),
+                                html.Tr([
+                                    html.Td("noadd"),
+                                    html.Td("2.69%"),
+                                    html.Td(html.Strong("3.68%")),
+                                    html.Td("3.60%"),
+                                    html.Td("2.68%"),
+                                    html.Td("Decline after peak")
+                                ]),
+                                html.Tr([
+                                    html.Td("hourly-match"),
+                                    html.Td("2.17%"),
+                                    html.Td("2.10%"),
+                                    html.Td("2.63%"),
+                                    html.Td("2.22%"),
+                                    html.Td(html.Strong("Stable/consistent"))
+                                ]),
+                                html.Tr([
+                                    html.Td("no-clean-firm"),
+                                    html.Td("1.18%"),
+                                    html.Td("0.83%"),
+                                    html.Td("1.65%"),
+                                    html.Td("1.81%"),
+                                    html.Td("U-shaped recovery")
+                                ]),
+                            ])
+                        ], bordered=True, hover=True, className="mt-3"),
+
+                        html.Div([
+                            html.H6("💡 Key Insight:", style={"color": "#1f77b4", "fontWeight": "bold", "marginTop": "20px"}),
+                            html.P([
+                                html.Strong("No-LDES peaks at 4.96% in 2035, then stabilizes"), " - system adapts through alternatives. LDES critical during transition (2025-2035) but alternatives exist long-term.", html.Br(),
+                                html.Strong("EU coordination shows early impact "), "- largest jump 2025→2030. Benefits materialize early but diminish over time.", html.Br(),
+                                html.Strong("Hourly matching most stable (2.1-2.6% across all years)"), " - predictable, robust policy option.", html.Br(),
+                                html.Strong("No-additionality declines after 2030"), " - market naturally adds capacity post-2030 without requirements."
+                            ], style={"backgroundColor": "#e8f4f8", "padding": "15px", "borderRadius": "5px", "marginTop": "10px"})
+                        ]),
+
+                        html.H5("5. Technology Compensation: Sub-Additive Interactions", style={"fontWeight": "bold", "marginTop": "25px"}),
+
+                        dbc.Alert([
+                            html.H6("Technologies Compensate for Each Other", style={"fontWeight": "bold"}),
+                            html.P([
+                                "LDES removal alone: +4.24%", html.Br(),
+                                "Clean-firm removal alone: +0.37%", html.Br(),
+                                html.Strong("Expected combined (additive): +4.61%"), html.Br(),
+                                html.Strong("Actual combined: Less than expected"), html.Br(), html.Br(),
+                                "When LDES is available, system uses it more to compensate for missing clean-firm. When clean-firm is available, system uses it more to compensate for missing LDES. When BOTH removed, system finds third-best alternatives.", html.Br(), html.Br(),
+                                html.Strong("Implication: "), "Technology portfolio matters - having multiple options provides resilience through substitution effects."
+                            ], className="mb-0")
+                        ], color="info"),
+
+                    ])
+                ], className="mb-4")
+            ])
+        ]),
+
+        # Section 8: Policy Recommendations
         dbc.Row([
             dbc.Col([
                 dbc.Card([

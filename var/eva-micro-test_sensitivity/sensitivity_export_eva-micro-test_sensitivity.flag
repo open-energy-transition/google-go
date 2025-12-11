@@ -1,0 +1,19 @@
+{
+  "case_name": "base_eva-micro-test",
+  "case_path": "/home/user/eu-flex-platform/var/workflow/sensitivity/base_eva-micro-test",
+  "csv_paths": [
+    "/home/user/eu-flex-platform/var/workflow/sensitivity/base_eva-micro-test/ty_2026_cy_2010",
+    "/home/user/eu-flex-platform/var/workflow/sensitivity/base_eva-micro-test/ty_2026_cy_2013",
+    "/home/user/eu-flex-platform/var/workflow/sensitivity/base_eva-micro-test/ty_2030_cy_2010",
+    "/home/user/eu-flex-platform/var/workflow/sensitivity/base_eva-micro-test/ty_2030_cy_2013"
+  ],
+  "tys": [
+    2026,
+    2030
+  ],
+  "cys": [
+    2010,
+    2013
+  ],
+  "preset": "micro-test"
+}
