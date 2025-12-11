@@ -99,6 +99,31 @@ def _save_plot(ax, save_fig: bool, fig_path: Optional[str], title: str) -> None:
         os.makedirs(fig_path, exist_ok=True)
         ax.figure.savefig(f"{fig_path}/{title}.png", dpi=300, bbox_inches="tight")
 
+def _calculate_ylim(df: pd.DataFrame, margin: float = 0.15) -> Tuple[float, float]:
+    """Calculate appropriate y-axis limits with margin.
+    
+    Args:
+        df: DataFrame with data values
+        margin: Percentage margin to add above max value (default 15%)
+        
+    Returns:
+        Tuple of (ymin, ymax)
+    """
+    # Calculate total per column (for stacked bars)
+    if len(df.shape) == 2:
+        totals = df.sum(axis=0)
+    else:
+        totals = df
+    
+    max_val = totals.max()
+    min_val = totals.min()
+    
+    # Add margin
+    ymax = max_val * (1 + margin)
+    ymin = min(0, min_val)  # Include 0 if all values are positive
+    
+    return (ymin, ymax)
+
 # Simple cache for reference network (avoids DataFrame hashing issues)
 _reference_network_cache = {}
 
@@ -456,9 +481,9 @@ def calculate_abatement_cost(df_cost, df_co2):
     
     return df_ac_pivot
 
-def plot_abatement_cost_arrow(df, title, y_label):
+def plot_abatement_cost_arrow(df, title, y_label, figsize=(4, 6), ylim=None):
     
-    fig, ax = plt.subplots(figsize=(4, 6))
+    fig, ax = plt.subplots(figsize=figsize)
     
     x_positions = range(len(df))
     colors = plt.cm.tab10.colors  # color palette for different years
@@ -484,7 +509,10 @@ def plot_abatement_cost_arrow(df, title, y_label):
     ax.legend(title="Year")
     ax.set_ylabel(y_label)
     ax.set_title(title)
-    ax.set_ylim([0,250])
+    
+    # Set ylim automatically or use provided value
+    if ylim:
+        ax.set_ylim(ylim)
     
     ax.legend(loc='upper left', bbox_to_anchor=(1.05, 1), title="Year")
     
@@ -496,7 +524,8 @@ def plot_abatement_cost_arrow(df, title, y_label):
 ### Functions to derive figures (a-m)
 def derive_energy_mix(df_networks: pd.DataFrame, country: Optional[str] = None, 
                      plot_fig: bool = False, save_fig: bool = False, 
-                     fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                     fig_path: Optional[str] = None, save_csv: bool = False, 
+                     figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive energy mix statistics from networks.
     
     Args:
@@ -506,6 +535,7 @@ def derive_energy_mix(df_networks: pd.DataFrame, country: Optional[str] = None,
         save_fig: Whether to save plot to file
         fig_path: Path for saving figures
         save_csv: Whether to return CSV-formatted data
+        figsize: Figure size as (width, height) tuple
         
     Returns:
         Tuple of (dataframe with results, series with colors) if save_csv=True, else (None, None)
@@ -535,7 +565,8 @@ def derive_energy_mix(df_networks: pd.DataFrame, country: Optional[str] = None,
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -544,7 +575,8 @@ def derive_energy_mix(df_networks: pd.DataFrame, country: Optional[str] = None,
 
 def derive_energy_mix_go(df_networks: pd.DataFrame, country: Optional[str] = None, 
                         plot_fig: bool = False, save_fig: bool = False, 
-                        fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                        fig_path: Optional[str] = None, save_csv: bool = False, 
+                        figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive GO Market energy mix statistics.
     
     Args:
@@ -554,6 +586,7 @@ def derive_energy_mix_go(df_networks: pd.DataFrame, country: Optional[str] = Non
         save_fig: Whether to save plot to file
         fig_path: Path for saving figures
         save_csv: Whether to return CSV-formatted data
+        figsize: Figure size as (width, height) tuple
         
     Returns:
         Tuple of (dataframe with results, series with colors) if save_csv=True, else (None, None)
@@ -578,7 +611,8 @@ def derive_energy_mix_go(df_networks: pd.DataFrame, country: Optional[str] = Non
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -587,7 +621,8 @@ def derive_energy_mix_go(df_networks: pd.DataFrame, country: Optional[str] = Non
 
 def derive_capacity_mix(df_networks: pd.DataFrame, country: Optional[str] = None, 
                        plot_fig: bool = False, save_fig: bool = False, 
-                       fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                       fig_path: Optional[str] = None, save_csv: bool = False, 
+                       figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive capacity mix statistics from networks.
     
     Args:
@@ -597,6 +632,7 @@ def derive_capacity_mix(df_networks: pd.DataFrame, country: Optional[str] = None
         save_fig: Whether to save plot to file
         fig_path: Path for saving figures
         save_csv: Whether to return CSV-formatted data
+        figsize: Figure size as (width, height) tuple
         
     Returns:
         Tuple of (dataframe with results, series with colors) if save_csv=True, else (None, None)
@@ -627,7 +663,8 @@ def derive_capacity_mix(df_networks: pd.DataFrame, country: Optional[str] = None
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -636,7 +673,8 @@ def derive_capacity_mix(df_networks: pd.DataFrame, country: Optional[str] = None
 
 def derive_capacity_mix_new(df_networks: pd.DataFrame, country: Optional[str] = None, 
                            plot_fig: bool = False, save_fig: bool = False, 
-                           fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                           fig_path: Optional[str] = None, save_csv: bool = False, 
+                           figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive capacity mix for new technologies (proxy of GO Market).
     
     Args:
@@ -681,7 +719,8 @@ def derive_capacity_mix_new(df_networks: pd.DataFrame, country: Optional[str] = 
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -690,7 +729,8 @@ def derive_capacity_mix_new(df_networks: pd.DataFrame, country: Optional[str] = 
 
 def derive_storage_energy_capacity(df_networks: pd.DataFrame, country: Optional[str] = None, 
                                    plot_fig: bool = False, save_fig: bool = False, 
-                                   fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                                   fig_path: Optional[str] = None, save_csv: bool = False, 
+                                   figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive storage energy capacity in GO Market.
     
     Args:
@@ -729,7 +769,8 @@ def derive_storage_energy_capacity(df_networks: pd.DataFrame, country: Optional[
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -738,7 +779,8 @@ def derive_storage_energy_capacity(df_networks: pd.DataFrame, country: Optional[
 
 def derive_storage_power_capacity(df_networks: pd.DataFrame, country: Optional[str] = None, 
                                   plot_fig: bool = False, save_fig: bool = False, 
-                                  fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                                  fig_path: Optional[str] = None, save_csv: bool = False, 
+                                  figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive storage power capacity in GO Market.
     
     Args:
@@ -777,7 +819,8 @@ def derive_storage_power_capacity(df_networks: pd.DataFrame, country: Optional[s
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -786,7 +829,8 @@ def derive_storage_power_capacity(df_networks: pd.DataFrame, country: Optional[s
 
 def derive_total_system_cost(df_networks: pd.DataFrame, country: Optional[str] = None, 
                             plot_fig: bool = False, save_fig: bool = False, 
-                            fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                            fig_path: Optional[str] = None, save_csv: bool = False, 
+                            figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive total system cost.
     
     Args:
@@ -819,7 +863,8 @@ def derive_total_system_cost(df_networks: pd.DataFrame, country: Optional[str] =
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -828,7 +873,8 @@ def derive_total_system_cost(df_networks: pd.DataFrame, country: Optional[str] =
 
 def derive_total_system_cost_new(df_networks: pd.DataFrame, country: Optional[str] = None, 
                                 plot_fig: bool = False, save_fig: bool = False, 
-                                fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                                fig_path: Optional[str] = None, save_csv: bool = False, 
+                                figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive total system cost for new technologies (proxy of GO Market).
     
     Args:
@@ -867,7 +913,8 @@ def derive_total_system_cost_new(df_networks: pd.DataFrame, country: Optional[st
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -876,7 +923,8 @@ def derive_total_system_cost_new(df_networks: pd.DataFrame, country: Optional[st
 
 def derive_go_market_revenue(df_networks: pd.DataFrame, country: Optional[str] = None, 
                             plot_fig: bool = False, save_fig: bool = False, 
-                            fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                            fig_path: Optional[str] = None, save_csv: bool = False, 
+                            figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive GO Market revenue by technology.
     
     Args:
@@ -911,7 +959,8 @@ def derive_go_market_revenue(df_networks: pd.DataFrame, country: Optional[str] =
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -920,7 +969,8 @@ def derive_go_market_revenue(df_networks: pd.DataFrame, country: Optional[str] =
 
 def derive_marginal_price(df_networks: pd.DataFrame, country: Optional[str] = None, 
                          plot_fig: bool = False, save_fig: bool = False, 
-                         fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                         fig_path: Optional[str] = None, save_csv: bool = False, 
+                         figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive marginal price of GoO consumers.
     
     Args:
@@ -980,7 +1030,8 @@ def derive_marginal_price(df_networks: pd.DataFrame, country: Optional[str] = No
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -989,7 +1040,8 @@ def derive_marginal_price(df_networks: pd.DataFrame, country: Optional[str] = No
 
 def derive_co2_emissions(df_networks: pd.DataFrame, country: Optional[str] = None, 
                         plot_fig: bool = False, save_fig: bool = False, 
-                        fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                        fig_path: Optional[str] = None, save_csv: bool = False, 
+                        figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive CO2 emissions.
     
     Args:
@@ -1027,7 +1079,8 @@ def derive_co2_emissions(df_networks: pd.DataFrame, country: Optional[str] = Non
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title)
+        ylim = _calculate_ylim(df)
+        ax = plot_bar(df, colors, ylabel=y_label, title=plot_title, figsize=figsize, ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -1036,7 +1089,8 @@ def derive_co2_emissions(df_networks: pd.DataFrame, country: Optional[str] = Non
 
 def derive_cfe_curtailment(df_networks: pd.DataFrame, country: Optional[str] = None, 
                           plot_fig: bool = False, save_fig: bool = False, 
-                          fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                          fig_path: Optional[str] = None, save_csv: bool = False, 
+                          figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive CFE curtailment statistics.
     
     Args:
@@ -1095,10 +1149,13 @@ def derive_cfe_curtailment(df_networks: pd.DataFrame, country: Optional[str] = N
     country_name = _get_country_name(country)
     if plot_fig:
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
+        ylim = _calculate_ylim(df)
         ax, ax_share = plot_bar_with_share(df, colors, df_curt_share,
                                             ylabel=y_label,
                                             ylabel_share="Curtailment share (%)",
-                                            title=plot_title)
+                                            title=plot_title,
+                                            figsize=figsize,
+                                            ylim=ylim)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -1110,7 +1167,8 @@ def derive_cfe_curtailment(df_networks: pd.DataFrame, country: Optional[str] = N
 
 def derive_cfe_utilization(df_networks: pd.DataFrame, country: Optional[str] = None, 
                           plot_fig: bool = False, save_fig: bool = False, 
-                          fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                          fig_path: Optional[str] = None, save_csv: bool = False, 
+                          figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive CFE utilization statistics.
     
     Args:
@@ -1158,7 +1216,7 @@ def derive_cfe_utilization(df_networks: pd.DataFrame, country: Optional[str] = N
     if plot_fig:
         cmap_style = 'viridis'
         plot_title = title_fig if country == "system" else f"{title_fig} - {country_name}"
-        ax = plot_heatmap(df_use, plot_title, cmap_style, legend_title=y_label)
+        ax = plot_heatmap(df_use, plot_title, cmap_style, legend_title=y_label, figsize=figsize)
         _save_plot(ax, save_fig, fig_path, title_fig)
 
     if save_csv:
@@ -1167,7 +1225,8 @@ def derive_cfe_utilization(df_networks: pd.DataFrame, country: Optional[str] = N
 
 def derive_co2_abatement_cost(df_networks: pd.DataFrame, country: Optional[str] = None, 
                               plot_fig: bool = False, save_fig: bool = False, 
-                              fig_path: Optional[str] = None, save_csv: bool = False) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+                              fig_path: Optional[str] = None, save_csv: bool = False, 
+                              figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
     """Derive CO2 abatement cost.
     
     Args:
@@ -1217,7 +1276,12 @@ def derive_co2_abatement_cost(df_networks: pd.DataFrame, country: Optional[str] 
     df_co2.loc["total"] = df_co2.sum(axis=0)
 
     df_ac = calculate_abatement_cost(df_cost, df_co2)
-    ax = plot_abatement_cost_arrow(df_ac, title=title_fig, y_label=y_label)
+    
+    # Calculate ylim for abatement cost plot
+    max_val = df_ac.max().max()
+    ylim = (0, max_val * 1.15)  # 15% margin above max value
+    
+    ax = plot_abatement_cost_arrow(df_ac, title=title_fig, y_label=y_label, figsize=figsize, ylim=ylim)
 
     country_name = _get_country_name(country)
     if plot_fig:
@@ -1230,7 +1294,7 @@ def derive_co2_abatement_cost(df_networks: pd.DataFrame, country: Optional[str] 
         return _prepare_csv_output(df_csv, title_fig, y_label, country), None
     return None, None
 
-def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False, fig_path=None, save_csv=False, figures=None):
+def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False, fig_path=None, save_csv=False, figures=None, figsize_bar=(12, 6), figsize_heatmap=(16, 8), figsize_arrow=(4, 6)):
     """Derive all or selected figures.
     
     Args:
@@ -1242,6 +1306,9 @@ def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False
         save_csv: Whether to return CSV-formatted data
         figures: List of figure letters to generate (e.g., ['a', 'c', 'f']).
                 If None, generates all figures (a-m)
+        figsize_bar: Figure size for bar plots as (width, height) tuple
+        figsize_heatmap: Figure size for heatmap plots as (width, height) tuple
+        figsize_arrow: Figure size for arrow plot (abatement cost) as (width, height) tuple
     
     Returns:
         Tuple of (results DataFrame, colors DataFrame) if save_csv=True, else (None, None)
@@ -1274,7 +1341,16 @@ def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False
     
     for fig_letter in figures:
         if fig_letter in figure_functions:
-            results, colors = figure_functions[fig_letter](df_networks, country, plot_fig, save_fig, fig_path, save_csv)
+            # Determine which figsize to use based on plot type
+            # 'l' (cfe_utilization) uses heatmap, 'm' (co2_abatement_cost) uses arrow
+            if fig_letter == 'l':
+                figsize = figsize_heatmap
+            elif fig_letter == 'm':
+                figsize = figsize_arrow
+            else:
+                figsize = figsize_bar
+            
+            results, colors = figure_functions[fig_letter](df_networks, country, plot_fig, save_fig, fig_path, save_csv, figsize)
             results_dict[fig_letter] = results
             colors_dict[fig_letter] = colors
         else:
