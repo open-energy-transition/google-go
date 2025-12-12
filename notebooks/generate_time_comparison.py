@@ -37,6 +37,7 @@ plot_formats = {
     "CFE curtailment": {"letter": "(k)", "y_label": "Curtailment (TWh)"},
     "CFE utilization": {"letter": "(l)", "y_label": "Utilization factor (-)"},
     "CO2 abatement cost": {"letter": "(m)", "y_label": "Abatement cost (€/tCO2)"},
+    "Resource utilization": {"letter": "(n)", "y_label": "Share (%)"},
 }
 
 vres_carriers = [
@@ -77,10 +78,10 @@ def _prepare_csv_output(df: pd.DataFrame, title: str, y_label: str, country: str
         names=['Results', 'y_label', 'carrier']
     )
     df_csv.columns = pd.MultiIndex.from_product(
-        [df_csv.columns.get_level_values("scenario").unique().tolist(), 
-         df_csv.columns.get_level_values("year").unique().tolist(), 
+        [df_csv.columns.get_level_values("year").unique().tolist(),
+         df_csv.columns.get_level_values("scenario").unique().tolist(), 
          [country_name]], 
-        names=['scenario', 'year', 'scope']
+        names=['year', 'scenario', 'scope']
     )
     return df_csv
 
@@ -109,18 +110,29 @@ def _calculate_ylim(df: pd.DataFrame, margin: float = 0.15) -> Tuple[float, floa
     Returns:
         Tuple of (ymin, ymax)
     """
-    # Calculate total per column (for stacked bars)
+    # For stacked bars with positive and negative values, we need to calculate
+    # the max of positive stacks and min of negative stacks separately
     if len(df.shape) == 2:
-        totals = df.sum(axis=0)
+        # Sum positive and negative values separately for each column
+        positive_stack = df.clip(lower=0).sum(axis=0)
+        negative_stack = df.clip(upper=0).sum(axis=0)
+        
+        max_val = positive_stack.max()
+        min_val = negative_stack.min()
     else:
-        totals = df
-    
-    max_val = totals.max()
-    min_val = totals.min()
+        max_val = df.max()
+        min_val = df.min()
     
     # Add margin
-    ymax = max_val * (1 + margin)
-    ymin = min(0, min_val)  # Include 0 if all values are positive
+    if max_val > 0:
+        ymax = max_val * (1 + margin)
+    else:
+        ymax = max_val * (1 - margin) if max_val < 0 else 0
+    
+    if min_val < 0:
+        ymin = min_val * (1 + margin)
+    else:
+        ymin = 0
     
     return (ymin, ymax)
 
@@ -148,7 +160,8 @@ def plot_bar(df, colors, ylabel=None, title=None, figsize=(12, 6), vert_lines=Tr
     fig, ax = plt.subplots(figsize=figsize)
     
     # Clean 'virtual ' prefix from index names
-    df = clean_virtual_names(df.copy())
+    if df.index.name is not "year":
+        df = clean_virtual_names(df.copy())
     
     # Remove column names from MultiIndex if present
     df_plot = df.copy()
@@ -162,11 +175,13 @@ def plot_bar(df, colors, ylabel=None, title=None, figsize=(12, 6), vert_lines=Tr
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1],
               loc='upper left', bbox_to_anchor=(1, 1),
-              title='Carrier')
+              title='Carrier' if df.index.name is not "year" else 'Year')
 
     # Add total values above each bar
     bar_totals = df.T.sum(axis=1)  # totals per bar
-    bar_height = df.clip(lower=0).T.sum(axis=1)
+    # Calculate bar height considering both positive and negative values
+    bar_height_pos = df.clip(lower=0).T.sum(axis=1)
+    bar_height_neg = df.clip(upper=0).T.sum(axis=1)
     
     if ylim:
         ax.set_ylim(ylim)
@@ -174,16 +189,24 @@ def plot_bar(df, colors, ylabel=None, title=None, figsize=(12, 6), vert_lines=Tr
     for i, total in enumerate(bar_totals):
         color = "black"
         
-        if ylim:
-            if bar_height.iloc[i] > ylim[1]:
-                bar_height.iloc[i] = ylim[1]
+        # Position text above positive part or below negative part
+        if total >= 0:
+            text_position = bar_height_pos.iloc[i]
+            valign = 'bottom'
+        else:
+            text_position = bar_height_neg.iloc[i]
+            valign = 'top'
+        
+        if ylim and ylim[1] is not 100:
+            if bar_height_pos.iloc[i] > ylim[1]:
+                text_position = ylim[1]
                 color = "red"
         
         ax.text(
             i,                              # x position
-            bar_height.iloc[i],             # y position
+            text_position,                  # y position
             "{:.0f}".format(total),         # label
-            ha='center', va='bottom',
+            ha='center', va=valign,
             color=color,
             fontsize=9
         )
@@ -232,10 +255,15 @@ def plot_bar(df, colors, ylabel=None, title=None, figsize=(12, 6), vert_lines=Tr
                 ax.axvline(i - 0.5, color='gray', linestyle='--', linewidth=1)
     
     # Labels
+    if df.index.name == "year":
+        ax.set_xlabel("")
+
     if ylabel:
         ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
+        if df.index.name == "year":
+            ax.set_title(title, pad=20)
 
     ax.grid(axis='y')
 
@@ -256,6 +284,10 @@ def plot_bar_with_share(df, colors, df_share, ylabel=None, ylabel_share=None, ti
 
     # Create stacked bar plot on the provided axis
     df_plot.T.plot(kind="bar", stacked=True, legend=False, color=colors, ax=ax)
+
+    # Set ylim for main axis if provided
+    if ylim:
+        ax.set_ylim(ylim)
 
     # Create secondary y-axis for share line plot
     ax_share = ax.twinx()
@@ -521,7 +553,127 @@ def plot_abatement_cost_arrow(df, title, y_label, figsize=(4, 6), ylim=None):
 
     return ax
 
-### Functions to derive figures (a-m)
+def get_cap_vres(df, carriers, groupby_list):
+    cols = {}
+    
+    # Get list of years from the ind
+    all_years = sorted(df.index.get_level_values('year').unique())
+    
+    # Store solar-hsat p_nom_opt from previous years for each scenario
+    solar_hsat_history = {}
+    solar_hsat_factor = 1.15 # solar + solar-hsat * 1.15 (see add_solar_potential_constraints in solve_network.py)
+    for year, sc in df.index:
+        n = df.loc[(year, sc)]
+        # Use tuple (year, scenario) as column key instead of network name
+        gens = n.generators[n.generators.carrier.isin(carriers) & (n.generators.build_year == year)]
+        if "country" in groupby_list:
+            country_map = n.buses[n.buses.index.isin(gens.bus)].country
+            gens["country"] = gens.bus.map(country_map)
+        grouped = gens.groupby(groupby_list)[["p_nom", "p_nom_opt", "p_nom_max"]].sum()/1e3 #GW
+
+        # Add ratio column
+        grouped["share over max"] = grouped["p_nom_opt"] / grouped["p_nom_max"]
+        if year == all_years[0]:
+            p_nom_max_total = grouped["p_nom_max"] + grouped["p_nom"]
+        grouped["share over max - total"] = grouped["p_nom_opt"] / p_nom_max_total
+
+        # Add solar-utility row
+        if "solar" in grouped.index and "solar-hsat" in grouped.index:
+            # Determine if we need MultiIndex based on groupby_list
+            if "country" in groupby_list:
+                # MultiIndex case: create with country level
+                countries = grouped.index.get_level_values("country").unique()
+                solar_utility = pd.DataFrame(
+                    index=pd.MultiIndex.from_product([["solar utility"], countries], names=["carrier", "scope"]),
+                    columns=grouped.columns,
+                    dtype=float
+                )
+                
+                # Get data with .values for array operations
+                solar_p_nom_opt = grouped.loc["solar", "p_nom_opt"].values
+                solar_hsat_p_nom_opt = grouped.loc["solar-hsat", "p_nom_opt"].values
+                solar_p_nom_max = grouped.loc["solar", "p_nom_max"].values
+                solar_hsat_p_nom = grouped.loc["solar-hsat", "p_nom"].values
+                solar_p_nom = grouped.loc["solar", "p_nom"].values
+                solar_hsat_p_nom_val = grouped.loc["solar-hsat", "p_nom"].values
+                
+            else:
+                # Single index case
+                solar_utility = pd.DataFrame(
+                    index=["solar utility"],
+                    columns=grouped.columns,
+                    dtype=float
+                )
+                solar_utility.index.name = "carrier"
+                
+                # Get data as scalars (no .values needed)
+                solar_p_nom_opt = grouped.loc["solar", "p_nom_opt"]
+                solar_hsat_p_nom_opt = grouped.loc["solar-hsat", "p_nom_opt"]
+                solar_p_nom_max = grouped.loc["solar", "p_nom_max"]
+                solar_hsat_p_nom = grouped.loc["solar-hsat", "p_nom"]
+                solar_p_nom = grouped.loc["solar", "p_nom"]
+                solar_hsat_p_nom_val = grouped.loc["solar-hsat", "p_nom"]
+            
+            # p_nom_opt: sum of solar and solar-hsat
+            solar_utility.loc[:, "p_nom_opt"] = (
+                solar_p_nom_opt + 
+                solar_hsat_p_nom_opt * solar_hsat_factor
+            )
+            
+            # p_nom_max logic
+            if year == all_years[0]:  # First year
+                # For first year: p_nom_max solar - p_nom solar-hsat
+                solar_utility.loc[:, "p_nom_max"] = (
+                    solar_p_nom_max - 
+                    solar_hsat_p_nom * solar_hsat_factor
+                )
+            else:
+                # For other years: p_nom_max solar (current year) - p_nom_opt solar-hsat (previous year)
+                year_idx = all_years.index(year)
+                prev_year = all_years[year_idx - 1]
+                prev_solar_hsat_opt = solar_hsat_history.get((sc, prev_year), 0)
+                
+                if "country" in groupby_list:
+                    solar_utility.loc[:, "p_nom_max"] = (
+                        solar_p_nom_max - 
+                        prev_solar_hsat_opt.values * solar_hsat_factor
+                    )
+                else:
+                    solar_utility.loc[:, "p_nom_max"] = (
+                        solar_p_nom_max - 
+                        prev_solar_hsat_opt * solar_hsat_factor
+                    )
+            
+            # p_nom: sum of solar and solar-hsat
+            solar_utility.loc[:, "p_nom"] = (
+                solar_p_nom + 
+                solar_hsat_p_nom_val
+            )
+            
+            # share over max
+            solar_utility.loc[:, "share over max"] = (
+                solar_utility["p_nom_opt"] / solar_utility["p_nom_max"]
+            ).where(solar_utility["p_nom_max"] > 0, 0)
+
+            if year == all_years[0]:
+                p_nom_max_total_solar_utility = solar_utility["p_nom_max"] + solar_utility["p_nom"]
+            solar_utility["share over max - total"] = solar_utility["p_nom_opt"] / p_nom_max_total_solar_utility
+            
+            # Concatenate solar-utility to grouped
+            grouped = pd.concat([grouped, solar_utility])
+            
+            # Store solar-hsat p_nom_opt for next year
+            solar_hsat_history[(sc, year)] = grouped.loc["solar-hsat", "p_nom_opt"]
+        
+        cols[(year, sc)] = round(grouped, 4)
+
+    df = pd.concat(cols, axis=1).fillna(0)
+    # Create MultiIndex columns with year and scenario
+    df.columns = pd.MultiIndex.from_tuples(df.columns, names=['year', 'scenario', 'capacity'])
+    
+    return df
+
+### Functions to derive figures
 def derive_energy_mix(df_networks: pd.DataFrame, country: Optional[str] = None, 
                      plot_fig: bool = False, save_fig: bool = False, 
                      fig_path: Optional[str] = None, save_csv: bool = False, 
@@ -1294,7 +1446,93 @@ def derive_co2_abatement_cost(df_networks: pd.DataFrame, country: Optional[str] 
         return _prepare_csv_output(df_csv, title_fig, y_label, country), None
     return None, None
 
-def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False, fig_path=None, save_csv=False, figures=None, figsize_bar=(12, 6), figsize_heatmap=(16, 8), figsize_arrow=(4, 6)):
+def derive_resource_utilization(df_networks: pd.DataFrame, country: Optional[str] = None, 
+                              plot_fig: bool = False, save_fig: bool = False, 
+                              fig_path: Optional[str] = None, save_csv: bool = False, 
+                              figsize: Tuple[int, int] = (12, 6)) -> Tuple[Optional[pd.DataFrame], Optional[pd.Series]]:
+    """Derive resource utilization statistics for variable renewable energy sources.
+    
+    This function calculates the share of utilized capacity relative to the maximum 
+    available capacity for VRES (Variable Renewable Energy Sources) technologies. 
+    The analysis can be performed at system-level or country-level, showing how much 
+    of the available renewable potential is being deployed.
+    
+    Args:
+        df_networks: DataFrame containing network data
+        country: Country code or 'system' for system-wide analysis
+        plot_fig: Whether to generate plot
+        save_fig: Whether to save plot to file
+        fig_path: Path for saving figures
+        save_csv: Whether to return CSV-formatted data
+        figsize: Figure size as (width, height) tuple
+        
+    Returns:
+        Tuple of (dataframe with results, series with colors) if save_csv=True, else (None, None)
+    """
+    results = "Resource utilization"
+    letter = plot_formats[results]['letter']
+    y_label = plot_formats[results]['y_label']
+    title_fig = f"{letter} {results}"
+
+    # Get capacity data at country and system level
+    df_countries = get_cap_vres(df_networks["network"], carriers=vres_carriers, 
+                               groupby_list=["carrier", "country"])
+    df_countries.index = df_countries.index.set_names(['carrier', 'scope'])
+    
+    df_system = get_cap_vres(df_networks["network"], carriers=vres_carriers, 
+                            groupby_list=["carrier"])
+    df_system.index = pd.MultiIndex.from_product(
+        [df_system.index, ["system"]], 
+        names=['carrier', 'scope']
+    )
+    
+    # Combine system and country data
+    df = pd.concat([df_system, df_countries], axis=0)
+    
+    # Extract share over max capacity and convert to percentage
+    idx = pd.IndexSlice
+    df_plot = df.loc[:, idx[:, :, "share over max - total"]].copy()
+    df_plot = df_plot.droplevel('capacity', axis=1) * 100
+    
+    # Prepare carrier list for plotting: replace individual solar types with aggregated "solar utility"
+    vres_plot = [c for c in vres_carriers if c not in ["solar", "solar-hsat"]]
+    vres_plot.insert(0, "solar utility")
+    
+    if plot_fig:
+        for carrier in vres_plot:
+            print(f"----------------------------------Analysing {carrier}")
+            if carrier not in df_plot.index:
+                print(f"Warning: {carrier} not found in data and will be skipped.")
+                continue
+            
+            for scen in df_plot.columns.get_level_values('scenario').unique():
+                print(f"------------------> Analysing scenario {scen}")
+                # Extract data for specific carrier and scenario across all years and scopes
+                df_carrier = df_plot.loc[carrier, idx[:, scen]].droplevel('scenario', axis=1).T
+                
+                # Create color palette for years
+                years_list = df_carrier.index.tolist()
+                if len(years_list) > 1:
+                    year_colors = {year: plt.cm.viridis(i / (len(years_list) - 1)) 
+                                 for i, year in enumerate(years_list)}
+                else:
+                    year_colors = {years_list[0]: plt.cm.viridis(0.5)}
+                
+                # Generate plot
+                plot_title = f"{title_fig} - {scen} - {carrier}"
+                ax = plot_bar(df_carrier, year_colors, ylabel=y_label, 
+                            title=plot_title, 
+                            vert_lines=False, figsize=figsize, ylim=(0, 100))
+                plt.show()
+                _save_plot(ax, save_fig, fig_path, plot_title)
+    
+    return None, None
+
+    
+def derive_all_figures(df_networks, country=None,
+                       plot_fig=False, save_fig=False,
+                       fig_path=None, save_csv=False, figures=None,
+                       figsize_bar=(12, 6), figsize_heatmap=(16, 8), figsize_arrow=(4, 6), figsize_bar_resource_utilization=(12, 6)):
     """Derive all or selected figures.
     
     Args:
@@ -1315,7 +1553,7 @@ def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False
     """
     # If no specific figures requested, generate all
     if figures is None:
-        figures = ['a', 'b', 'c', 'd', 'e1', 'e2', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm']
+        figures = ['a', 'b', 'c', 'd', 'e1', 'e2', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n']
     
     # Mapping of figure letters to derive functions
     figure_functions = {
@@ -1333,6 +1571,7 @@ def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False
         'k': derive_cfe_curtailment,
         'l': derive_cfe_utilization,
         'm': derive_co2_abatement_cost,
+        'n': derive_resource_utilization, # no need to be saved in the csv
     }
     
     # Generate requested figures
@@ -1347,6 +1586,8 @@ def derive_all_figures(df_networks, country=None, plot_fig=False, save_fig=False
                 figsize = figsize_heatmap
             elif fig_letter == 'm':
                 figsize = figsize_arrow
+            elif fig_letter == 'n':
+                figsize = figsize_bar_resource_utilization
             else:
                 figsize = figsize_bar
             

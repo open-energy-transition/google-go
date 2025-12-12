@@ -307,3 +307,34 @@ def group_by_country_focus(n, c, port=""):
 
 pypsa.statistics.groupers.add_grouper("build_year", group_by_build_year)
 pypsa.statistics.groupers.add_grouper("country1", group_by_country_focus)
+
+# Define figure size mappings based on number of years
+# For bar plots
+FIGSIZE_BAR = {
+    1: (3, 6),
+    2: (6, 6),
+    3: (8, 6),
+    4: (12, 6)
+}
+
+# For heatmap plots
+FIGSIZE_HEATMAP_MAP = {
+    1: (4, 8),
+    2: (8, 8),
+    3: (12, 8),
+    4: (16, 8)
+}
+
+# For arrow plot (abatement cost) - fixed size independent of years
+FIGSIZE_ARROW = (6, 6)
+
+# For bar plots - resource utilization - fixed size independent of years
+FIGSIZE_RESOURCE_UTILIZATION = (12, 6)
+
+# For bar plots - resource utilization - fixed size independent of years
+FIGSIZE_BAR_COUNTRIES = (12, 6)
+
+# Helper function to get figsize from years list
+def get_figsize_from_years(years_list, figsize_map):
+    n_years = len(years_list)
+    return figsize_map.get(n_years, figsize_map[4])  # Default to 4 years if not found
