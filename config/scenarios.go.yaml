@@ -1,0 +1,178 @@
+# -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
+#
+# SPDX-License-Identifier: MIT
+
+# This file is used to define the scenarios that are run by snakemake. Each entry on the first level is a scenario. Each scenario can contain configuration overrides with respect to the config/config.yaml settings.
+#
+# Example
+#
+# custom-scenario: # name of the scenario
+#   electricity:
+#       renewable_carriers: [wind, solar] # override the list of renewable carriers
+
+# ===================== Main Tree =====================
+# =====================================================
+
+baseline:
+  enable:
+    certificate: false
+
+energy-match-50:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 0
+
+hourly-match-50-90:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+hourly-match-50-95:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 95
+
+hourly-match-25-98:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 98
+
+hourly-match-50-99:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# Constraint issue (please check equality/inequality of the GO constraints)
+hourly-match-50-100:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 100
+
+# ============== Sensitivities ==============
+# ===========================================
+
+# 1) additionality, EU GO market (C&I 50%; 99.9% hourly matching)
+hourly-match-EU-50-99:
+  certificate:
+    new_demand:
+      enable: true
+      scope: global
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 2) additionality, no Advanced Clean Firm (C&I 50%; 99.9% hourly matching)
+hourly-match-no-LDES-50-99:
+  certificate:
+    storage_carriers: [li-ion]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 3) additionality, no LDES (iron-air) (C&I 50%; 99.9% hourly matching)
+hourly-match-no-clean-firm-50-99:
+  certificate:
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
+                    ror, hydro, urban central solid biomass CHP, geothermal, 
+                    solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 4) no additionality (C&I 50%, 99.9% hourly matching)
+hourly-match-noadd-50-99:
+  certificate:
+    plant_status: [new, existing]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 5) no additionality, low C&I participation 10%, 99.9% hourly matching
+hourly-match-noadd-10-99:
+  certificate:
+    plant_status: [new, existing]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 10
+      hourly_matching: 99.9
+  
+# 6) no additionality, high C&I participation 90%, 99.9% hourly matching
+hourly-match-noadd-90-99:
+  certificate:
+    plant_status: [new, existing]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 90
+      hourly_matching: 99.9
+
+
+# == DEC targets ==
+baseline-co2-price25-50-90:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 25
+
+
+hourly-match-co2-price25-50-99:
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+
+baseline-co2-price50-50-90:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 50
+
+
+hourly-match-co2-price50-50-90:
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9

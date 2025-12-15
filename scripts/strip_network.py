@@ -128,17 +128,18 @@ def strip_network(n, carriers):  # , country=None):
     ].index
     m.remove("Bus", n.buses.index.symmetric_difference(nodes_to_keep))
 
-    for c in m.iterate_components(
-        ["Generator", "Link", "Line", "Store", "StorageUnit", "Load"]
-    ):
+    for c in n.components:
+        if c.name not in ["Generator", "Link", "Line", "Store", "StorageUnit", "Load"]:
+            continue
+
         if c.name in ["Link", "Line"]:
-            location_boolean = c.df.bus0.isin(nodes_to_keep) & c.df.bus1.isin(
+            location_boolean = c.static.bus0.isin(nodes_to_keep) & c.static.bus1.isin(
                 nodes_to_keep
             )
         else:
-            location_boolean = c.df.bus.isin(nodes_to_keep)
-        to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier)]
-        to_drop = c.df.index.symmetric_difference(to_keep)
+            location_boolean = c.static.bus.isin(nodes_to_keep)
+        to_keep = c.static.index[location_boolean & c.static.carrier.isin(carrier)]
+        to_drop = c.static.index.symmetric_difference(to_keep)
         m.remove(c.name, to_drop)
 
     m.links.loc[m.links.carrier.isin(["H2 Electrolysis", "H2 Fuel Cell"]), "bus2"] = ""
@@ -182,14 +183,18 @@ def merge_load(n, config_elec):
     p_set = p_set.rename({v: k for k, v in n.loads.bus.items()})
     n.loads_t.p_set[p_set.index] += p_set
 
-    if config_elec["heating_factors"].get("enable", False):
-        heat_share = config_elec["heating_factors"]["share"]
-        heat_increment = config_elec["heating_factors"]["increment"]
+    # Add exogenous electricity demand for heating
+    if config_elec["heating_demand"].get("enable", False):
+        logger.info("Adding exogenous electricity demand for heating")
+        heat_share = config_elec["heating_demand"]["share"]
+        heat_elc_load = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
+        n.loads_t.p_set[p_set.index] += heat_elc_load
 
-        heat_elc_load_base = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
-        heat_elc_load_new = heat_elc_load_base * heat_increment
-        
-        n.loads_t.p_set[p_set.index] += heat_elc_load_new
+    if config_elec["hydrogen_demand"].get("enable", False):
+        logger.info("Adding exogenous electricity demand for hydrogen production")
+        hydrogen_share = config_elec["hydrogen_demand"]["share"]
+        hydrogen_elc_load = n.loads_t.p_set[p_set.index] * hydrogen_share / (1-hydrogen_share)
+        n.loads_t.p_set[p_set.index] += hydrogen_elc_load
 
     logger.info("Merge electricity demand loads to one electricity loads per bus")
 
@@ -200,7 +205,7 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "strip_network",
-            run="baseline-3H",
+            run="baseline-h2-demand",
             opts="",
             clusters="39",
             configfiles="config/config.go.yaml",

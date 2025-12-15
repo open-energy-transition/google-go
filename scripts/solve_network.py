@@ -859,7 +859,7 @@ def add_TES_energy_to_power_ratio_constraints(n: pypsa.Network) -> None:
     n : pypsa.Network
         A PyPSA network with TES and heating sectors enabled.
 
-    Raises
+    Raisesresources/baseline-3H
     ------
     ValueError
         If no valid TES storage or charger links are found.
@@ -1352,12 +1352,12 @@ def add_rps_constraints(n, planning_horizons):
         res_shares = retrieve_tyndp_data(tyndp_scenario, planning_horizons)
     else:
         source = "manual"
-        res_shares = pd.DataFrame([res_target["res_shares_default"]]).T
+        res_shares = pd.DataFrame([res_target["res_shares_overwrite"]]).T
     
-    # Add missing countries from res_shares_default to res_shares DataFrame
-    for cc in res_target["res_shares_default"].keys():
+    # Add missing countries from res_shares_overwrite to res_shares DataFrame
+    for cc in res_target["res_shares_overwrite"].keys():
         if cc not in res_shares.index:
-            res_shares.loc[cc] = res_target["res_shares_default"][cc]
+            res_shares.loc[cc] = res_target["res_shares_overwrite"][cc]
     
     res_shares.columns = [f'RES_target_{planning_horizons}']
     country_names = ["System" if code == "not found" else code for code in coco.CountryConverter().convert(res_shares.index, to="short_name")]
@@ -1433,13 +1433,11 @@ def add_virtual_ppl_matching(n):
 
     # Explode VPP DataFrame by 'ppl' column, reset index, and re-index on 'ppl'
     df = vpp.explode("ppl").reset_index().set_index("ppl")
+    df.index.name = "name"
 
     # Split into links and generators
     df_links = df[df["component"] == "links"].copy()
-    df_links.index.name = "Link"
-
     df_gens = df[df["component"] == "generators"].copy()
-    df_gens.index.name = "Generator"
 
     # Compute RHS: aggregated power per virtual_ppl from links and generators
     rhs = 0
@@ -1463,7 +1461,7 @@ def add_virtual_ppl_matching(n):
 
     # Prepare VPP DataFrame to get LHS: generator power per virtual_ppl
     df_vpp = vpp.reset_index().set_index("virtual_ppl", drop=False)
-    df_vpp.index.name = "Generator"
+    df_vpp.index.name = "name"
 
     lhs = n.model["Generator-p"].loc[:, df_vpp.index].groupby(df_vpp.virtual_ppl).sum()
 
@@ -1499,11 +1497,11 @@ def add_virtual_storage_matching(n):
         df_vs = df_vs.reset_index(level=["country", "carrier", "direction"])
         lhs = n.model["Generator-p"].loc[:, df_vs.index]
 
-        df.index.name = "Link"
-        df.rename(columns={"virtual_storage": "Generator"}, inplace=True)
+        df.index.name = "name"
+        df.rename(columns={"virtual_storage": "name"}, inplace=True)
         rhs = (
             (n.model["Link-p"].loc[:, df.index] * df.efficiency)
-            .groupby(df.Generator)
+            .groupby(df.name)
             .sum()
         )
 
@@ -1633,11 +1631,6 @@ def extra_functionality(
         add_virtual_ppl_matching(n)
         add_buffer_matching(n)
         add_virtual_storage_matching(n)
-
-        # if strategy == "vol-match":
-        #     add_go_annual_matching_constraints(n, snapshots)
-        # if strategy == "247-go":
-        #     add_247_go_matching_constraints(n)
 
 
 def check_objective_value(n: pypsa.Network, solving: dict) -> None:
@@ -1983,7 +1976,7 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "solve_sector_network_myopic",
-            run="hourly-match-90-3H",
+            run="baseline",
             opts="",
             clusters="39",
             configfiles="config/config.go.yaml",
