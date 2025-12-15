@@ -526,7 +526,7 @@ sector:
       rolling_window_ambient_temperature: 72
       relative_annual_temperature_reduction: 0.01
     ptes:
-      dynamic_capacity: true
+      dynamic_capacity: false
       supplemental_heating:
         enable: false
         booster_heat_pump: false
@@ -571,6 +571,23 @@ sector:
     rural:
     - air
     - ground
+  residential_heat:
+    dsm:
+      enable: false
+      direction:
+      - overheat
+      - undercool
+      restriction_value:
+        2020: 0.06
+        2025: 0.16
+        2030: 0.27
+        2035: 0.36
+        2040: 0.38
+        2045: 0.39
+        2050: 0.4
+      restriction_time:
+      - 10
+      - 22
   cluster_heat_buses: true
   heat_demand_cutout: default
   bev_dsm_restriction_value: 0.8
@@ -940,20 +957,8 @@ costs:
     "CO2 intensity": 0
     "discount rate": 0.07
     "standing losses": 0
+  custom_cost_fn: data/custom_costs.csv
   overwrites: {}
-  marginal_cost:
-    solar: 0.01
-    onwind: 0.015
-    offwind: 0.015
-    hydro: 0.
-    H2: 0.
-    electrolysis: 0.
-    fuel cell: 0.
-    battery: 0.
-    battery inverter: 0.
-    home battery storage: 0
-    water tank charger: 0.03
-    central water pit charger: 0.025
   emission_prices:
     enable: false
     co2: 0.
