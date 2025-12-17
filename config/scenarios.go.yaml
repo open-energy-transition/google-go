@@ -133,8 +133,16 @@ hourly-match-noadd-90-99:
       hourly_matching: 99.9
 
 
-# == DEC targets ==
-baseline-co2-price25-50-90:
+# == Policy ==
+baseline-rps: # renewable portfolio standard (RES share targets over total electricity generation)
+  enable:
+    certificate: false
+
+  res_target:
+    system_share_target: true
+    country_share_target: true
+
+baseline-co2-price25: # low carbon price, proxy of US market
   enable:
     certificate: false
 
@@ -156,7 +164,7 @@ hourly-match-co2-price25-50-99:
       hourly_matching: 99.9
 
 
-baseline-co2-price50-50-90:
+baseline-co2-price50: # medium carbon price, proxy of EU market
   enable:
     certificate: false
 
@@ -165,10 +173,10 @@ baseline-co2-price50-50-90:
       co2: 50
 
 
-hourly-match-co2-price50-50-90:
+hourly-match-co2-price50-50-99:
   costs:
     emission_prices:
-      co2: 25
+      co2: 50
 
   certificate:
     new_demand:
@@ -176,3 +184,11 @@ hourly-match-co2-price50-50-90:
       participant: ci
       energy_matching: 50
       hourly_matching: 99.9
+
+baseline-co2-price100: # high carbon price
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 100
