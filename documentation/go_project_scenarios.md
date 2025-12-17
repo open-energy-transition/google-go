@@ -35,33 +35,38 @@ All main scenarios (except baseline) enable the `certificate.new_demand` feature
 
 These scenarios explore the base case without GO procurement and annual energy matching without hourly requirements.
 
-| Scenario Name | `enable.certificate` | `certificate.new_demand.enable` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :------------------- | :------------------------------ | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| baseline | false | - | - | - | - | Reference scenario without GO market modeling, used as comparison baseline for all other scenarios. |
-| energy-match-50 | true (default) | true | ci | 50 | 0 | 50% of C&I demand participates in GO procurement with annual energy matching only (no hourly requirements). |
-| energy-match-25 | true (default) | true | ci | 25 | 0 | 25% of C&I demand participates in GO procurement with annual energy matching only (no hourly requirements). |
+| Parameter | baseline | energy-match-50 | energy-match-25 |
+| :-------- | :------- | :-------------- | :-------------- |
+| **Description** | Reference scenario without GO market modeling, used as comparison baseline for all other scenarios. | 50% of C&I demand participates in GO procurement with annual energy matching only (no hourly requirements). | 25% of C&I demand participates in GO procurement with annual energy matching only (no hourly requirements). |
+| `enable.certificate` | false | true (default) | true (default) |
+| `certificate.new_demand.enable` | - | true | true |
+| `certificate.new_demand.participant` | - | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | - | 50 | 25 |
+| `certificate.new_demand.hourly_matching` (%) | - | 0 | 0 |
 
 ### 2.2 Hourly Matching Scenarios - 50% C&I Participation
 
 These scenarios examine the impact of increasingly stringent hourly matching requirements when 50% of C&I demand participates in GO procurement.
 
-| Scenario Name | `certificate.new_demand.enable` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :------------------------------ | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| hourly-match-50-90 | true | ci | 50 | 90 | 50% C&I participation with 90% hourly matching requirement. |
-| hourly-match-50-95 | true | ci | 50 | 95 | 50% C&I participation with 95% hourly matching requirement. |
-| hourly-match-50-98 | true | ci | 50 | 98 | 50% C&I participation with 98% hourly matching requirement. |
-| hourly-match-50-99 | true | ci | 50 | 99.9 | 50% C&I participation with near-perfect (99.9%) hourly matching requirement. |
+| Parameter | hourly-match-50-90 | hourly-match-50-95 | hourly-match-50-98 | hourly-match-50-99 |
+| :-------- | :----------------- | :----------------- | :----------------- | :----------------- |
+| **Description** | 50% C&I participation with 90% hourly matching requirement. | 50% C&I participation with 95% hourly matching requirement. | 50% C&I participation with 98% hourly matching requirement. | 50% C&I participation with near-perfect (99.9%) hourly matching requirement. |
+| `certificate.new_demand.enable` | true | true | true | true |
+| `certificate.new_demand.participant` | ci | ci | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 | 50 | 50 | 50 |
+| `certificate.new_demand.hourly_matching` (%) | 90 | 95 | 98 | 99.9 |
 
 ### 2.3 Hourly Matching Scenarios - 25% C&I Participation
 
 These scenarios mirror the 50% participation series but with lower C&I involvement, exploring how participation levels moderate the impact of hourly matching requirements.
 
-| Scenario Name | `certificate.new_demand.enable` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :------------------------------ | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| hourly-match-25-90 | true | ci | 25 | 90 | 25% C&I participation with 90% hourly matching requirement. |
-| hourly-match-25-95 | true | ci | 25 | 95 | 25% C&I participation with 95% hourly matching requirement. |
-| hourly-match-25-98 | true | ci | 25 | 98 | 25% C&I participation with 98% hourly matching requirement. |
-| hourly-match-25-99 | true | ci | 25 | 99.9 | 25% C&I participation with near-perfect (99.9%) hourly matching requirement. |
+| Parameter | hourly-match-25-90 | hourly-match-25-95 | hourly-match-25-98 | hourly-match-25-99 |
+| :-------- | :----------------- | :----------------- | :----------------- | :----------------- |
+| **Description** | 25% C&I participation with 90% hourly matching requirement. | 25% C&I participation with 95% hourly matching requirement. | 25% C&I participation with 98% hourly matching requirement. | 25% C&I participation with near-perfect (99.9%) hourly matching requirement. |
+| `certificate.new_demand.enable` | true | true | true | true |
+| `certificate.new_demand.participant` | ci | ci | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 25 | 25 | 25 | 25 |
+| `certificate.new_demand.hourly_matching` (%) | 90 | 95 | 98 | 99.9 |
 
 ## 3. Sensitivities
 
@@ -77,29 +82,40 @@ The policy sensitivities include three baseline scenarios with different carbon 
 
 These scenarios disable GO market modeling to isolate the effects of RPS and carbon pricing policies.
 
-| Scenario Name | `enable.certificate` | `res_target.system_share_target` | `res_target.country_share_target` | `costs.emission_prices.co2` (€/t_CO2) | Description |
-| :------------ | :------------------- | :------------------------------- | :-------------------------------- | :------------------------------------ | :---------- |
-| baseline-rps | false | true | true | 0 (default) | Baseline with Renewable Portfolio Standard (RPS) policy instead of GO markets, enforcing renewable targets at system and country levels. |
-| baseline-co2-price25 | false | false (default) | false (default) | 25 | Baseline with low carbon price (25 €/t_CO2), representing US-style carbon pricing without GO markets. |
-| baseline-co2-price50 | false | false (default) | false (default) | 50 | Baseline with medium carbon price (50 €/t_CO2), representing EU-style carbon pricing without GO markets. |
-| baseline-co2-price100 | false | false (default) | false (default) | 100 | Baseline with high carbon price (100 €/t_CO2) to assess stringent carbon policy without GO markets. |
+| Parameter | baseline-rps | baseline-co2-price25 | baseline-co2-price50 | baseline-co2-price100 |
+| :-------- | :----------- | :------------------- | :------------------- | :-------------------- |
+| **Description** | Baseline with Renewable Portfolio Standard (RPS) policy instead of GO markets, enforcing renewable targets at system and country levels. | Baseline with low carbon price (25 €/t_CO2), representing US-style carbon pricing without GO markets. | Baseline with medium carbon price (50 €/t_CO2), representing EU-style carbon pricing without GO markets. | Baseline with high carbon price (100 €/t_CO2) to assess stringent carbon policy without GO markets. |
+| `enable.certificate` | false | false | false | false |
+| `res_target.system_share_target` | true | false (default) | false (default) | false (default) |
+| `res_target.country_share_target` | true | false (default) | false (default) | false (default) |
+| `costs.emission_prices.co2` (€/t_CO2) | 0 (default) | 25 | 50 | 100 |
 
 #### GO Market with Carbon Pricing Scenarios
 
 These scenarios combine GO market modeling (50% C&I participation, 99.9% hourly matching) with carbon pricing to assess policy interactions.
 
-| Scenario Name | `enable.certificate` | `costs.emission_prices.co2` (€/t_CO2) | `certificate.new_demand.enable` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :------------------- | :------------------------------------- | :------------------------------ | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| hourly-match-co2-price25-50-99 | true (default) | 25 | true | ci | 50 | 99.9 | GO market with 50% C&I participation and 99.9% hourly matching under low carbon price (US-style). |
-| hourly-match-co2-price50-50-99 | true (default) | 50 | true | ci | 50 | 99.9 | GO market with 50% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). |
+| Parameter | hourly-match-co2-price25-50-99 | hourly-match-co2-price50-50-99 |
+| :-------- | :----------------------------- | :----------------------------- |
+| **Description** | GO market with 50% C&I participation and 99.9% hourly matching under low carbon price (US-style). | GO market with 50% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). |
+| `enable.certificate` | true (default) | true (default) |
+| `costs.emission_prices.co2` (€/t_CO2) | 25 | 50 |
+| `certificate.new_demand.enable` | true | true |
+| `certificate.new_demand.participant` | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 | 50 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 |
 
 ### 3.2 GO Market Scope Sensitivities
 
 This group explores the geographic scope of GO trading. The default configuration in `config.go.yaml` sets `certificate.new_demand.scope: national`, restricting GO trading to within each country. This sensitivity tests a `global` (European-wide) market scope.
 
-| Scenario Name | `certificate.new_demand.enable` | `certificate.new_demand.scope` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :------------------------------ | :----------------------------- | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| hourly-match-EU-50-99 | true | global | ci | 50 | 99.9 | EU-wide GO market allowing cross-border GO trading, with 50% C&I participation and 99.9% hourly matching. Compares to national scope in main scenarios. |
+| Parameter | hourly-match-EU-50-99 |
+| :-------- | :-------------------- |
+| **Description** | EU-wide GO market allowing cross-border GO trading, with 50% C&I participation and 99.9% hourly matching. Compares to national scope in main scenarios. |
+| `certificate.new_demand.enable` | true |
+| `certificate.new_demand.scope` | global |
+| `certificate.new_demand.participant` | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 |
 
 ### 3.3 Technology Portfolio Sensitivities
 
@@ -109,15 +125,25 @@ These scenarios systematically remove technology categories to understand their 
 
 #### LDES Restrictions
 
-| Scenario Name | `certificate.storage_carriers` | `certificate.new_demand.enable` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :----------------------------- | :------------------------------ | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| hourly-match-no-LDES-50-99 | [li-ion] | true | ci | 50 | 99.9 | Excludes long-duration energy storage (iron-air) from GO-eligible storage, allowing only short-duration lithium-ion batteries. Tests dependence on LDES for hourly matching. |
+| Parameter | hourly-match-no-LDES-50-99 |
+| :-------- | :------------------------- |
+| **Description** | Excludes long-duration energy storage (iron-air) from GO-eligible storage, allowing only short-duration lithium-ion batteries. Tests dependence on LDES for hourly matching. |
+| `certificate.storage_carriers` | [li-ion] |
+| `certificate.new_demand.enable` | true |
+| `certificate.new_demand.participant` | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 |
 
 #### Clean Firm Restrictions
 
-| Scenario Name | `certificate.plant_carriers` | `certificate.new_demand.enable` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :--------------------------- | :------------------------------ | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| hourly-match-no-clean-firm-50-99 | [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt] | true | ci | 50 | 99.9 | Excludes advanced firm technologies (`adv_firm_tech`) from GO-eligible generators, removing dispatchable clean power. Tests reliance on firm generation for hourly matching. |
+| Parameter | hourly-match-no-clean-firm-50-99 |
+| :-------- | :------------------------------- |
+| **Description** | Excludes advanced firm technologies (`adv_firm_tech`) from GO-eligible generators, removing dispatchable clean power. Tests reliance on firm generation for hourly matching. |
+| `certificate.plant_carriers` | [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt] |
+| `certificate.new_demand.enable` | true |
+| `certificate.new_demand.participant` | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 |
 
 ### 3.4 Additionality Sensitivities
 
@@ -125,8 +151,11 @@ This group examines the impact of additionality requirements—whether only new 
 
 These scenarios remove the additionality requirement (`plant_status: [new, existing]`) and test it across different participation levels to understand how existing capacity availability affects GO market dynamics and investment signals.
 
-| Scenario Name | `certificate.plant_status` | `certificate.new_demand.enable` | `certificate.new_demand.participant` | `certificate.new_demand.energy_matching` (%) | `certificate.new_demand.hourly_matching` (%) | Description |
-| :------------ | :------------------------- | :------------------------------ | :----------------------------------- | :------------------------------------------- | :------------------------------------------- | :---------- |
-| hourly-match-noadd-50-99 | [new, existing] | true | ci | 50 | 99.9 | No additionality requirement (existing plants eligible) with 50% C&I participation and 99.9% hourly matching. |
-| hourly-match-noadd-10-99 | [new, existing] | true | ci | 10 | 99.9 | No additionality requirement with low (10%) C&I participation and 99.9% hourly matching, testing if low participation reduces need for new capacity. |
-| hourly-match-noadd-90-99 | [new, existing] | true | ci | 90 | 99.9 | No additionality requirement with high (90%) C&I participation and 99.9% hourly matching, testing if existing capacity suffices even at high participation. |
+| Parameter | hourly-match-noadd-50-99 | hourly-match-noadd-10-99 | hourly-match-noadd-90-99 |
+| :-------- | :----------------------- | :----------------------- | :----------------------- |
+| **Description** | No additionality requirement (existing plants eligible) with 50% C&I participation and 99.9% hourly matching. | No additionality requirement with low (10%) C&I participation and 99.9% hourly matching, testing if low participation reduces need for new capacity. | No additionality requirement with high (90%) C&I participation and 99.9% hourly matching, testing if existing capacity suffices even at high participation. |
+| `certificate.plant_status` | [new, existing] | [new, existing] | [new, existing] |
+| `certificate.new_demand.enable` | true | true | true |
+| `certificate.new_demand.participant` | ci | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 | 10 | 90 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 | 99.9 |
