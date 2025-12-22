@@ -1,0 +1,76 @@
+site_name: Google-GO
+theme:
+  name: material
+  logo: supporting-material/logo_OET_cropped.png
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+
+
+        name: Switch to dark mode
+      primary: grey
+      accent: red
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: grey
+      accent: red
+  highlightjs: true
+  hljs_languages:
+    - yaml
+    - rust
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.instant.preview
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
+    - navigation.top
+
+nav:
+  - Introduction:
+    - Introduction/index.md
+    - Background: Introduction/background.md
+    - Installation: Introduction/installation.md
+    - Run Scenarios: Introduction/run-scenarios.md
+    - Assumptions: Introduction/assumptions.md
+  - Configuration:
+    - Configuration/index.md
+    - Project Config: Configuration/go_project_config.md
+    - Scenarios Config: Configuration/go_project_scenarios.md
+  - Feature:
+    - Feature/index.md
+    - Strip Network: Feature/strip_network.md
+    - Add Certificate: Feature/add_certificate.md
+    - Solve Network Constraints: Feature/solve_network_constraints.md
+  - Analysis:
+    - Analysis/index.md
+    - Main Results: Analysis/main_results_generation.md
+    - Interactive Dashboard: Analysis/interactive_dasboard.md
+    - Jupyter Notebook: Analysis/jupyter_notebooks.md
+
+markdown_extensions:
+  - material.extensions.preview:
+      configurations:
+        - targets:
+            include:
+              - changelog/index.md
+              - customization.md
+              - insiders/changelog/*
+              - setup/extensions/*
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+repo_url: https://github.com/open-energy-transition/google-go

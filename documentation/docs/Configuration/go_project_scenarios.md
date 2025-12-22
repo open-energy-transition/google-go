@@ -20,7 +20,7 @@ An overview of the scenarios analyzed is provided in the scenario tree in Figure
 
 Each scenario name becomes part of the output file paths, enabling systematic organization of results across multiple scenario runs.
 
-![Scenario tree](supporting-material/scenario-tree.jpg)
+![Scenario tree](../supporting-material/scenario-tree.jpg)
 **Figure 1** - Scenario tree of the Google GO Project.
 
 ## 2. Main Scenarios

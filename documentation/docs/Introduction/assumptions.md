@@ -1,4 +1,4 @@
-# Google-GO Project Model Assumptions
+# Assumptions
 
 This document outlines the key modeling assumptions that differentiate the Google-GO project from the standard PyPSA-Eur model. While the project builds upon the PyPSA-Eur framework, several assumptions have been introduced to better fit the project scope.
 
@@ -56,7 +56,7 @@ Demand from commercial and industry customers is derived from the C&I share over
 
 For implementation details, see `config.go.yaml` (described in `go_project_config.md`).
 
-![C&I share](supporting-material/C&I-share.png)
+![C&I share](../supporting-material/C&I-share.png)
 **Figure 1** - 2023 C&I share over the final electricity consumption (Source: [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en)).
 
 ## 2. Clean Firm Technologies
@@ -129,8 +129,40 @@ Such shares are defined for each planning horizon and country, including system-
 
 **Table 3** - RPS at country and system (i.e., EU+) level.
 
-| Year | Albania<br>(AL) | Austria<br>(AT) | Bosnia<br>(BA) | Belgium<br>(BE) | Bulgaria<br>(BG) | Switzerland<br>(CH) | Czechia<br>(CZ) | Germany<br>(DE) | Denmark<br>(DK) | Estonia<br>(EE) | Spain<br>(ES) | Finland<br>(FI) | France<br>(FR) | Great Britain<br>(GB) | Greece<br>(GR) | Croatia<br>(HR) | Hungary<br>(HU) | Ireland<br>(IE) | Italy<br>(IT) | Lithuania<br>(LT) | Luxembourg<br>(LU) | Latvia<br>(LV) | Montenegro<br>(ME) | North Macedonia<br>(MK) | Netherlands<br>(NL) | Norway<br>(NO) | Poland<br>(PL) | Portugal<br>(PT) | Romania<br>(RO) | Serbia<br>(RS) | Sweden<br>(SE) | Slovenia<br>(SI) | Slovakia<br>(SK) | Kosovo<br>(XK) | System<br>(EU+) |
-|:-----|:--------|:--------|:-------|:--------|:---------|:------------|:--------|:--------|:--------|:--------|:------|:--------|:-------|:--------------|:-------|:--------|:--------|:--------|:------|:----------|:-----------|:-------|:-----------|:---------------|:-----------|:-------|:------|:---------|:--------|:------|:-------|:---------|:--------|:-------|:--------|
-| 2030 | 0.93 | 0.92 | 1.00 | 0.58 | 0.34 | 0.82 | 0.33 | 0.91 | 0.84 | 0.69 | 0.82 | 0.77 | 0.36 | 0.83 | 0.71 | 0.92 | 0.29 | 0.89 | 0.72 | 0.94 | 0.95 | 0.89 | 1.00 | 0.47 | 0.81 | 0.99 | 0.64 | 0.96 | 0.54 | 0.65 | 0.77 | 0.49 | 0.28 | 0.43 | 0.74 |
-| 2035 | 0.96 | 0.92 | 0.92 | 0.66 | 0.33 | 0.90 | 0.34 | 0.92 | 0.89 | 0.80 | 0.88 | 0.83 | 0.44 | 0.82 | 0.81 | 0.90 | 0.32 | 0.91 | 0.78 | 0.96 | 0.96 | 0.89 | 1.00 | 0.57 | 0.86 | 0.99 | 0.60 | 0.98 | 0.58 | 0.67 | 0.83 | 0.53 | 0.32 | 0.43 | 0.78 |
-| 2040 | 0.99 | 0.92 | 0.85 | 0.74 | 0.32 | 0.98 | 0.35 | 0.94 | 0.94 | 0.92 | 0.94 | 0.89 | 0.52 | 0.82 | 0.91 | 0.88 | 0.35 | 0.93 | 0.85 | 0.97 | 0.96 | 0.89 | 1.00 | 0.68 | 0.92 | 0.99 | 0.56 | 0.99 | 0.62 | 0.69 | 0.89 | 0.58 | 0.35 | 0.43 | 0.83 |
+| Country              | 2030 | 2035 | 2040 |
+| :------------------- | :--: | :--: | :--: |
+| System (EU+)         | 0.74 | 0.78 | 0.83 |
+| Albania (AL)         | 0.93 | 0.96 | 0.99 |
+| Austria (AT)         | 0.92 | 0.92 | 0.92 |
+| Bosnia (BA)          | 1.00 | 0.92 | 0.85 |
+| Belgium (BE)         | 0.58 | 0.66 | 0.74 |
+| Bulgaria (BG)        | 0.34 | 0.33 | 0.32 |
+| Switzerland (CH)     | 0.82 | 0.90 | 0.98 |
+| Czechia (CZ)         | 0.33 | 0.34 | 0.35 |
+| Germany (DE)         | 0.91 | 0.92 | 0.94 |
+| Denmark (DK)         | 0.84 | 0.89 | 0.94 |
+| Estonia (EE)         | 0.69 | 0.80 | 0.92 |
+| Spain (ES)           | 0.82 | 0.88 | 0.94 |
+| Finland (FI)         | 0.77 | 0.83 | 0.89 |
+| France (FR)          | 0.36 | 0.44 | 0.52 |
+| Great Britain (GB)   | 0.83 | 0.82 | 0.82 |
+| Greece (GR)          | 0.71 | 0.81 | 0.91 |
+| Croatia (HR)         | 0.92 | 0.90 | 0.88 |
+| Hungary (HU)         | 0.29 | 0.32 | 0.35 |
+| Ireland (IE)         | 0.89 | 0.91 | 0.93 |
+| Italy (IT)           | 0.72 | 0.78 | 0.85 |
+| Lithuania (LT)       | 0.94 | 0.96 | 0.97 |
+| Luxembourg (LU)      | 0.95 | 0.96 | 0.96 |
+| Latvia (LV)          | 0.89 | 0.89 | 0.89 |
+| Montenegro (ME)      | 1.00 | 1.00 | 1.00 |
+| North Macedonia (MK) | 0.47 | 0.57 | 0.68 |
+| Netherlands (NL)     | 0.81 | 0.86 | 0.92 |
+| Norway (NO)          | 0.99 | 0.99 | 0.99 |
+| Poland (PL)          | 0.64 | 0.60 | 0.56 |
+| Portugal (PT)        | 0.96 | 0.98 | 0.99 |
+| Romania (RO)         | 0.54 | 0.58 | 0.62 |
+| Serbia (RS)          | 0.65 | 0.67 | 0.69 |
+| Sweden (SE)          | 0.77 | 0.83 | 0.89 |
+| Slovenia (SI)        | 0.49 | 0.53 | 0.58 |
+| Slovakia (SK)        | 0.28 | 0.32 | 0.35 |
+| Kosovo (XK)          | 0.43 | 0.43 | 0.43 |
