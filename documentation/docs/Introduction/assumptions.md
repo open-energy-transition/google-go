@@ -95,7 +95,7 @@ The input data were processed to derive the two input cost parameters used in Py
 The final cost parameters are computed as follows, where the annuity factor is calculated following the standard PyPSA-Eur approach (see `process_cost_data.py`), using the lifetime and a discount rate of 7% ($r$ is the discount rate and $n$ is the lifetime in years):
 
 $$
-\text{Annualized Capital Cost (€2020/MW-a)} = \text{annuity} \times \text{investment cost} + \text{fixed O\&M}
+\text{Annualized Capital Cost (€2020/MW-a)} = \text{annuity} \times \text{investment cost} + \text{fixed O{\&}M}
 $$
 
 $$
@@ -103,12 +103,12 @@ $$
 $$
 
 $$
-\text{Marginal Cost (€2020/MWh)} = \text{variable O\&M} + \frac{\text{fuel cost}}{\text{efficiency}}
+\text{Marginal Cost (€2020/MWh)} = \text{variable O{\&}M} + \frac{\text{fuel cost}}{\text{efficiency}}
 $$
 
 **Table 2** - Techno-economic characterization of clean firm technologies.
 
-|                      | Investment Cost ($2025/kW) | FOM ($2025/kW-a) | VOM ($2025/MWh) | Fuel (€2020/MWh) (€2020/kg) | Efficiency | Lifetime | Annualized Capital Cost (€2020/MW-a) | Marginal Cost (€2020/MWh) |
+|                      | Investment Cost ($2025/kW) | Fixed O&M ($2025/kW-a) | Variable O&M ($2025/MWh) | Fuel (€2020/MWh) (€2020/kg) | Efficiency | Lifetime | Annualized Capital Cost (€2020/MW-a) | Marginal Cost (€2020/MWh) |
 |:---------------------|:---------------------------|:-----------------|:----------------|:----------------------------|:-----------|:---------|:-------------------------------------|:--------------------------|
 | **Green OCGT**       | 1,150 – 1,450              | 10.00 – 17.00    | 3.50 – 5.00     | '30: 150.0 (5.0)<br>'40: 90.0 (3.0) | 0.40       | 30       | 72,790                               | '25: 444.7<br>'30: 371.1<br>'35: 297.5<br>'40: 223.8 |
 | **Advanced Clean Firm** | 9,020 – 14,820          | 136.00 – 158.00  | 4.40 – 5.15     | 3.41                        | 0.33      | 70       | 585,153                              | 13.6                      |
