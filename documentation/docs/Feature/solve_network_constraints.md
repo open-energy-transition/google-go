@@ -1,4 +1,4 @@
-This document outlines specific functions within the `solve_network.py` script that are particularly relevant to the Google-GO project. These functions introduce custom constraints and functionalities to the PyPSA network, enabling specialized modeling for Guarantee of Origin (GoO) certificates and renewable energy targets.
+This document outlines specific functions within the `solve_network.py` script that are particularly relevant to the Google-GO project. These functions introduce custom constraints and functionalities to the PyPSA network, enabling specialized modeling for Guarantee of Origin (GO) certificates and renewable energy targets.
 
 ## Background Constraints
 
@@ -52,7 +52,7 @@ Where:
 
 ### Add Buffer Matching
 
-**`add_buffer_matching(n)`**: This function establishes constraints related to the GoO buffer, which manages hourly matching limits. It ensures that the sum of buffer dischargers is equivalent to the sum of buffer chargers, and that the buffer discharge does not exceed the defined hourly matching limits, facilitating the accounting of GoO certificates over time.
+**`add_buffer_matching(n)`**: This function establishes constraints related to the GOs buffer, which manages hourly matching limits. It ensures that the sum of buffer dischargers is equivalent to the sum of buffer chargers, and that the buffer discharge does not exceed the defined hourly matching limits, facilitating the accounting of GOs certificates over time.
 
 **Mathematical Formulation:**
 

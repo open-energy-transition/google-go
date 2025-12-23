@@ -1,4 +1,4 @@
-This script, `add_certificate.py`, is a specialized script developed for the Google-GO project within the PyPSA-Eur workflow. It is designed to integrate Guarantee of Origin (GoO) certificates into energy system models. It essentially creates "virtual" representations of power plants and storage units, and sets up a market for these certificates within the PyPSA network.
+This script, `add_certificate.py`, is a specialized script developed for the Google-GO project within the PyPSA-Eur workflow. It is designed to integrate Guarantee of Origin (GO) certificates into energy system models. It essentially creates "virtual" representations of power plants and storage units, and sets up a market for these certificates within the PyPSA network.
 
 Here's a breakdown of its main functions, categorized by their roles:
 
@@ -10,7 +10,7 @@ Here's a breakdown of its main functions, categorized by their roles:
 *   **Functions for Creating the GO Layer**:
     *   **`add_virtual_carriers`**: Adds "virtual" carriers to the PyPSA network, which are duplicates of existing carriers used for tracking certificate flows.
     *   **`add_virtual_ppl`**: Adds virtual power plants to the PyPSA network as aggregate virtual generators and creates corresponding virtual buses.
-    *   **`add_demand`**: Adds GoO demand to the PyPSA network by creating new buses and loads representing the certificate demand.
+    *   **`add_demand`**: Adds GOs demand to the PyPSA network by creating new buses and loads representing the certificate demand.
     *   **`add_go_market`**: Establishes a market bus for Guarantees of Origin, connecting GO supply and demand buses.
     *   **`add_virtual_storage`**: Adds virtual storage units to the PyPSA network as virtual generators, connected to national "GO Market" buses.
 
@@ -22,11 +22,11 @@ Here's a breakdown of its main functions, categorized by their roles:
 
 The script's overall workflow involves:
 
-1.  **Virtual Carrier Addition**: Adds "GoO" as a carrier and creates virtual carriers based on plant groupings.
+1.  **Virtual Carrier Addition**: Adds "GOs" as a carrier and creates virtual carriers based on plant groupings.
 2.  **Virtual Power Plant Creation**: Groups real generators and links into virtual power plants and adds them to the network.
 3.  **Demand Integration**:
-    *   If enabled, calculates and adds "background" GoO demand using AIB statistics and creates a corresponding market.
-    *   If enabled, calculates and adds "new" GoO demand based on load profiles and creates a corresponding market.
+    *   If enabled, calculates and adds "background" GOs demand using AIB statistics and creates a corresponding market.
+    *   If enabled, calculates and adds "new" GOs demand based on load profiles and creates a corresponding market.
 4.  **Virtual Storage Integration**: If national scope demands are enabled and storage carriers are defined, groups real storage units into virtual storage and adds them to the network.
 
 Essentially, this script extends a standard PyPSA energy model to include the complexities of a Guarantee of Origin certificate system, allowing for the simulation and analysis of certificate trading and its impact on the energy system.

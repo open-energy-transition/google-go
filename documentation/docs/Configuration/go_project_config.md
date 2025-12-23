@@ -1,6 +1,6 @@
 # Google-GO Project Configuration: `config.go.yaml`
 
-This document details the configuration settings used in the Google-GO project, specifically focusing on the `config/config.go.yaml` file and its differences from the default PyPSA-Eur configuration found in `config/config.default.yaml`. These modifications enable the specialized modeling required for Guarantee of Origin (GoO) certificates and renewable energy targets within the project's framework.
+This document details the configuration settings used in the Google-GO project, specifically focusing on the `config/config.go.yaml` file and its differences from the default PyPSA-Eur configuration found in `config/config.default.yaml`. These modifications enable the specialized modeling required for Guarantee of Origin (GOs) certificates and renewable energy targets within the project's framework.
 
 ## General Project Context
 
@@ -43,7 +43,7 @@ The `enable` section controls the activation of various features and rules withi
 
 | Parameter     | Unit | Values          | `config.go.yaml`             | Description                                          |
 | :----------   | :--- | :-------------- | :--------------------------- | :--------------------------------------------------- |
-| certificate   | -    | {true, false}   | true                       | If `true`, the Guarantee of Origin (GoO) market is modeled. |
+| certificate   | -    | {true, false}   | true                       | If `true`, the Guarantee of Origin (GOs) market is modeled. |
 
 ### `co2_budget`
 
