@@ -27,9 +27,9 @@ Each scenario name becomes part of the output file paths, enabling systematic or
 
 ## 2. Main Scenarios
 
-The main scenarios form the core analysis of how different GO market designs impact the electricity system.
+The main scenarios form the core analysis of how different GO market designs - in terms of participation and temporal matching requirement - impact the electricity system.
 
-All main scenarios (except baseline) enable the `certificate.new_demand` feature and focus on C&I participants (`participant: ci`). The scenarios systematically vary two key parameters:
+All main scenarios (except baseline) enable the `certificate.new_demand` feature. The scenarios systematically vary two key parameters:
 
 - **Energy matching**: The percentage of C&I electricity demand participating in GO procurement (25% or 50%)
 - **Hourly matching**: The percentage of hourly demand that must be matched with hourly renewable generation (0%, 90%, 95%, 98%, or 99.9%). Hourly matching of 0% refers to annual GO matching.
