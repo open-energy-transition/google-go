@@ -14,14 +14,16 @@ The modeling assumptions are organized into four main groups, each addressing a 
 To simplify the model and focus on the electricity sector, demands from low-voltage, industry, agriculture, heating, and hydrogen are aggregated into a single electricity load, while transport demand remains separate due to its dependency on EV batteries. 
 
 To compensate for the absence of full sector coupling modeling, the electricity demand framework combines default [PyPSA-Eur](https://pypsa-eur.readthedocs.io/en/latest/introduction.html) assumptions with [TYNDP-2024](https://2024.entsos-tyndp-scenarios.eu/download/) projections. Specifically:
+
 - **PyPSA-Eur**: provides demand for low-voltage, industry, agriculture, and transport
 - **TYNDP-2024**: provides demand for [heating](https://2024-data.entsos-tyndp-scenarios.eu/files/scenarios-inputs/Demand_Scenarios_TYNDP_2024_After_Public_Consultation.xlsb.zip) and [hydrogen](https://2024.entsos-tyndp-scenarios.eu/download/)
 
-Within the aggregated electricity demand, Commercial and Industry (C&I) demand—which participates in the GO market—is further characterized using data from [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en) and [IEA](https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights) to determine its share and load profile.
+Within the aggregated electricity demand, Commercial and Industry (C&I) demand - which participates in the GO market - is further characterized using data from [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en) and [IEA](https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights) to determine its share and load profile.
 
 ### 1.1 Heating and Hydrogen Electrification
 
 Both demand components are computed following a consistent methodology:
+
 - Derived from TYNDP 2024 results
 - Calculated as a share of net final electricity demand excluding transport (since transport is modeled separately in PyPSA-Eur)
 - Based on the National Trends scenario (aligned with most recent policies)
@@ -35,11 +37,13 @@ Both demand components are computed following a consistent methodology:
 | Hydrogen         | 4%   | 7%   | 14%  | 21%  |
 
 **Heating Demand:**
+
 - Includes space heating, cooling, and hot water needs in buildings and households
 - The source provides only 2019-Historical and 2040 and 2050-Deviation Scenarios. So, 2019 data are kept constant across the planning horizon
 - These shares do not account for hydrogen-related demand at the denominator
 
 **Hydrogen Demand:**
+
 - Includes electricity demand from all electrolyzers
 - The source ([TYNDP 2024-Scenarios Report-Data and Figures](https://2024.entsos-tyndp-scenarios.eu/download/)) provides 2030- and 2040-National Trends. So, 2025 and 2035 were interpolated assuming null demand in 2020
 - These shares account for heat-related demand at the denominator, so they should be used only when heating demand is also included. However, the code is flexible and allows separate handling of demands if needed
@@ -49,6 +53,7 @@ For implementation details, see `config.go.yaml` and `strip_network.py` (describ
 ### 1.2 Commercial and Industry Demand
 
 Demand from commercial and industry customers is derived from the C&I share over total electricity consumption as it follows:
+
 - [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en) is the main source
 - United Kingdom (GB) and Switzerland (CH) are absent in Eurostat, so energy balance statistics from [IEA](https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights) are used instead
 - Only the latest full available data are used: Eurostat-2023, IEA-2022
@@ -62,12 +67,14 @@ For implementation details, see `config.go.yaml` (described in `go_project_confi
 ## 2. Clean Firm Technologies
 
 Two types of clean firm technologies are considered:
+
 - **Green Open Cycle Gas Turbine (Green OCGT)**: low-CAPEX, high-OPEX technology using green hydrogen as fuel
 - **Advanced Clean Firm**: capital-intensive technology serving as a proxy for advanced nuclear or advanced geothermal
 
 **Data Sources:**
 
 The techno-economic parameters are derived from multiple sources:
+
 - **Investment cost, fixed operation and maintenance (O&M), variable O&M, and lifetime**: [Lazard LCOE - June 2025](https://www.lazard.com/media/uounhon4/lazards-lcoeplus-june-2025.pdf). Where ranges were provided, the mean values were used
 - **Fuel cost and efficiency**: [PyPSA Technology Data](https://github.com/PyPSA/technology-data/blob/master/outputs)
 - **Green hydrogen price**: [EU Clean Hydrogen Observatory](https://observatory.clean-hydrogen.europa.eu/index.php/hydrogen-landscape/production-trade-and-cost/cost-hydrogen-production)
@@ -75,6 +82,7 @@ The techno-economic parameters are derived from multiple sources:
 **Currency Conversion:**
 
 Lazard costs are reported in $2025, while PyPSA-Eur uses €2020 as reference currency. The conversion was performed in two steps:
+
 1. Dollar-to-Euro conversion using the 2025 exchange rate
 2. Inflation adjustment to €2020 using [Average annual Harmonised Index of Consumer Prices (HICP) - EU27](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_aind/default/table?lang=en)
 
@@ -119,6 +127,7 @@ For implementation details, see `config.go.yaml` (described in `go_project_confi
 ## 4. Generation Expansion
 
 The assumptions on extendable generators follow the default PyPSA-Eur configuration (for details, see `config.default.yaml` and [PyPSA-Eur documentation](https://pypsa-eur.readthedocs.io/en/latest/configuration.html#electricity)). Extendable technologies include:
+
 - All solar and wind types
 - Open Cycle Gas Turbine (OCGT) and Combined Cycle Gas Turbine (CCGT)
 - Clean firm technologies described in Section 2
