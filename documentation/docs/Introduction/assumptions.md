@@ -95,7 +95,7 @@ The input data were processed to derive the two input cost parameters used in Py
 The final cost parameters are computed as follows, where the annuity factor is calculated following the standard PyPSA-Eur approach (see `process_cost_data.py`), using the lifetime and a discount rate of 7% ($r$ is the discount rate and $n$ is the lifetime in years):
 
 $$
-\text{Annualized Capital Cost (€2020/MW-a)} = \text{annuity} \times \text{investment cost} + \text{fixed O{\&}M}
+\text{Annualized Capital Cost (€2020/MW-a)} = \text{annuity} \times \text{investment cost} + \text{fixed O\&M}
 $$
 
 $$
@@ -103,7 +103,7 @@ $$
 $$
 
 $$
-\text{Marginal Cost (€2020/MWh)} = \text{variable O{\&}M} + \frac{\text{fuel cost}}{\text{efficiency}}
+\text{Marginal Cost (€2020/MWh)} = \text{variable O\&M} + \frac{\text{fuel cost}}{\text{efficiency}}
 $$
 
 **Table 2** - Techno-economic characterization of clean firm technologies.
