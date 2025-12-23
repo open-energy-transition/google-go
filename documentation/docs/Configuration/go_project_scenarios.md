@@ -1,6 +1,6 @@
 # Google-GO Project Scenarios: `scenarios.go.yaml`
 
-This document provides a comprehensive overview of the scenario definitions used in the Google-GO project, specifically focusing on the `config/scenarios.go.yaml` file. This configuration file enables the systematic exploration of different Guarantee of Origin (GO) market designs and policy interactions through a structured set of scenarios.
+This section provides a comprehensive overview of the scenario definitions used in the Google-GO project, specifically focusing on the `config/scenarios.go.yaml` file. This configuration file enables the systematic exploration of different Guarantee of Origin (GO) market designs and policy interactions through a structured set of scenarios.
 
 ## 1. Overview and Purpose
 

@@ -1,4 +1,4 @@
-This document outlines specific functions within the `solve_network.py` script that are particularly relevant to the Google-GO project. These functions introduce custom constraints and functionalities to the PyPSA network, enabling specialized modeling for Guarantee of Origin (GO) certificates and renewable energy targets.
+This section outlines specific functions within the `solve_network.py` script that are particularly relevant to the Google-GO project. These functions introduce custom constraints and functionalities to the PyPSA network, enabling specialized modeling for Guarantee of Origin (GO) certificates and renewable energy targets.
 
 ## Background Constraints
 

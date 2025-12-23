@@ -1,4 +1,4 @@
-This document describes the post-processing workflow for analyzing and visualizing the results of the Google-GO project. The post-processing framework consists of three main components:
+This section describes the post-processing workflow for analyzing and visualizing the results of the Google-GO project. The post-processing framework consists of three main components:
 
 1.  **Main Results Generation**: Automated Python scripts (`generate_frontier.py`, `generate_time_series.py`, `generate_time_comparison.py`) that process network optimization results and output structured CSV files. These scripts quantify the energy procurement frontier, extract hourly time series data for electricity and GO markets, and provide comprehensive comparative metrics across scenarios and years, including energy mix, capacity expansion, costs, emissions, and market indicators.
 

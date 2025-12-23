@@ -1,6 +1,6 @@
 # Assumptions
 
-This document outlines the key modeling assumptions that differentiate the Google-GO project from the standard PyPSA-Eur model. While the project builds upon the PyPSA-Eur framework, several assumptions have been introduced to better fit the project scope.
+This section outlines the key modeling assumptions that differentiate the Google-GO project from the standard PyPSA-Eur model. While the project builds upon the PyPSA-Eur framework, several assumptions have been introduced to better fit the project scope.
 
 The modeling assumptions are organized into four main groups, each addressing a specific aspect of the energy system that requires customization beyond the default PyPSA-Eur configuration:
 
