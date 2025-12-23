@@ -10,18 +10,18 @@ All notebooks follow a consistent three-section structure:
 
 2. **Network Retrieval (Section 1)**: Interactive code cells where users specify:
 
-   - Years to analyze (e.g., `[2025, 2030, 2035, 2040]`)
-   - Scenarios to compare (e.g., `["baseline", "energy-match-50", "hourly-match-50-99"]`)
-   - Geographic scope (e.g., system-wide, specific countries)
+      - Years to analyze (e.g., `[2025, 2030, 2035, 2040]`)
+      - Scenarios to compare (e.g., `["baseline", "energy-match-50", "hourly-match-50-99"]`)
+      - Geographic scope (e.g., system-wide, specific countries)
 
-   The networks are then loaded into a pandas DataFrame indexed by year and scenario, with both full networks and stripped GO market sub-networks.
+      The networks are then loaded into a pandas DataFrame indexed by year and scenario, with both full networks and stripped GO market sub-networks.
 
 3. **Figure Generation (Section 2+)**: One or more sections with code cells that:
 
-   - Call the appropriate `derive_*` functions from the imported script
-   - Generate plots directly in the notebook
-   - Optionally save figures to disk (controlled by `save_fig` flag)
-   - Display results interactively for exploration
+      - Call the appropriate `derive_*` functions from the imported script
+      - Generate plots directly in the notebook
+      - Optionally save figures to disk (controlled by `save_fig` flag)
+      - Display results interactively for exploration
 
 This modular structure enables rapid iteration: users can modify scenario selections in Section 1 and re-run Section 2 without reloading data, or adjust plotting parameters and regenerate specific figures independently.
 
