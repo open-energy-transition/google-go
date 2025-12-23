@@ -13,7 +13,9 @@ The modeling assumptions are organized into four main groups, each addressing a 
 
 To simplify the model and focus on the electricity sector, demands from low-voltage, industry, agriculture, heating, and hydrogen are aggregated into a single electricity load, while transport demand remains separate due to its dependency on EV batteries. 
 
-To compensate for the absence of full sector coupling modeling, the electricity demand framework combines default [PyPSA-Eur](https://pypsa-eur.readthedocs.io/en/latest/introduction.html) assumptions with [TYNDP-2024](https://2024.entsos-tyndp-scenarios.eu/download/) projections. Specifically:
+To compensate for the absence of full sector coupling modeling, the electricity demand framework combines default [PyPSA-Eur](https://pypsa-eur.readthedocs.io/en/latest/introduction.html) assumptions with [TYNDP-2024](https://2024.entsos-tyndp-scenarios.eu/download/) projections. 
+
+Specifically:
 
 - **PyPSA-Eur**: provides demand for low-voltage, industry, agriculture, and transport
 - **TYNDP-2024**: provides demand for [heating](https://2024-data.entsos-tyndp-scenarios.eu/files/scenarios-inputs/Demand_Scenarios_TYNDP_2024_After_Public_Consultation.xlsb.zip) and [hydrogen](https://2024.entsos-tyndp-scenarios.eu/download/)
