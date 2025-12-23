@@ -11,10 +11,12 @@ The `scenarios.go.yaml` file defines a collection of scenarios that share the ba
 3. **Scenario Configuration**: `scenarios.go.yaml` further overrides specific parameters for each scenario
 
 This file is integrated into the Snakemake workflow through the `run.scenarios` section in `config.go.yaml`, where:
+
 - `run.scenarios.enable` is set to `true` to activate scenario-based modeling
 - `run.scenarios.file` points to `config/scenarios.go.yaml`
 
 An overview of the scenarios analyzed is provided in the scenario tree in Figure 1. The scenarios are organized into two main groups:
+
 - **Main Scenarios** (11 scenarios): Core scenarios exploring different levels of Commercial & Industry (C&I) participation and hourly matching requirements
 - **Sensitivities** (12 scenarios): Additional scenarios examining policy interactions, market scope, technology constraints, and additionality requirements
 
@@ -28,6 +30,7 @@ Each scenario name becomes part of the output file paths, enabling systematic or
 The main scenarios form the core analysis of how different GO market designs impact the electricity system.
 
 All main scenarios (except baseline) enable the `certificate.new_demand` feature and focus on C&I participants (`participant: ci`). The scenarios systematically vary two key parameters:
+
 - **Energy matching**: The percentage of C&I electricity demand participating in GO procurement (25% or 50%)
 - **Hourly matching**: The percentage of hourly demand that must be matched with hourly renewable generation (0%, 90%, 95%, 98%, or 99.9%). Hourly matching of 0% refers to annual GO matching.
 
