@@ -74,36 +74,39 @@ In addition, this script imports helper functions from `notebooks_function.py`.
 #### Core Functions
 
 - **Electricity Balance Collection**: `collect_electricity_balance(n)` extracts the electricity energy balance from the network:
-  1. Retrieves energy balance statistics grouped by country, bus carrier, and technology carrier
-  2. Filters for AC and low voltage buses, excluding transmission and distribution infrastructure
-  3. Aggregates generation/consumption by country and carrier
-  4. Collects electricity load across all demand sectors
-  5. Combines generation and load data with metadata labels ("area" for stacked area plot, "line" for demand overlay)
-  6. Converts units to GW and adds result type labels
   
-  Returns a DataFrame with MultiIndex: [country, carrier, type, Results, y_label]
+    1. Retrieves energy balance statistics grouped by country, bus carrier, and technology carrier
+    2. Filters for AC and low voltage buses, excluding transmission and distribution infrastructure
+    3. Aggregates generation/consumption by country and carrier
+    4. Collects electricity load across all demand sectors
+    5. Combines generation and load data with metadata labels ("area" for stacked area plot, "line" for demand overlay)
+    6. Converts units to GW and adds result type labels
+  
+    Returns a DataFrame with MultiIndex: [country, carrier, type, Results, y_label]
 
 - **GO Market Collection**: `collect_go_market(m)` extracts GO market time series from a stripped network containing only GO market components:
-  1. Retrieves energy balance for GO market generators and consumers
-  2. Cleans virtual carrier names (removes "virtual " prefix, to align with the electricity energy balance carrier naming)
-  3. Separates generation (area plot) from demand (line plot)
-  4. Combines and labels data appropriately
-  5. Converts units to GW-GOs
   
-  Returns a DataFrame with the same MultiIndex structure as electricity balance data.
+    1. Retrieves energy balance for GO market generators and consumers
+    2. Cleans virtual carrier names (removes "virtual " prefix, to align with the electricity energy balance carrier naming)
+    3. Separates generation (area plot) from demand (line plot)
+    4. Combines and labels data appropriately
+    5. Converts units to GW-GOs
+  
+    Returns a DataFrame with the same MultiIndex structure as electricity balance data.
 
 - **Main Processing Loop**: `main(output="results_time_series", tutorial=False)` manages the time series extraction workflow:
-  1. Scans the `../results/` directory recursively for all network files (`.nc`)
-  2. For each network:
-     - Loads the PyPSA network
-     - Collects electricity balance time series
-     - Strips and processes GO market network (if present)
-     - Collects GO market time series
-     - Labels data with scenario and year information
-  3. Converts country codes to short names for readability
-  4. Exports consolidated DataFrame to CSV
-
-  The `tutorial` flag limits processing for testing purposes.
+  
+    1. Scans the `../results/` directory recursively for all network files (`.nc`)
+    2. For each network:
+        - Loads the PyPSA network
+        - Collects electricity balance time series
+        - Strips and processes GO market network (if present)
+        - Collects GO market time series
+        - Labels data with scenario and year information
+    3. Converts country codes to short names for readability
+    4. Exports consolidated DataFrame to CSV
+  
+    The `tutorial` flag limits processing for testing purposes.
 
 #### Script Execution
 
@@ -133,29 +136,30 @@ Also, constants are defined for unit conversions and plot formatting, and techno
 
 - **Data Processing Utilities**:
 
-  - `_get_country_name(country)`: Converts country codes to short names; handles "system" keyword for EU-wide analysis
-  - `_filter_by_country(df, country, country_column)`: Filters DataFrame by country; passes through unchanged for system-level analysis
-  - `_prepare_csv_output(df, title, y_label, country)`: Structures data with MultiIndex for CSV export (Results, y_label, carrier) × (year, scenario, scope)
-  - `_prepare_colors_output(colors, title)`: Adds MultiIndex to color mapping for consistent visualization
-  - `_save_plot(ax, save_fig, fig_path, title)`: Handles figure saving with directory creation
-  - `_calculate_ylim(df, margin)`: Computes appropriate y-axis limits with margin for both positive and negative stacked values
-  - `_get_reference_network(df_networks)`: Retrieves a cached reference network for color scheme consistency
+    - `_get_country_name(country)`: Converts country codes to short names; handles "system" keyword for EU-wide analysis
+    - `_filter_by_country(df, country, country_column)`: Filters DataFrame by country; passes through unchanged for system-level analysis
+    - `_prepare_csv_output(df, title, y_label, country)`: Structures data with MultiIndex for CSV export (Results, y_label, carrier) × (year, scenario, scope)
+    - `_prepare_colors_output(colors, title)`: Adds MultiIndex to color mapping for consistent visualization
+    - `_save_plot(ax, save_fig, fig_path, title)`: Handles figure saving with directory creation
+    - `_calculate_ylim(df, margin)`: Computes appropriate y-axis limits with margin for both positive and negative stacked values
+    - `_get_reference_network(df_networks)`: Retrieves a cached reference network for color scheme consistency
 
 - **Plotting Functions**:
-  - `plot_bar(df, colors, ylabel, title, figsize, vert_lines, ylim)` creates stacked bar charts with:
-    - Configurable figure size based on number of years
-    - Automatic handling of positive/negative stacks
-    - Total value labels above/below bars
-    - Optional vertical separator lines between scenarios
-    - Custom legend positioning and formatting
+  
+    - `plot_bar(df, colors, ylabel, title, figsize, vert_lines, ylim)` creates stacked bar charts with:
+        - Configurable figure size based on number of years
+        - Automatic handling of positive/negative stacks
+        - Total value labels above/below bars
+        - Optional vertical separator lines between scenarios
+        - Custom legend positioning and formatting
 
-  - `plot_bar_with_share(df, colors, df_share, ylabel, ylabel_share, title, figsize, vert_lines, ylim, ylim_share)` extends `plot_bar` with a secondary y-axis overlay showing percentage shares or ratios
+    - `plot_bar_with_share(df, colors, df_share, ylabel, ylabel_share, title, figsize, vert_lines, ylim, ylim_share)` extends `plot_bar` with a secondary y-axis overlay showing percentage shares or ratios
 
-  - `plot_heatmap(df, title, cmap_style, legend_title, figsize)` generates country-year heatmaps for spatial-temporal pattern visualization
+    - `plot_heatmap(df, title, cmap_style, legend_title, figsize)` generates country-year heatmaps for spatial-temporal pattern visualization
 
-  - `calculate_abatement_cost(df_cost, df_co2)` computes CO2 abatement cost as the cost difference divided by emissions difference relative to a baseline
+    - `calculate_abatement_cost(df_cost, df_co2)` computes CO2 abatement cost as the cost difference divided by emissions difference relative to a baseline
 
-  - `plot_abatement_cost_arrow(df, title, y_label, figsize, ylim)` creates arrow plot showing abatement cost progression with annotations
+    - `plot_abatement_cost_arrow(df, title, y_label, figsize, ylim)` creates arrow plot showing abatement cost progression with annotations
 
 - **Technical Analysis Functions**: `get_cap_vres(df, carriers, groupby_list)` calculates VRES capacity utilization by comparing optimal capacity against maximum available potential
 
@@ -190,36 +194,40 @@ Each of the 14 main results is generated by a dedicated `derive_*` function foll
   - (n) **`derive_resource_utilization`**: VRES resource utilization (% of maximum potential). N.B.: this result is not saved in the CSV file, whereas is accounted for in the notebooks for additional results (See Section **3. Jupyter Notebooks** for more details)
 
 - **Aggregation Function**: `derive_all_figures(df_networks, country, plot_fig, save_fig, fig_path, save_csv, figures, figsize_*)` orchestrates the generation of all requested figures:
-  - Accepts a list of figure identifiers (e.g., `['a', 'b', 'c']`)
-  - Calls corresponding `derive_*` functions
-  - Aggregates results and colors into dictionaries
-  - Returns consolidated DataFrames for CSV export
+  
+    - Accepts a list of figure identifiers (e.g., `['a', 'b', 'c']`)
+    - Calls corresponding `derive_*` functions
+    - Aggregates results and colors into dictionaries
+    - Returns consolidated DataFrames for CSV export
 
 #### Network Management Functions
 
 - `load_countries_from_config()` reads the list of modelled countries from `config.go.yaml`
 
 - `save_df_csv(df_dict, path_csv, filename)` saves nested dictionaries of DataFrames to CSV:
-  - Creates output directory if needed
-  - Concatenates data across countries/results
-  - Handles both results and color mappings
+  
+    - Creates output directory if needed
+    - Concatenates data across countries/results
+    - Handles both results and color mappings
 
 - `retrieve_networks(tutorial)` loads network results into a structured DataFrame:
-  - Reads scenario and year lists from configuration
-  - Loads PyPSA networks from result files
-  - Prepares networks (adds carriers, colors, names)
-  - Strips and stores GO market sub-networks
-  - Returns DataFrame indexed by (year, scenario)
+  
+    - Reads scenario and year lists from configuration
+    - Loads PyPSA networks from result files
+    - Prepares networks (adds carriers, colors, names)
+    - Strips and stores GO market sub-networks
+    - Returns DataFrame indexed by (year, scenario)
 
 - **Main Processing Function**: `main(path_csv, results, colors, tutorial)` coordinates the entire time comparison workflow:
-  1. Loads all network results via `retrieve_networks()`
-  2. Retrieves country list from configuration
-  3. Iterates through countries (or system level)
-  4. Calls `derive_all_figures()` for each country
-  5. Aggregates results and color mappings across countries
-  6. Exports to CSV files
-
-  In tutorial mode, only the first 2 countries are processed for testing.
+  
+    1. Loads all network results via `retrieve_networks()`
+    2. Retrieves country list from configuration
+    3. Iterates through countries (or system level)
+    4. Calls `derive_all_figures()` for each country
+    5. Aggregates results and color mappings across countries
+    6. Exports to CSV files
+  
+    In tutorial mode, only the first 2 countries are processed for testing.
 
 #### Script Execution
 
