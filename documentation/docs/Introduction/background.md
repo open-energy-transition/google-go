@@ -1,6 +1,6 @@
 # Background
 ![GO Market AIB](../supporting-material/market_plot.png)
-**Figure 1** - Spatial scope of the Guarantess of Origin (GOs) European market(s).
+**Figure 1** - Spatial scope of the existing Guarantess of Origin (GOs) European market(s).
 
 Guarantees of Origin (GOs) are certificates used in Europe proving that energy has been generated from renewable sources. This thus allows final customers, such as commercial and industry (C&I) ones, to buy and claim renewable energy, separating the "green" attribute from the physical electrons. Annual GOs matches renewable supply and consumption at annual level. They are the standard GOs and are issued at national level. Then, the [Association of Issuing Bodies (AIB)](https://www.aib-net.org/) coordinates the national issuing bodies, ensuring consistency across countries and facilitating cross-border trading. Instead, hourly GOs, also referred to as hourly Granular Certificates (GCs), are newer and more granular type, enabling near real-time matching between renewable supply and consumption.
 
