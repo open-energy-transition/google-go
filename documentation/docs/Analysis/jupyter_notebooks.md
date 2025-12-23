@@ -9,6 +9,7 @@ All notebooks follow a consistent three-section structure:
 1. **Helpers (Section 0)**: Import statements loading the corresponding `generate_*.py` script and supporting libraries. This section also initializes plotting parameters and constants.
 
 2. **Network Retrieval (Section 1)**: Interactive code cells where users specify:
+
    - Years to analyze (e.g., `[2025, 2030, 2035, 2040]`)
    - Scenarios to compare (e.g., `["baseline", "energy-match-50", "hourly-match-50-99"]`)
    - Geographic scope (e.g., system-wide, specific countries)
@@ -16,6 +17,7 @@ All notebooks follow a consistent three-section structure:
    The networks are then loaded into a pandas DataFrame indexed by year and scenario, with both full networks and stripped GO market sub-networks.
 
 3. **Figure Generation (Section 2+)**: One or more sections with code cells that:
+
    - Call the appropriate `derive_*` functions from the imported script
    - Generate plots directly in the notebook
    - Optionally save figures to disk (controlled by `save_fig` flag)
@@ -38,6 +40,7 @@ The following notebooks correspond directly to the three main result types:
 Beyond the main automated results, the project includes notebooks for supplementary analyses:
 
 - **`plot_country_comparison.ipynb`**: Generates country-level comparative analysis across years and scenarios using `generate_country_comparison.py`. This notebook:
+
   - Produces horizontal bar charts comparing countries side-by-side for selected metrics (energy mix, capacity, emissions, etc.)
   - Creates geographic heatmap visualizations on European maps showing spatial patterns of results
   - Enables identification of countries with similar or divergent outcomes across scenarios
@@ -46,6 +49,7 @@ Beyond the main automated results, the project includes notebooks for supplement
   Key result types include energy mix (a), GO market generation (b), capacity mix (c-d), storage capacity (e1-e2), system costs (g), GO market revenue (h), marginal prices (i), emissions (j), and curtailment (k). An additional map visualization (b_map) shows GO market activity spatially.
 
 - **`plot_resource_utilization(cap_vs_max_cap).ipynb`**: Analyzes variable renewable energy source (VRES) resource utilization using `generate_time_comparison.py` functions. This notebook:
+
   - Compares optimal installed VRES capacity against maximum technical potential for each technology and location
   - Calculates utilization percentages to identify whether resources are fully exploited or constrained
   - Visualizes utilization shares across scenarios and years to understand how GO market requirements affect renewable deployment patterns
@@ -58,6 +62,7 @@ Beyond the main automated results, the project includes notebooks for supplement
 Other than the scripts used for the main results, the notebooks utilize other supporting Python scripts that are imported but not executed directly:
 
 - **`notebooks_function.py`**: Contains shared utility functions, constants, and helper routines used across all notebooks:
+
   - Carrier name mapping and color schemes (e.g., `rename_map`, `category_colors`)
   - Network preparation functions (`prepare_network()`, `drop_year()`, `rename_year()`)
   - GO market network extraction (`strip_network_GoO()`)
