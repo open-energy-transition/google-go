@@ -25,24 +25,26 @@ The script imports standard data science libraries (`pandas`, `numpy`), PyPSA fo
 - **Score and Load Extraction**: `get_score_load(n, score="cfe")` extracts the clean/renewable energy score and electricity load from a network object. The score represents hourly clean energy availability (from `n.buses_t.cfe_p` or `n.buses_t.res_p`), while the load represents electricity demand. Both are grouped by country.
 
 - **Frontier Calculation**: `get_hourly_energy_matrix(n, score, load)` computes the hourly matching percentage for energy matching levels ranging from 1% to 120%. For each energy matching level, it calculates:
-  - The target load (total load scaled by energy matching level)
-  - Unfilled energy (shortfall between target and available clean energy)
-  - Remaining score (potential surplus clean energy)
-  - Hourly matching percentage (fraction of target load met by clean energy)
-
-  The function returns a pandas Series with hourly matching values indexed by energy matching percentage. Values become `NaN` when the constraint cannot be satisfied.
+  
+    - The target load (total load scaled by energy matching level)
+    - Unfilled energy (shortfall between target and available clean energy)
+    - Remaining score (potential surplus clean energy)
+    - Hourly matching percentage (fraction of target load met by clean energy)
+  
+    The function returns a pandas Series with hourly matching values indexed by energy matching percentage. Values become `NaN` when the constraint cannot be satisfied.
 
 - **Main Processing Loop**: `main(output="results_frontier", score="cfe", tutorial=False)`: Orchestrates the frontier generation process:
-  1. Scans the `../results/` directory recursively for all network files (`.nc`)
-  2. For each network:
-     - Loads the PyPSA network
-     - Extracts score and load data
-     - Calculates EU-wide frontier (aggregating all countries)
-     - Calculates national-level frontiers for each country
-  3. Organizes results in a MultiIndex DataFrame with dimensions: [scenario, year, country]
-  4. Exports to CSV file
-
-  The `tutorial` flag limits processing to the first 7 networks for testing purposes.
+  
+    1. Scans the `../results/` directory recursively for all network files (`.nc`)
+    2. For each network:
+        - Loads the PyPSA network
+        - Extracts score and load data
+        - Calculates EU-wide frontier (aggregating all countries)
+        - Calculates national-level frontiers for each country
+    3. Organizes results in a MultiIndex DataFrame with dimensions: [scenario, year, country]
+    4. Exports to CSV file
+  
+    The `tutorial` flag limits processing to the first 7 networks for testing purposes.
 
 #### Script Execution
 
