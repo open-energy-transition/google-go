@@ -10,18 +10,18 @@ All notebooks follow a consistent three-section structure:
 
 2. **Network Retrieval (Section 1)**: Interactive code cells where users specify:
 
-      - Years to analyze (e.g., `[2025, 2030, 2035, 2040]`)
-      - Scenarios to compare (e.g., `["baseline", "energy-match-50", "hourly-match-50-99"]`)
-      - Geographic scope (e.g., system-wide, specific countries)
+    - Years to analyze (e.g., `[2025, 2030, 2035, 2040]`)
+    - Scenarios to compare (e.g., `["baseline", "energy-match-50", "hourly-match-50-99"]`)
+    - Geographic scope (e.g., system-wide, specific countries)
 
-      The networks are then loaded into a pandas DataFrame indexed by year and scenario, with both full networks and stripped GO market sub-networks.
+    The networks are then loaded into a pandas DataFrame indexed by year and scenario, with both full networks and stripped GO market sub-networks.
 
 3. **Figure Generation (Section 2+)**: One or more sections with code cells that:
 
-      - Call the appropriate `derive_*` functions from the imported script
-      - Generate plots directly in the notebook
-      - Optionally save figures to disk (controlled by `save_fig` flag)
-      - Display results interactively for exploration
+    - Call the appropriate `derive_*` functions from the imported script
+    - Generate plots directly in the notebook
+    - Optionally save figures to disk (controlled by `save_fig` flag)
+    - Display results interactively for exploration
 
 This modular structure enables rapid iteration: users can modify scenario selections in Section 1 and re-run Section 2 without reloading data, or adjust plotting parameters and regenerate specific figures independently.
 
@@ -41,21 +41,21 @@ Beyond the main automated results, the project includes notebooks for supplement
 
 - **`plot_country_comparison.ipynb`**: Generates country-level comparative analysis across years and scenarios using `generate_country_comparison.py`. This notebook:
 
-  - Produces horizontal bar charts comparing countries side-by-side for selected metrics (energy mix, capacity, emissions, etc.)
-  - Creates geographic heatmap visualizations on European maps showing spatial patterns of results
-  - Enables identification of countries with similar or divergent outcomes across scenarios
-  - Uses consistent color schemes and formatting for multi-country comparisons
-  
-  Key result types include energy mix (a), GO market generation (b), capacity mix (c-d), storage capacity (e1-e2), system costs (g), GO market revenue (h), marginal prices (i), emissions (j), and curtailment (k). An additional map visualization (b_map) shows GO market activity spatially.
+    - Produces horizontal bar charts comparing countries side-by-side for selected metrics (energy mix, capacity, emissions, etc.)
+    - Creates geographic heatmap visualizations on European maps showing spatial patterns of results
+    - Enables identification of countries with similar or divergent outcomes across scenarios
+    - Uses consistent color schemes and formatting for multi-country comparisons
+    
+    Key result types include energy mix (a), GO market generation (b), capacity mix (c-d), storage capacity (e1-e2), system costs (g), GO market revenue (h), marginal prices (i), emissions (j), and curtailment (k). An additional map visualization (b_map) shows GO market activity spatially.
 
 - **`plot_resource_utilization(cap_vs_max_cap).ipynb`**: Analyzes variable renewable energy source (VRES) resource utilization using `generate_time_comparison.py` functions. This notebook:
 
-  - Compares optimal installed VRES capacity against maximum technical potential for each technology and location
-  - Calculates utilization percentages to identify whether resources are fully exploited or constrained
-  - Visualizes utilization shares across scenarios and years to understand how GO market requirements affect renewable deployment patterns
-  - Helps assess the spatial efficiency of renewable resource allocation
-  
-  This analysis corresponds to result type (n) in the time comparison framework and provides insights into grid integration constraints and siting limitations for renewable energy.
+    - Compares optimal installed VRES capacity against maximum technical potential for each technology and location
+    - Calculates utilization percentages to identify whether resources are fully exploited or constrained
+    - Visualizes utilization shares across scenarios and years to understand how GO market requirements affect renewable deployment patterns
+    - Helps assess the spatial efficiency of renewable resource allocation
+    
+    This analysis corresponds to result type (n) in the time comparison framework and provides insights into grid integration constraints and siting limitations for renewable energy.
 
 #### Supporting Scripts
 
@@ -63,12 +63,12 @@ Other than the scripts used for the main results, the notebooks utilize other su
 
 - **`notebooks_function.py`**: Contains shared utility functions, constants, and helper routines used across all notebooks:
 
-  - Carrier name mapping and color schemes (e.g., `rename_map`, `category_colors`)
-  - Network preparation functions (`prepare_network()`, `drop_year()`, `rename_year()`)
-  - GO market network extraction (`strip_network_GoO()`)
-  - Statistics aggregation across multiple networks (`get_stats_all()`, `get_stats_prices()`)
-  - Data cleaning utilities (`clean_virtual_names()`, `sum_except_color()`)
-  - Figure size configuration constants (`FIGSIZE_BAR`, `FIGSIZE_HEATMAP_MAP`, `FIGSIZE_ARROW`)
+    - Carrier name mapping and color schemes (e.g., `rename_map`, `category_colors`)
+    - Network preparation functions (`prepare_network()`, `drop_year()`, `rename_year()`)
+    - GO market network extraction (`strip_network_GoO()`)
+    - Statistics aggregation across multiple networks (`get_stats_all()`, `get_stats_prices()`)
+    - Data cleaning utilities (`clean_virtual_names()`, `sum_except_color()`)
+    - Figure size configuration constants (`FIGSIZE_BAR`, `FIGSIZE_HEATMAP_MAP`, `FIGSIZE_ARROW`)
 
 - **`generate_country_comparison.py`**: Provides functions for country-level analysis, including plotting routines for bar charts (`plot_bar()`), map visualizations (`plot_map()`), and derive functions for all result types adapted for country comparison context.
 
