@@ -12,8 +12,8 @@ import dash_bootstrap_components as dbc
 def create_deadzone_layout(data_loader):
     """Create the Dead Zone Analysis tab layout"""
 
-    # Get available data
-    stats = data_loader.get_summary_stats('CI_25')
+    # Get available data from consolidated results
+    stats = data_loader.get_summary_stats()
     years = stats.get('years', [])
     scenarios = stats.get('scenarios', [])
 
@@ -23,23 +23,9 @@ def create_deadzone_layout(data_loader):
         # Control panel
         dbc.Card([
             dbc.CardBody([
-                # Main scenario selector
+                # Selectors
                 dbc.Row([
-                    dbc.Col([
-                        html.Label("Main Scenario:", style={'fontWeight': 'bold'}),
-                        dcc.Dropdown(
-                            id='deadzone-main-scenario-selector',
-                            options=[
-                                {'label': 'CI 25%', 'value': 'CI_25'},
-                                {'label': 'CI 50%', 'value': 'CI_50'},
-                                {'label': 'No Additionality', 'value': 'CI_noadd'}
-                            ],
-                            value='CI_25',
-                            clearable=False
-                        )
-                    ], width=3),
-
-                    # Year selector (for types 1 & 3)
+                    # Year selector
                     dbc.Col([
                         html.Label("Year:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
@@ -50,7 +36,7 @@ def create_deadzone_layout(data_loader):
                         )
                     ], width=2),
 
-                    # Scenario selector (for types 1 & 3)
+                    # Scenario selector
                     dbc.Col([
                         html.Label("Scenarios (select up to 5 or All):", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
@@ -60,7 +46,7 @@ def create_deadzone_layout(data_loader):
                             clearable=False,
                             multi=True  # Allow multiple selection
                         )
-                    ], width=4),
+                    ], width=5),
 
                     # Country/spatial scope selector
                     dbc.Col([
@@ -72,7 +58,7 @@ def create_deadzone_layout(data_loader):
                             clearable=False,
                             multi=True  # Allow multiple selection
                         )
-                    ], width=3),
+                    ], width=5),
                 ], className="mb-2")
             ])
         ], className="mb-4"),

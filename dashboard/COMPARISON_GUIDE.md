@@ -1,29 +1,33 @@
-# How to Use the Comparison Tab
+# How to Use the Cross-Scenario Comparison Tab
 
 ## Overview
 
-The Comparison tab now shows **all available sub-scenarios** from all three main scenarios (CI_25, CI_50, CI_noadd). You can compare any sub-scenario across the main scenarios, even if the names differ.
+The Cross-Scenario Comparison tab allows you to compare up to 4 different scenarios side-by-side. All scenarios are now consolidated in a single dataset, making comparisons straightforward.
 
-## Available Sub-Scenarios
+## Available Scenarios
 
-### Common to All (Baseline):
-- **baseline** - Available in CI_25, CI_50, and CI_noadd
+All scenarios from the consolidated dataset are available for comparison, including:
 
-### CI_25 Specific:
+### Common Scenarios:
+- **baseline** - Base case without policy constraints
+
+### Energy Matching Scenarios:
 - **energy-match-25** - 25% energy matching
+- **energy-match-50** - 50% energy matching
+
+### Hourly Matching Scenarios (25% additionality):
 - **hourly-match-25-90** - 25% additionality, 90% hourly matching
 - **hourly-match-25-95** - 25% additionality, 95% hourly matching
 - **hourly-match-25-98** - 25% additionality, 98% hourly matching
 - **hourly-match-25-99** - 25% additionality, 99% hourly matching
 
-### CI_50 Specific:
-- **energy-match-50** - 50% energy matching
+### Hourly Matching Scenarios (50% additionality):
 - **hourly-match-50-90** - 50% additionality, 90% hourly matching
 - **hourly-match-50-95** - 50% additionality, 95% hourly matching
 - **hourly-match-50-98** - 50% additionality, 98% hourly matching
 - **hourly-match-50-99** - 50% additionality, 99% hourly matching
 
-### CI_noadd Specific:
+### No Additionality Scenarios:
 - **hourly-match-noadd-10-99** - No additionality, 10% target, 99% hourly matching
 - **hourly-match-noadd-50-99** - No additionality, 50% target, 99% hourly matching
 - **hourly-match-noadd-90-99** - No additionality, 90% target, 99% hourly matching
@@ -31,11 +35,9 @@ The Comparison tab now shows **all available sub-scenarios** from all three main
 ## Understanding the Results
 
 ### When Comparing "baseline"
-**Expected:** All three scenarios (CI_25, CI_50, CI_noadd) should show **identical or very similar values**.
+**Expected:** The baseline scenario provides a reference point for all policy scenarios.
 
-**Why?** Baseline represents the same starting assumptions across all scenarios before any policy constraints are applied.
-
-**Use this to:** Verify data consistency and understand the baseline energy system.
+**Use this to:** Understand the baseline energy system and measure policy impacts.
 
 ### When Comparing Policy Scenarios
 
@@ -67,16 +69,16 @@ Unfortunately, since they have different names, you'll need to check each indivi
 
 ## Recommended Comparison Workflows
 
-### Workflow 1: Verify Baseline Consistency
+### Workflow 1: Compare Policy Impacts
 ```
 1. Select: Year = 2030
-2. Select: Sub-Scenario = baseline
-3. Select: Metric = (a) Energy mix
-4. Check: All three scenarios (CI_25, CI_50, CI_noadd)
-5. Result: Should see nearly identical values
+2. Select: Scenario 1 = baseline
+3. Select: Scenario 2 = hourly-match-25-90
+4. Select: Metric = (a) Energy mix
+5. Result: See how 90% hourly matching affects the energy mix
 ```
 
-### Workflow 2: Compare Impact of Additionality Requirement
+### Workflow 2: Compare Additionality Levels
 ```
 1. Note values from:
    - CI_25, hourly-match-25-99 (25% additionality)

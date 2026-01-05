@@ -1,6 +1,6 @@
 """
 Data loading utilities for the dashboard
-Handles loading and preprocessing of results from CI_25, CI_50, and CI_noadd
+Handles loading and preprocessing of consolidated results
 """
 import pandas as pd
 import numpy as np
@@ -8,21 +8,19 @@ from pathlib import Path
 
 
 class DataLoader:
-    """Loads and manages data from different scenario results"""
+    """Loads and manages data from consolidated results"""
 
     def __init__(self, results_dir="../results"):
         self.results_dir = Path(results_dir)
         self.data = {}
-        self.scenarios = ['CI_25', 'CI_50', 'CI_noadd']
         self.frontier_data = None
         self.timeseries_cache = {}  # Cache for timeseries data
         self.timeseries_metadata_cache = None  # Cache metadata
 
     def load_all_data(self):
-        """Load data from all scenarios"""
-        for scenario in self.scenarios:
-            print(f"Loading {scenario}...")
-            self.data[scenario] = self.load_scenario_data(scenario)
+        """Load consolidated data"""
+        print("Loading consolidated results...")
+        self.data = self.load_scenario_data()
 
         # Load frontier data
         print("Loading frontier data...")
@@ -32,13 +30,12 @@ class DataLoader:
         print("Loading timeseries metadata...")
         self.get_timeseries_metadata(None)
 
-    def load_scenario_data(self, scenario):
-        """Load data for a specific scenario"""
-        scenario_dir = self.results_dir / scenario
+    def load_scenario_data(self):
+        """Load data from consolidated results.csv"""
         scenario_data = {}
 
-        # Load main results CSV
-        results_file = scenario_dir / "results.csv"
+        # Load main consolidated results CSV
+        results_file = self.results_dir / "results.csv"
         if results_file.exists():
             df = pd.read_csv(results_file, header=[0, 1, 2], index_col=[0, 1, 2])
             scenario_data['results'] = df
@@ -46,10 +43,12 @@ class DataLoader:
             scenario_data['scenarios'] = self._extract_scenarios(df)
             scenario_data['metrics'] = self._extract_metrics(df)
             print(f"  Found {len(scenario_data['years'])} years, {len(scenario_data['scenarios'])} scenarios, {len(scenario_data['metrics'])} metrics")
+        else:
+            print(f"  Warning: {results_file} not found")
 
         # Load country-specific results if available
         scenario_data['countries'] = {}
-        for country_file in scenario_dir.glob("results-*.csv"):
+        for country_file in self.results_dir.glob("results-*.csv"):
             country = country_file.stem.replace('results-', '')
             df_country = pd.read_csv(country_file, header=[0, 1, 2], index_col=[0, 1, 2])
             scenario_data['countries'][country] = df_country
@@ -77,14 +76,12 @@ class DataLoader:
             return list(df.index.get_level_values(0).unique())
         return []
 
-    def get_data(self, scenario, year=None, scenario_name=None, metric=None):
+    def get_data(self, year=None, scenario_name=None, metric=None):
         """
         Get data for specific filters
 
         Parameters:
         -----------
-        scenario : str
-            One of 'CI_25', 'CI_50', 'CI_noadd'
         year : int, optional
             Specific year to filter
         scenario_name : str, optional
@@ -92,10 +89,7 @@ class DataLoader:
         metric : str, optional
             Specific metric (e.g., '(a) Energy mix')
         """
-        if scenario not in self.data:
-            return None
-
-        df = self.data[scenario].get('results')
+        df = self.data.get('results')
         if df is None:
             return None
 
@@ -131,9 +125,9 @@ class DataLoader:
 
         return df
 
-    def get_carriers_for_metric(self, scenario, metric):
+    def get_carriers_for_metric(self, metric):
         """Get list of carriers for a specific metric"""
-        df = self.data[scenario].get('results')
+        df = self.data.get('results')
         if df is None:
             return []
 
@@ -144,10 +138,10 @@ class DataLoader:
             carriers = list(metric_data.index.get_level_values(2).unique())
             return carriers
         except Exception as e:
-            print(f"Error getting carriers for {scenario} {metric}: {e}")
+            print(f"Error getting carriers for {metric}: {e}")
             return []
 
-    def get_time_series_data(self, scenario, year, scenario_name, carrier):
+    def get_time_series_data(self, year, scenario_name, carrier):
         """
         Get time series data for a specific carrier
         This would need to be implemented based on how time series data is stored
@@ -155,17 +149,13 @@ class DataLoader:
         # Placeholder - implement based on actual data structure
         return None
 
-    def get_summary_stats(self, scenario):
-        """Get summary statistics for a scenario"""
-        if scenario not in self.data:
-            return {}
-
-        data = self.data[scenario]
+    def get_summary_stats(self):
+        """Get summary statistics"""
         return {
-            'years': data.get('years', []),
-            'scenarios': data.get('scenarios', []),
-            'metrics': data.get('metrics', []),
-            'num_countries': len(data.get('countries', {}))
+            'years': self.data.get('years', []),
+            'scenarios': self.data.get('scenarios', []),
+            'metrics': self.data.get('metrics', []),
+            'num_countries': len(self.data.get('countries', {}))
         }
 
     def load_frontier_data(self):
@@ -216,14 +206,12 @@ class DataLoader:
             traceback.print_exc()
             return None
 
-    def get_frontier_data(self, main_scenario, year, country='EU'):
+    def get_frontier_data(self, year, country='EU'):
         """
-        Get frontier data for a specific main scenario, year, and country
+        Get frontier data for a specific year and country
 
         Parameters:
         -----------
-        main_scenario : str
-            One of 'CI_25', 'CI_50', 'CI_noadd' (not currently used for filtering)
         year : int or str
             Year to filter
         country : str
@@ -260,8 +248,8 @@ class DataLoader:
             traceback.print_exc()
             return {}
 
-    def get_frontier_countries(self, main_scenario, year):
-        """Get list of available countries for a given main scenario and year"""
+    def get_frontier_countries(self, year):
+        """Get list of available countries for a given year"""
         if self.frontier_data is None:
             return []
 
@@ -286,7 +274,7 @@ class DataLoader:
 
     # ==================== Timeseries Data Methods ====================
 
-    def get_timeseries_metadata(self, main_scenario, year=None):
+    def get_timeseries_metadata(self, year=None):
         """
         Get available metadata for timeseries data without loading the full file
         Returns dict with available: scenarios, countries, types, carriers

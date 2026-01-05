@@ -37,11 +37,10 @@ New tab: **"Within-Scenario"** (rightmost tab in the dashboard)
    - Percentage change
 
 ### How to Use
-1. Navigate to the "Within-Scenario" tab
-2. Select a main scenario (e.g., CI_50)
-3. Choose year, metric, and two different sub-scenarios
-4. View the side-by-side comparison and difference analysis
-5. Check summary statistics for quick insights
+1. Navigate to the "Cross-Scenario Comparison" tab
+2. Choose year, metric, and up to 4 scenarios to compare
+3. View the side-by-side comparison
+4. Check summary statistics for quick insights
 
 ---
 
@@ -51,13 +50,13 @@ New tab: **"Within-Scenario"** (rightmost tab in the dashboard)
 Visualizes how each technology evolves over time for a given scenario. This line plot shows the trajectory/trend of each carrier (technology) across all available years.
 
 ### Location
-Available in all three individual scenario tabs:
-- CI_25 tab
-- CI_50 tab
-- CI_noadd tab
+Available in:
+- Single Scenario Analysis tab
+- Cross-Scenario Comparison tab
+- Timeseries Exploration tab
 
 ### How to Access
-1. Navigate to any individual scenario tab (CI_25, CI_50, or CI_noadd)
+1. Navigate to the Single Scenario Analysis tab
 2. In the "Plot Type" dropdown, select **"Technology Trajectory"**
 3. Choose your scenario, metric, and carriers
 
@@ -75,9 +74,9 @@ Available in all three individual scenario tabs:
 - Visualize technology mix evolution
 
 ### Example
-To see how solar capacity changes from 2025 to 2050 under CI_50 with Hourly 90%:
-1. Go to CI_50 tab
-2. Select "Hourly 90%" scenario
+To see how solar capacity changes from 2025 to 2040 under hourly-match-50-90:
+1. Go to Single Scenario Analysis tab
+2. Select "Hourly 90% (CI 50%)" scenario
 3. Choose "(c) Generator capacity" metric
 4. Select plot type: "Technology Trajectory"
 5. Filter to "solar" carrier (or keep all selected)
@@ -99,9 +98,9 @@ Makes the dashboard more user-friendly by displaying scenario names in a readabl
 | `hourly-match-25-90` | Hourly 90% (CI 25%) |
 | `hourly-match-50-95` | Hourly 95% (CI 50%) |
 | `hourly-match-noadd-90-99` | Hourly 90%-99% (No Add.) |
-| `CI_25` | CI 25% |
-| `CI_50` | CI 50% |
-| `CI_noadd` | No Additional Constraints |
+| `baseline` | Baseline |
+| `energy-match-25` | Energy Match 25% |
+| `hourly-match-50-90` | Hourly 90% (CI 50%) |
 
 ### Where Applied
 - All dropdown menus showing sub-scenarios
@@ -151,36 +150,35 @@ Makes the dashboard more user-friendly by displaying scenario names in a readabl
 
 ## Usage Examples
 
-### Example 1: Compare Hourly Matching Stringency within CI 50%
-**Question**: How much more capacity is needed for Hourly 95% vs Hourly 90% in 2050?
+### Example 1: Compare Hourly Matching Stringency
+**Question**: How much more capacity is needed for Hourly 95% vs Hourly 90% in 2040?
 
 **Steps**:
-1. Go to "Within-Scenario" tab
-2. Select: CI 50%, Year: 2050, Metric: "(c) Generator capacity"
-3. Sub-Scenario 1: Hourly 90% (CI 50%)
-4. Sub-Scenario 2: Hourly 95% (CI 50%)
-5. View the difference plot to see which technologies need more capacity
+1. Go to "Cross-Scenario Comparison" tab
+2. Select: Year: 2040, Metric: "(c) Capacity mix"
+3. Scenario 1: hourly-match-50-90
+4. Scenario 2: hourly-match-50-95
+5. View the comparison to see which technologies need more capacity
 
 ### Example 2: Visualize Solar Growth Trajectory
 **Question**: How does solar capacity grow over time under the most stringent scenario?
 
 **Steps**:
-1. Go to CI_50 tab
-2. Select scenario: Hourly 95% (CI 50%)
-3. Metric: "(c) Generator capacity"
-4. Plot Type: "Technology Trajectory"
-5. Carriers: Select only "solar"
-6. View the line plot showing solar's growth from 2025 to 2050
+1. Go to Single Scenario Analysis tab
+2. Select scenario: hourly-match-50-95
+3. Metric: "(c) Capacity mix"
+4. Plot Type: "Year on Year Evolution"
+5. View the evolution showing solar's growth from 2025 to 2040
 
-### Example 3: Compare Baseline Across All Three Main Scenarios
-**Question**: What's the difference in energy mix for baseline across CI levels?
+### Example 3: Explore Timeseries Data
+**Question**: How does electricity balance vary throughout the year?
 
 **Steps**:
-1. Go to "Comparison" tab
-2. Sub-Scenario: Select "Baseline"
-3. Year: 2050, Metric: "(a) Energy mix"
-4. Check all three main scenarios: CI 25%, CI 50%, No Additional Constraints
-5. View grouped bar chart comparing baseline across scenarios
+1. Go to "Timeseries Exploration" tab
+2. Select Year: 2035, Scenario: baseline
+3. Timeseries Type: "Electricity Balance"
+4. Country: EU
+5. View hourly data across different time ranges (week, month, full year)
 
 ---
 

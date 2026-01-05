@@ -16,21 +16,6 @@ def create_timeseries_layout(data_loader):
         dbc.Card([
             dbc.CardBody([
                 dbc.Row([
-                    # Main scenario selector
-                    dbc.Col([
-                        html.Label("Main Scenario:", style={'fontWeight': 'bold'}),
-                        dcc.Dropdown(
-                            id='ts-main-scenario-selector',
-                            options=[
-                                {'label': 'CI 25%', 'value': 'CI_25'},
-                                {'label': 'CI 50%', 'value': 'CI_50'},
-                                {'label': 'No Additionality', 'value': 'CI_noadd'}
-                            ],
-                            value='CI_25',
-                            clearable=False
-                        )
-                    ], width=2),
-
                     # Year selector
                     dbc.Col([
                         html.Label("Year:", style={'fontWeight': 'bold'}),

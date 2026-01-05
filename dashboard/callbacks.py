@@ -21,14 +21,11 @@ def register_callbacks(app, data_loader):
     @app.callback(
         [Output('single-scenario-selector', 'options'),
          Output('single-scenario-selector', 'value')],
-        [Input('single-main-scenario-selector', 'value')]
+        [Input('single-year-selector', 'value')]
     )
-    def update_single_subscenarios(main_scenario):
-        """Update available sub-scenarios based on selected main scenario"""
-        if not main_scenario:
-            return [], None
-
-        stats = data_loader.get_summary_stats(main_scenario)
+    def update_single_subscenarios(year):
+        """Update available sub-scenarios"""
+        stats = data_loader.get_summary_stats()
         scenarios = stats.get('scenarios', [])
         options = [{'label': format_scenario_name(s), 'value': s} for s in scenarios]
         return options, scenarios[0] if scenarios else None
@@ -60,113 +57,103 @@ def register_callbacks(app, data_loader):
     @app.callback(
         [Output('single-carrier-selector', 'options'),
          Output('single-carrier-selector', 'value')],
-        [Input('single-main-scenario-selector', 'value'),
-         Input('single-metric-selector', 'value')]
+        [Input('single-metric-selector', 'value')]
     )
-    def update_single_carriers(main_scenario, metric):
-        """Update available carriers based on selected main scenario and metric"""
-        if not main_scenario or not metric:
+    def update_single_carriers(metric):
+        """Update available carriers based on selected metric"""
+        if not metric:
             return [], []
 
-        carriers = data_loader.get_carriers_for_metric(main_scenario, metric)
+        carriers = data_loader.get_carriers_for_metric(metric)
         options = [{'label': c, 'value': c} for c in carriers]
         # Select all by default
         return options, carriers
 
     @app.callback(
         Output('single-main-plot', 'figure'),
-        [Input('single-main-scenario-selector', 'value'),
-         Input('single-year-selector', 'value'),
+        [Input('single-year-selector', 'value'),
          Input('single-scenario-selector', 'value'),
          Input('single-metric-selector', 'value'),
          Input('single-plot-type-selector', 'value'),
          Input('single-carrier-selector', 'value')]
     )
-    def update_single_main_plot(main_scenario, year, scenario, metric, plot_type, carriers):
+    def update_single_main_plot(year, scenario, metric, plot_type, carriers):
         """Update main plot for single scenario analysis"""
-        if not main_scenario:
-            return create_empty_figure("Please select a main scenario")
-        return create_plot(main_scenario, year, scenario, metric, plot_type,
+        if not scenario:
+            return create_empty_figure("Please select a scenario")
+        return create_plot(year, scenario, metric, plot_type,
                           carriers, data_loader, color_mapper)
 
     @app.callback(
         Output('single-secondary-plot', 'figure'),
-        [Input('single-main-scenario-selector', 'value'),
-         Input('single-year-selector', 'value'),
+        [Input('single-year-selector', 'value'),
          Input('single-scenario-selector', 'value'),
          Input('single-metric-selector', 'value'),
          Input('single-carrier-selector', 'value')]
     )
-    def update_single_secondary_plot(main_scenario, year, scenario, metric, carriers):
+    def update_single_secondary_plot(year, scenario, metric, carriers):
         """Update secondary plot showing carrier breakdown"""
-        if not main_scenario:
-            return create_empty_figure("Please select a main scenario")
-        return create_pie_breakdown(main_scenario, year, scenario, metric,
+        if not scenario:
+            return create_empty_figure("Please select a scenario")
+        return create_pie_breakdown(year, scenario, metric,
                                    carriers, data_loader, color_mapper)
 
     @app.callback(
         Output('single-summary-stats', 'children'),
-        [Input('single-main-scenario-selector', 'value'),
-         Input('single-year-selector', 'value'),
+        [Input('single-year-selector', 'value'),
          Input('single-scenario-selector', 'value'),
          Input('single-metric-selector', 'value'),
          Input('single-plot-type-selector', 'value')]
     )
-    def update_single_summary(main_scenario, year, scenario, metric, plot_type):
+    def update_single_summary(year, scenario, metric, plot_type):
         """Update summary statistics for single scenario analysis"""
-        if not main_scenario:
-            return html.P("Please select a main scenario")
+        if not scenario:
+            return html.P("Please select a scenario")
         # Use multi-year stats for stacked_bar, year_comparison, and year_on_year_evolution
         if plot_type in ['stacked_bar', 'year_comparison', 'year_on_year_evolution']:
-            return create_multi_year_summary_stats(main_scenario, scenario, metric, data_loader)
-        return create_summary_stats(main_scenario, year, scenario, metric, data_loader)
+            return create_multi_year_summary_stats(scenario, metric, data_loader)
+        return create_summary_stats(year, scenario, metric, data_loader)
 
     # ==================== Dead Zone Analysis Callbacks ====================
     @app.callback(
         [Output('deadzone-country-selector', 'options'),
          Output('deadzone-country-selector', 'value')],
-        [Input('deadzone-main-scenario-selector', 'value'),
-         Input('deadzone-year-selector', 'value')]
+        [Input('deadzone-year-selector', 'value')]
     )
-    def update_deadzone_countries(main_scenario, year):
+    def update_deadzone_countries(year):
         """Update available countries for dead zone analysis"""
-        if not main_scenario:
-            return [{'label': 'All', 'value': 'all'}], ['EU']
-
         # Get available countries
-        countries = data_loader.get_frontier_countries(main_scenario, year if year != 'all' else 2035)
+        countries = data_loader.get_frontier_countries(year if year != 'all' else 2035)
         options = [{'label': 'All', 'value': 'all'}] + [{'label': c, 'value': c} for c in countries]
         return options, ['EU']
 
     @app.callback(
         Output('deadzone-plot', 'figure'),
-        [Input('deadzone-main-scenario-selector', 'value'),
-         Input('deadzone-year-selector', 'value'),
+        [Input('deadzone-year-selector', 'value'),
          Input('deadzone-scenario-selector', 'value'),
          Input('deadzone-country-selector', 'value')]
     )
-    def update_deadzone_plot(main_scenario, year, scenario, country):
+    def update_deadzone_plot(year, scenario, country):
         """Update dead zone frontier plot - automatically infer comparison type"""
-        if not main_scenario:
-            return create_empty_figure("Please select a main scenario")
+        if not year:
+            return create_empty_figure("Please select a year")
 
         # Infer comparison type from selections
         comparison_type = infer_comparison_type(year, scenario, country)
 
         return create_deadzone_frontier_plot(
-            comparison_type, main_scenario, year, scenario, country, data_loader
+            comparison_type, year, scenario, country, data_loader
         )
 
     @app.callback(
         Output('deadzone-summary', 'children'),
-        [Input('deadzone-main-scenario-selector', 'value'),
-         Input('deadzone-year-selector', 'value'),
+        [Input('deadzone-year-selector', 'value'),
          Input('deadzone-scenario-selector', 'value'),
          Input('deadzone-country-selector', 'value')]
     )
-    def update_deadzone_summary(main_scenario, year, scenario, country):
+    def update_deadzone_summary(year, scenario, country):
         """Update dead zone summary with key takeaways"""
-        if not main_scenario:
+        if not year:
             return html.P("Select parameters to see analysis summary")
 
         # Infer comparison type
@@ -174,7 +161,7 @@ def register_callbacks(app, data_loader):
 
         try:
             # Get frontier data to analyze
-            stats = data_loader.get_summary_stats(main_scenario)
+            stats = data_loader.get_summary_stats()
             all_years = stats.get('years', [])
 
             # Process scenarios
@@ -189,16 +176,16 @@ def register_callbacks(app, data_loader):
             if isinstance(country, list):
                 countries_to_use = [c for c in country if c != 'all']
                 if not countries_to_use or 'all' in country:
-                    countries_to_use = data_loader.get_frontier_countries(main_scenario, all_years[-1] if all_years else 2035)
+                    countries_to_use = data_loader.get_frontier_countries(all_years[-1] if all_years else 2035)
             else:
-                countries_to_use = data_loader.get_frontier_countries(main_scenario, all_years[-1] if all_years else 2035) if country == 'all' else [country]
+                countries_to_use = data_loader.get_frontier_countries(all_years[-1] if all_years else 2035) if country == 'all' else [country]
 
             # Get some frontier data for insights
             year_for_analysis = all_years[-1] if year == 'all' and all_years else (year if year != 'all' else 2035)
             country_for_analysis = countries_to_use[0] if countries_to_use else 'EU'
             scenario_for_analysis = scenarios_to_use[0] if scenarios_to_use else 'baseline'
 
-            frontier_dict = data_loader.get_frontier_data(main_scenario, year_for_analysis, country_for_analysis)
+            frontier_dict = data_loader.get_frontier_data(year_for_analysis, country_for_analysis)
             frontier_values = frontier_dict.get(scenario_for_analysis, []) if frontier_dict else []
 
             # Calculate insights - handle numpy arrays
@@ -383,32 +370,23 @@ def register_callbacks(app, data_loader):
 
     # Helper to find which main scenario a sub-scenario belongs to
     def find_main_scenario(subscenario):
-        """Find which main scenario contains this sub-scenario"""
-        print(f"!!! FIND_MAIN_SCENARIO called for: {subscenario}")
-        for main in ['CI_25', 'CI_50', 'CI_noadd']:
-            stats = data_loader.get_summary_stats(main)
-            if subscenario in stats.get('scenarios', []):
-                print(f"Found {subscenario} in {main}")
-                return main
-        print(f"WARNING: {subscenario} not found in any main scenario!")
+        """Find which main scenario contains this sub-scenario - no longer needed with consolidated structure"""
+        # With consolidated structure, all scenarios are in the same data
+        # This function is kept for backward compatibility but returns None
+        # since we no longer need to distinguish between main scenarios
         return None
 
     @app.callback(
         [Output('cross-carrier-selector', 'options'),
          Output('cross-carrier-selector', 'value')],
-        [Input('cross-metric-selector', 'value'),
-         Input('cross-subscenario1-selector', 'value')]
+        [Input('cross-metric-selector', 'value')]
     )
-    def update_cross_carriers(metric, subscenario1):
-        """Update available carriers based on selected metric and first subscenario"""
-        if not metric or not subscenario1:
+    def update_cross_carriers(metric):
+        """Update available carriers based on selected metric"""
+        if not metric:
             return [], []
 
-        main_scenario = find_main_scenario(subscenario1)
-        if not main_scenario:
-            return [], []
-
-        carriers = data_loader.get_carriers_for_metric(main_scenario, metric)
+        carriers = data_loader.get_carriers_for_metric(metric)
         options = [{'label': c, 'value': c} for c in carriers]
         # Select all by default
         return options, carriers
@@ -433,11 +411,8 @@ def register_callbacks(app, data_loader):
         if len(subscenarios) < 2:
             return create_empty_figure("Please select at least 2 sub-scenarios")
 
-        # Find main scenarios for each subscenario
-        main_scenarios = [find_main_scenario(s) if s else None for s in subscenarios]
-
-        return create_cross_comparison_plot(main_scenarios[0], year, metric, plot_type, subscenarios,
-                                            data_loader, color_mapper, main_scenarios, carriers, grouping)
+        return create_cross_comparison_plot(year, metric, plot_type, subscenarios,
+                                            data_loader, color_mapper, carriers, grouping)
 
     @app.callback(
         Output('cross-difference-plot', 'figure'),
@@ -449,10 +424,8 @@ def register_callbacks(app, data_loader):
     )
     def update_cross_difference(year, metric, subscenario1, subscenario2, carriers):
         """Update cross-scenario difference plot"""
-        main1 = find_main_scenario(subscenario1) if subscenario1 else None
-        main2 = find_main_scenario(subscenario2) if subscenario2 else None
-        return create_cross_difference_plot(main1 or main2, year, metric, subscenario1, subscenario2,
-                                           data_loader, color_mapper, main1, main2, carriers)
+        return create_cross_difference_plot(year, metric, subscenario1, subscenario2,
+                                           data_loader, color_mapper, carriers)
 
     @app.callback(
         Output('cross-summary-stats', 'children'),
@@ -463,23 +436,18 @@ def register_callbacks(app, data_loader):
     )
     def update_cross_summary(year, metric, subscenario1, subscenario2):
         """Update cross-scenario summary statistics"""
-        main1 = find_main_scenario(subscenario1) if subscenario1 else None
-        main2 = find_main_scenario(subscenario2) if subscenario2 else None
-        return create_cross_summary_stats(main1 or main2, year, metric, subscenario1, subscenario2,
-                                          data_loader, main1, main2)
+        return create_cross_summary_stats(year, metric, subscenario1, subscenario2,
+                                          data_loader)
 
     # ==================== Timeseries Exploration Callbacks ====================
     @app.callback(
         [Output('ts-year-selector', 'options'),
          Output('ts-year-selector', 'value')],
-        [Input('ts-main-scenario-selector', 'value')]
+        [Input('ts-scenario-selector', 'value')]
     )
-    def update_ts_years(main_scenario):
+    def update_ts_years(scenario):
         """Update available years for timeseries"""
-        if not main_scenario:
-            return [], None
-
-        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        metadata = data_loader.get_timeseries_metadata()
         years = metadata.get('years', [])
         options = [{'label': str(y), 'value': y} for y in years]
         default_value = years[-1] if years else None
@@ -488,14 +456,11 @@ def register_callbacks(app, data_loader):
     @app.callback(
         [Output('ts-scenario-selector', 'options'),
          Output('ts-scenario-selector', 'value')],
-        [Input('ts-main-scenario-selector', 'value')]
+        [Input('ts-year-selector', 'value')]
     )
-    def update_ts_scenarios(main_scenario):
+    def update_ts_scenarios(year):
         """Update available scenarios for timeseries"""
-        if not main_scenario:
-            return [], []
-
-        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        metadata = data_loader.get_timeseries_metadata()
         scenarios = metadata.get('scenarios', [])
         options = [{'label': s, 'value': s} for s in scenarios]
         default_value = [scenarios[0]] if scenarios else []
@@ -504,14 +469,11 @@ def register_callbacks(app, data_loader):
     @app.callback(
         [Output('ts-type-selector', 'options'),
          Output('ts-type-selector', 'value')],
-        [Input('ts-main-scenario-selector', 'value')]
+        [Input('ts-year-selector', 'value')]
     )
-    def update_ts_types(main_scenario):
+    def update_ts_types(year):
         """Update available timeseries types"""
-        if not main_scenario:
-            return [], None
-
-        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        metadata = data_loader.get_timeseries_metadata()
         types = metadata.get('types', [])
         options = [{'label': t, 'value': t} for t in types]
         default_value = types[0] if types else None
@@ -520,14 +482,11 @@ def register_callbacks(app, data_loader):
     @app.callback(
         [Output('ts-country-selector', 'options'),
          Output('ts-country-selector', 'value')],
-        [Input('ts-main-scenario-selector', 'value')]
+        [Input('ts-year-selector', 'value')]
     )
-    def update_ts_countries(main_scenario):
+    def update_ts_countries(year):
         """Update available countries for timeseries"""
-        if not main_scenario:
-            return [], None
-
-        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        metadata = data_loader.get_timeseries_metadata()
         countries = metadata.get('countries', [])
         options = [{'label': c, 'value': c} for c in countries]
         # Try to find a reasonable default
@@ -543,14 +502,11 @@ def register_callbacks(app, data_loader):
 
     @app.callback(
         Output('ts-carrier-selector', 'options'),
-        [Input('ts-main-scenario-selector', 'value')]
+        [Input('ts-year-selector', 'value')]
     )
-    def update_ts_carriers(main_scenario):
+    def update_ts_carriers(year):
         """Update available carriers for timeseries"""
-        if not main_scenario:
-            return []
-
-        metadata = data_loader.get_timeseries_metadata(main_scenario)
+        metadata = data_loader.get_timeseries_metadata()
         carriers = metadata.get('carriers', [])
         options = [{'label': c, 'value': c} for c in carriers]
         return options
@@ -614,21 +570,21 @@ def register_callbacks(app, data_loader):
 
 # ==================== Helper Functions ====================
 
-def create_plot(scenario, year, scenario_name, metric, plot_type, carriers, data_loader, color_mapper):
+def create_plot(year, scenario_name, metric, plot_type, carriers, data_loader, color_mapper):
     """Create a plot based on parameters"""
     try:
         # Handle multi-year plots (year='all')
         if year == 'all' or plot_type in ['stacked_bar', 'year_comparison', 'year_on_year_evolution']:
             if plot_type == 'stacked_bar':
-                return create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
+                return create_stacked_bar_all_years(scenario_name, metric, carriers, data_loader, color_mapper)
             elif plot_type == 'year_comparison':
-                return create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
+                return create_year_comparison_plot(scenario_name, metric, carriers, data_loader, color_mapper)
             elif plot_type == 'year_on_year_evolution':
-                return create_year_on_year_evolution_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper)
+                return create_year_on_year_evolution_plot(scenario_name, metric, carriers, data_loader, color_mapper)
 
         # Single year plots
         # Get data
-        df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+        df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
 
         if df is None or df.empty:
             return create_empty_figure("No data available")
@@ -718,10 +674,10 @@ def create_pie_plot(data, metric, color_mapper):
     return fig
 
 
-def create_pie_breakdown(scenario, year, scenario_name, metric, carriers, data_loader, color_mapper):
+def create_pie_breakdown(year, scenario_name, metric, carriers, data_loader, color_mapper):
     """Create pie chart breakdown"""
     try:
-        df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+        df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
 
         if df is None or df.empty:
             return create_empty_figure("No data available")
@@ -741,10 +697,10 @@ def create_pie_breakdown(scenario, year, scenario_name, metric, carriers, data_l
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_summary_stats(scenario, year, scenario_name, metric, data_loader):
+def create_summary_stats(year, scenario_name, metric, data_loader):
     """Create comprehensive summary statistics HTML"""
     try:
-        df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+        df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
 
         if df is None or df.empty:
             return html.P("No data available", className="text-muted")
@@ -829,10 +785,10 @@ def create_summary_stats(scenario, year, scenario_name, metric, data_loader):
         return html.P(f"Error: {str(e)}")
 
 
-def create_multi_year_summary_stats(scenario, scenario_name, metric, data_loader):
+def create_multi_year_summary_stats(scenario_name, metric, data_loader):
     """Create summary statistics for multi-year comparisons"""
     try:
-        stats = data_loader.get_summary_stats(scenario)
+        stats = data_loader.get_summary_stats()
         years = stats.get('years', [])
 
         if not years or not scenario_name or not metric:
@@ -844,7 +800,7 @@ def create_multi_year_summary_stats(scenario, scenario_name, metric, data_loader
         all_carriers = set()
 
         for year in years:
-            df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+            df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
 
             if df is None or df.empty:
                 continue
@@ -953,10 +909,10 @@ def create_multi_year_summary_stats(scenario, scenario_name, metric, data_loader
         return html.P(f"Error: {str(e)}")
 
 
-def create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data_loader, color_mapper):
+def create_stacked_bar_all_years(scenario_name, metric, carriers, data_loader, color_mapper):
     """Create stacked bar plot comparing all years for a scenario"""
     try:
-        stats = data_loader.get_summary_stats(scenario)
+        stats = data_loader.get_summary_stats()
         years = stats.get('years', [])
 
         if not years or not scenario_name or not metric:
@@ -966,7 +922,7 @@ def create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data
 
         # Get data for each year
         for year in years:
-            df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+            df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
 
             if df is None or df.empty:
                 continue
@@ -1022,10 +978,10 @@ def create_stacked_bar_all_years(scenario, scenario_name, metric, carriers, data
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper):
+def create_year_comparison_plot(scenario_name, metric, carriers, data_loader, color_mapper):
     """Create grouped bar plot comparing carriers across years"""
     try:
-        stats = data_loader.get_summary_stats(scenario)
+        stats = data_loader.get_summary_stats()
         years = stats.get('years', [])
 
         if not years or not scenario_name or not metric:
@@ -1036,7 +992,7 @@ def create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_
         all_carriers = set()
 
         for year in years:
-            df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+            df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
 
             if df is None or df.empty:
                 continue
@@ -1085,10 +1041,10 @@ def create_year_comparison_plot(scenario, scenario_name, metric, carriers, data_
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_year_on_year_evolution_plot(scenario, scenario_name, metric, carriers, data_loader, color_mapper):
+def create_year_on_year_evolution_plot(scenario_name, metric, carriers, data_loader, color_mapper):
     """Create line plot showing year on year evolution of technologies"""
     try:
-        stats = data_loader.get_summary_stats(scenario)
+        stats = data_loader.get_summary_stats()
         years = stats.get('years', [])
 
         if not years or not scenario_name or not metric:
@@ -1099,7 +1055,7 @@ def create_year_on_year_evolution_plot(scenario, scenario_name, metric, carriers
         all_carriers = set()
 
         for year in years:
-            df = data_loader.get_data(scenario, year=year, scenario_name=scenario_name, metric=metric)
+            df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
 
             if df is None or df.empty:
                 continue
@@ -1160,14 +1116,12 @@ def create_year_on_year_evolution_plot(scenario, scenario_name, metric, carriers
 
 # ==================== Helper Functions ====================
 
-def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscenarios, data_loader, color_mapper, main_scenarios=None, carriers=None, grouping='year'):
+def create_cross_comparison_plot(year, metric, plot_type, subscenarios, data_loader, color_mapper, carriers=None, grouping='year'):
     """Create comparison plot for multiple sub-scenarios (2-4)"""
     try:
         # Handle both list and individual inputs for backwards compatibility
         if not isinstance(subscenarios, list):
             subscenarios = [subscenarios]
-        if main_scenarios is None or not isinstance(main_scenarios, list):
-            main_scenarios = [main_scenario] * len(subscenarios)
 
         if not metric or len(subscenarios) < 2:
             return create_empty_figure("Please select at least 2 sub-scenarios")
@@ -1183,16 +1137,16 @@ def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscen
 
             if plot_type == 'stacked_bar':
                 return create_cross_stacked_bar_plot(metric, subscenarios,
-                                                    data_loader, color_mapper, main_scenarios, carriers, grouping)
+                                                    data_loader, color_mapper, carriers, grouping)
             elif plot_type == 'stacked_with_total':
                 return create_cross_stacked_with_total_plot(metric, subscenarios,
-                                                           data_loader, color_mapper, main_scenarios, carriers, grouping)
+                                                           data_loader, color_mapper, carriers, grouping)
             elif plot_type == 'year_comparison':
                 return create_cross_year_comparison_plot(metric, subscenarios,
-                                                         data_loader, color_mapper, main_scenarios, carriers, grouping)
+                                                         data_loader, color_mapper, carriers, grouping)
             elif plot_type == 'year_on_year_evolution':
                 return create_cross_evolution_plot(metric, subscenarios,
-                                                   data_loader, color_mapper, main_scenarios, carriers, grouping)
+                                                   data_loader, color_mapper, carriers, grouping)
 
         # Default: side-by-side comparison (single year required)
         if not year or year == 'all':
@@ -1201,10 +1155,10 @@ def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscen
         fig = go.Figure()
         colors = ['lightblue', 'lightcoral', 'lightgreen', 'lightyellow']
 
-        # Get data for all sub-scenarios from their respective main scenarios
+        # Get data for all sub-scenarios
         all_data = []
-        for i, (subscenario, main_sc) in enumerate(zip(subscenarios, main_scenarios)):
-            df = data_loader.get_data(main_sc, year=year, scenario_name=subscenario, metric=metric)
+        for i, subscenario in enumerate(subscenarios):
+            df = data_loader.get_data(year=year, scenario_name=subscenario, metric=metric)
             if df is not None and not df.empty:
                 data = df.iloc[:, 0] if isinstance(df.columns, pd.MultiIndex) else df.iloc[:, 0]
                 # Filter by selected carriers if provided
@@ -1244,13 +1198,13 @@ def create_cross_comparison_plot(main_scenario, year, metric, plot_type, subscen
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subscenario2, data_loader, color_mapper, main1=None, main2=None, carriers=None):
+def create_cross_difference_plot(year, metric, subscenario1, subscenario2, data_loader, color_mapper, carriers=None):
     """Create difference plot between two sub-scenarios"""
     try:
         # Handle 'all' year case - use latest year for difference plot
         display_year = year
         if year == 'all':
-            stats = data_loader.get_summary_stats(main1 or main_scenario)
+            stats = data_loader.get_summary_stats()
             years = stats.get('years', [])
             display_year = years[-1] if years else None
             if not display_year:
@@ -1262,9 +1216,9 @@ def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subs
         if subscenario1 == subscenario2:
             return create_empty_figure("Please select two different sub-scenarios")
 
-        # Get data for both sub-scenarios from their respective main scenarios
-        df1 = data_loader.get_data(main1 or main_scenario, year=display_year, scenario_name=subscenario1, metric=metric)
-        df2 = data_loader.get_data(main2 or main_scenario, year=display_year, scenario_name=subscenario2, metric=metric)
+        # Get data for both sub-scenarios
+        df1 = data_loader.get_data(year=display_year, scenario_name=subscenario1, metric=metric)
+        df2 = data_loader.get_data(year=display_year, scenario_name=subscenario2, metric=metric)
 
         if df1 is None or df1.empty or df2 is None or df2.empty:
             return create_empty_figure("No data available for selected parameters")
@@ -1312,13 +1266,13 @@ def create_cross_difference_plot(main_scenario, year, metric, subscenario1, subs
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_summary_stats(main_scenario, year, metric, subscenario1, subscenario2, data_loader, main1=None, main2=None):
+def create_cross_summary_stats(year, metric, subscenario1, subscenario2, data_loader):
     """Create summary statistics comparing two sub-scenarios with 6 key takeaways"""
     try:
         # Handle 'all' year case - use latest year for summary stats
         display_year = year
         if year == 'all':
-            stats = data_loader.get_summary_stats(main1 or main_scenario)
+            stats = data_loader.get_summary_stats()
             years = stats.get('years', [])
             display_year = years[-1] if years else None
             if not display_year:
@@ -1330,9 +1284,9 @@ def create_cross_summary_stats(main_scenario, year, metric, subscenario1, subsce
         if subscenario1 == subscenario2:
             return html.P("Please select two different sub-scenarios")
 
-        # Get data for both sub-scenarios from their respective main scenarios
-        df1 = data_loader.get_data(main1 or main_scenario, year=display_year, scenario_name=subscenario1, metric=metric)
-        df2 = data_loader.get_data(main2 or main_scenario, year=display_year, scenario_name=subscenario2, metric=metric)
+        # Get data for both sub-scenarios
+        df1 = data_loader.get_data(year=display_year, scenario_name=subscenario1, metric=metric)
+        df2 = data_loader.get_data(year=display_year, scenario_name=subscenario2, metric=metric)
 
         if df1 is None or df1.empty or df2 is None or df2.empty:
             return html.P("No data available for selected parameters")
@@ -1354,8 +1308,8 @@ def create_cross_summary_stats(main_scenario, year, metric, subscenario1, subsce
 
         # Fetch emissions data separately
         emissions_metric = "(j) CO2 emissions"
-        df1_emissions = data_loader.get_data(main1 or main_scenario, year=display_year, scenario_name=subscenario1, metric=emissions_metric)
-        df2_emissions = data_loader.get_data(main2 or main_scenario, year=display_year, scenario_name=subscenario2, metric=emissions_metric)
+        df1_emissions = data_loader.get_data(year=display_year, scenario_name=subscenario1, metric=emissions_metric)
+        df2_emissions = data_loader.get_data(year=display_year, scenario_name=subscenario2, metric=emissions_metric)
 
         emissions1 = 0
         emissions2 = 0
@@ -1520,14 +1474,14 @@ def create_cross_summary_stats(main_scenario, year, metric, subscenario1, subsce
         return html.P(f"Error: {str(e)}")
 
 
-def create_cross_stacked_bar_plot(metric, subscenarios, data_loader, color_mapper, main_scenarios=None, carriers=None, grouping='year'):
+def create_cross_stacked_bar_plot(metric, subscenarios, data_loader, color_mapper, carriers=None, grouping='year'):
     """Create stacked bar plot comparing multiple sub-scenarios (2-4) across all years"""
     try:
         if not metric or len(subscenarios) < 2:
             return create_empty_figure("Please select at least 2 sub-scenarios")
 
         # Get available years
-        stats = data_loader.get_summary_stats(main_scenarios[0])
+        stats = data_loader.get_summary_stats()
         years = stats.get('years', [])
 
         if not years:
@@ -1537,10 +1491,10 @@ def create_cross_stacked_bar_plot(metric, subscenarios, data_loader, color_mappe
         all_carriers = set()
         year_data = {}  # Dict of dicts: {subscenario: {year: {carrier: value}}}
 
-        for subscenario, main_sc in zip(subscenarios, main_scenarios):
+        for subscenario in subscenarios:
             year_data[subscenario] = {}
             for year in years:
-                df = data_loader.get_data(main_sc, year=year, scenario_name=subscenario, metric=metric)
+                df = data_loader.get_data(year=year, scenario_name=subscenario, metric=metric)
                 if df is not None and not df.empty:
                     data = df.iloc[:, 0] if isinstance(df.columns, pd.MultiIndex) else df.iloc[:, 0]
                     carrier_list = data.index.get_level_values(2).tolist()
@@ -1622,7 +1576,7 @@ def create_cross_stacked_bar_plot(metric, subscenarios, data_loader, color_mappe
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_stacked_with_total_plot(metric, subscenarios, data_loader, color_mapper, main_scenarios=None, carriers=None, grouping='year'):
+def create_cross_stacked_with_total_plot(metric, subscenarios, data_loader, color_mapper, carriers=None, grouping='year'):
     """Create stacked bar plot with total line overlay comparing multiple sub-scenarios across all years"""
     try:
         # For now, only use first 2 scenarios for this plot type
@@ -1630,7 +1584,6 @@ def create_cross_stacked_with_total_plot(metric, subscenarios, data_loader, colo
             return create_empty_figure("Please select at least 2 sub-scenarios")
 
         subscenario1, subscenario2 = subscenarios[0], subscenarios[1]
-        main1, main2 = main_scenarios[0], main_scenarios[1]
 
         if not all([metric, subscenario1, subscenario2]):
             return create_empty_figure("Please select all parameters")
@@ -1639,8 +1592,8 @@ def create_cross_stacked_with_total_plot(metric, subscenarios, data_loader, colo
             return create_empty_figure("Please select two different sub-scenarios")
 
         # Get available years
-        stats1 = data_loader.get_summary_stats(main1 or main_scenario1)
-        years = stats1.get('years', [])
+        stats = data_loader.get_summary_stats()
+        years = stats.get('years', [])
 
         if not years:
             return create_empty_figure("No years available")
@@ -1651,8 +1604,8 @@ def create_cross_stacked_with_total_plot(metric, subscenarios, data_loader, colo
         year_data2 = {}
 
         for year in years:
-            df1 = data_loader.get_data(main1 or main_scenario1, year=year, scenario_name=subscenario1, metric=metric)
-            df2 = data_loader.get_data(main2 or main_scenario2, year=year, scenario_name=subscenario2, metric=metric)
+            df1 = data_loader.get_data(year=year, scenario_name=subscenario1, metric=metric)
+            df2 = data_loader.get_data(year=year, scenario_name=subscenario2, metric=metric)
 
             if df1 is not None and not df1.empty:
                 data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
@@ -1768,7 +1721,7 @@ def create_cross_stacked_with_total_plot(metric, subscenarios, data_loader, colo
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_mapper, main_scenarios=None, carriers=None, grouping='year'):
+def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_mapper, carriers=None, grouping='year'):
     """Create year comparison plot for multiple sub-scenarios (grouped bars across years)"""
     try:
         # For now, only use first 2 scenarios for this plot type
@@ -1776,8 +1729,6 @@ def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_m
             return create_empty_figure("Please select at least 2 sub-scenarios")
 
         subscenario1, subscenario2 = subscenarios[0], subscenarios[1]
-        main1, main2 = main_scenarios[0], main_scenarios[1]
-        main_scenario1, main_scenario2 = main1, main2
 
         if not all([metric, subscenario1, subscenario2]):
             return create_empty_figure("Please select all parameters")
@@ -1786,8 +1737,8 @@ def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_m
             return create_empty_figure("Please select two different sub-scenarios")
 
         # Get available years
-        stats1 = data_loader.get_summary_stats(main1 or main_scenario1)
-        years = stats1.get('years', [])
+        stats = data_loader.get_summary_stats()
+        years = stats.get('years', [])
 
         if not years:
             return create_empty_figure("No years available")
@@ -1798,8 +1749,8 @@ def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_m
         year_data2 = {}
 
         for year in years:
-            df1 = data_loader.get_data(main1 or main_scenario1, year=year, scenario_name=subscenario1, metric=metric)
-            df2 = data_loader.get_data(main2 or main_scenario2, year=year, scenario_name=subscenario2, metric=metric)
+            df1 = data_loader.get_data(year=year, scenario_name=subscenario1, metric=metric)
+            df2 = data_loader.get_data(year=year, scenario_name=subscenario2, metric=metric)
 
             if df1 is not None and not df1.empty:
                 data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
@@ -1877,7 +1828,7 @@ def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_m
         return create_empty_figure(f"Error: {str(e)}")
 
 
-def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper, main_scenarios=None, carriers=None, grouping='year'):
+def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper, carriers=None, grouping='year'):
     """Create year on year evolution plot for multiple sub-scenarios (line plot over time)"""
     try:
         # For now, only use first 2 scenarios for this plot type
@@ -1885,8 +1836,6 @@ def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper,
             return create_empty_figure("Please select at least 2 sub-scenarios")
 
         subscenario1, subscenario2 = subscenarios[0], subscenarios[1]
-        main1, main2 = main_scenarios[0], main_scenarios[1]
-        main_scenario1, main_scenario2 = main1, main2
 
         if not all([metric, subscenario1, subscenario2]):
             return create_empty_figure("Please select all parameters")
@@ -1895,8 +1844,8 @@ def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper,
             return create_empty_figure("Please select two different sub-scenarios")
 
         # Get available years
-        stats1 = data_loader.get_summary_stats(main1 or main_scenario1)
-        years = stats1.get('years', [])
+        stats = data_loader.get_summary_stats()
+        years = stats.get('years', [])
 
         if not years:
             return create_empty_figure("No years available")
@@ -1907,8 +1856,8 @@ def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper,
         year_data2 = {}
 
         for year in years:
-            df1 = data_loader.get_data(main1 or main_scenario1, year=year, scenario_name=subscenario1, metric=metric)
-            df2 = data_loader.get_data(main2 or main_scenario2, year=year, scenario_name=subscenario2, metric=metric)
+            df1 = data_loader.get_data(year=year, scenario_name=subscenario1, metric=metric)
+            df2 = data_loader.get_data(year=year, scenario_name=subscenario2, metric=metric)
 
             if df1 is not None and not df1.empty:
                 data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
@@ -2057,7 +2006,7 @@ def infer_comparison_type(year, scenario, country):
     return 'years'
 
 
-def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario, country, data_loader):
+def create_deadzone_frontier_plot(comparison_type, year, scenario, country, data_loader):
     """
     Create dead zone frontier plot based on comparison type
 
@@ -2077,7 +2026,7 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
         # Define line styles
         line_styles_base = ['solid', 'dash', 'dot', 'dashdot']
 
-        stats = data_loader.get_summary_stats(main_scenario)
+        stats = data_loader.get_summary_stats()
         all_years = stats.get('years', [])
         all_scenarios = stats.get('scenarios', [])
 
@@ -2106,7 +2055,7 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
             for scen in scenarios_to_plot:
                 for ctry in countries:
                     for yr in years_to_plot:
-                        frontier_dict = data_loader.get_frontier_data(main_scenario, yr, ctry)
+                        frontier_dict = data_loader.get_frontier_data(yr, ctry)
                         if scen in frontier_dict:
                             frontier_values = frontier_dict[scen]
                             x_values = np.arange(len(frontier_values))
@@ -2158,7 +2107,7 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
 
             for ctry in countries:
                 for yr in years_to_plot:
-                    frontier_dict = data_loader.get_frontier_data(main_scenario, yr, ctry)
+                    frontier_dict = data_loader.get_frontier_data(yr, ctry)
                     for scen in scenarios_to_plot:
                         if scen in frontier_dict:
                             frontier_values = frontier_dict[scen]
@@ -2196,14 +2145,14 @@ def create_deadzone_frontier_plot(comparison_type, main_scenario, year, scenario
 
             # Get all countries if 'all' is selected
             if isinstance(country, list) and 'all' in country:
-                spatial_countries = data_loader.get_frontier_countries(main_scenario, year_to_use)
+                spatial_countries = data_loader.get_frontier_countries(year_to_use)
             elif isinstance(country, list):
                 spatial_countries = [c for c in country if c != 'all']
             else:
-                spatial_countries = [country] if country != 'all' else data_loader.get_frontier_countries(main_scenario, year_to_use)
+                spatial_countries = [country] if country != 'all' else data_loader.get_frontier_countries(year_to_use)
 
             for ctry in spatial_countries:
-                frontier_dict = data_loader.get_frontier_data(main_scenario, year_to_use, ctry)
+                frontier_dict = data_loader.get_frontier_data(year_to_use, ctry)
                 if scenario_to_use in frontier_dict:
                     frontier_values = frontier_dict[scenario_to_use]
                     x_values = np.arange(len(frontier_values))

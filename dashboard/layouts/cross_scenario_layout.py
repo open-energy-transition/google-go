@@ -1,5 +1,5 @@
 """
-Layout for cross-scenario comparison (comparing sub-scenarios across main scenarios)
+Layout for cross-scenario comparison
 """
 import dash_bootstrap_components as dbc
 from dash import dcc, html
@@ -9,27 +9,11 @@ from utils.colors import format_scenario_name
 def create_cross_scenario_layout(data_loader):
     """Create layout for cross-scenario comparison tab"""
 
-    # Get data for all scenarios
-    scenarios_data = {
-        'CI_25': data_loader.get_summary_stats('CI_25'),
-        'CI_50': data_loader.get_summary_stats('CI_50'),
-        'CI_noadd': data_loader.get_summary_stats('CI_noadd')
-    }
-
-    # Get years and metrics (should be same across all scenarios)
-    years = scenarios_data['CI_25'].get('years', [])
-    metrics = scenarios_data['CI_25'].get('metrics', [])
-
-    # Build a map of subscenario -> main_scenario for later lookup
-    # And collect ALL unique sub-scenarios across all main scenarios
-    subscenario_to_main = {}
-    all_subscenarios = []
-
-    for main_scenario, stats in scenarios_data.items():
-        for subscenario in stats.get('scenarios', []):
-            if subscenario not in subscenario_to_main:
-                subscenario_to_main[subscenario] = main_scenario
-                all_subscenarios.append(subscenario)
+    # Get data from consolidated results
+    stats = data_loader.get_summary_stats()
+    years = stats.get('years', [])
+    metrics = stats.get('metrics', [])
+    all_subscenarios = stats.get('scenarios', [])
 
     # Create dropdown options with formatted names
     subscenario_options = [{'label': format_scenario_name(s), 'value': s} for s in all_subscenarios]
@@ -42,7 +26,7 @@ def create_cross_scenario_layout(data_loader):
 
     return dbc.Container([
         html.H2("Cross-Scenario Comparison", className="mb-4"),
-        html.P("Compare up to 4 sub-scenarios across different main scenarios"),
+        html.P("Compare up to 4 scenarios"),
 
         # Control panel
         dbc.Card([

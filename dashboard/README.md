@@ -1,14 +1,15 @@
 # Google-Go Analysis Dashboard
 
-Interactive dashboard for visualizing energy system results from CI_25, CI_50, and CI_noadd scenarios.
+Interactive dashboard for visualizing energy system results from all scenarios.
 
 ## Features
 
-- **Four Main Tabs:**
-  - **CI_25**: Visualize results from the CI_25 scenario (25% clean energy target)
-  - **CI_50**: Visualize results from the CI_50 scenario (50% clean energy target)
-  - **CI_noadd**: Visualize results from the CI_noadd scenario (no additionality)
-  - **Comparison**: Compare results across all three scenarios side-by-side
+- **Five Main Tabs:**
+  - **Single Scenario Analysis**: Visualize individual scenario results in detail
+  - **Cross-Scenario Comparison**: Compare up to 4 scenarios side-by-side
+  - **Dead Zone Analysis**: Frontier curve analysis across different spatial scopes
+  - **Timeseries Exploration**: Explore hourly timeseries data across scenarios
+  - **Key Insights**: View statistical analysis and strategic recommendations
 
 - **Interactive Controls:**
   - **Year selection**: Choose from 2025, 2030, 2035, 2040
@@ -59,33 +60,31 @@ Then open your browser to `http://localhost:8050`
 
 ## Data Structure
 
-The dashboard expects data in the following structure:
+The dashboard expects data in the following consolidated structure:
 
 ```
 results/
-├── colors.csv           # Color mappings for carriers
-├── CI_25/
-│   ├── results.csv      # Main results file
-│   └── results-*.csv    # Country-specific results (optional)
-├── CI_50/
-│   ├── results.csv
-│   └── results-*.csv
-└── CI_noadd/
-    ├── results.csv
-    └── results-*.csv
+├── colors.csv                    # Color mappings for carriers
+├── results.csv                   # Consolidated results for all scenarios
+├── results-*.csv                 # Country-specific results (optional)
+├── results_frontier.csv          # Frontier analysis data
+├── results_time_series.parquet   # Timeseries data (parquet format, preferred)
+└── results_time_series.csv       # Timeseries data (CSV fallback)
 ```
 
-### Results CSV Format
+### Consolidated Results CSV Format
 
-The results CSV files should have a **multi-level header structure**:
+The consolidated `results.csv` file should have a **multi-level header structure**:
 - **Level 0**: Year (2025, 2030, 2035, 2040)
 - **Level 1**: Scenario name (baseline, energy-match-25, hourly-match-25-90, etc.)
-- **Level 2**: Metadata (can be empty)
+- **Level 2**: Scope (system, country-specific)
 
 And a **multi-level index**:
 - **Level 0**: Result category (e.g., "(a) Energy mix", "(c) Capacity mix")
 - **Level 1**: Y-axis label (e.g., "Net generation (TWh)", "Capacity (GW)")
 - **Level 2**: Carrier (e.g., "solar", "onwind", "CCGT")
+
+All scenarios are now included in one file, eliminating the need for separate CI_25, CI_50, and CI_noadd directories.
 
 ### Colors CSV Format
 
@@ -106,23 +105,24 @@ Results,carrier,color
 
 ```
 dashboard/
-├── app.py                    # Main application file
-├── callbacks.py              # All callback functions and plot generation
-├── requirements.txt          # Python dependencies
-├── README.md                 # This file
-├── run_dashboard.sh          # Convenient run script
-├── layouts/                  # Tab layouts
+├── app.py                          # Main application file
+├── callbacks.py                    # All callback functions and plot generation
+├── requirements.txt                # Python dependencies
+├── README.md                       # This file
+├── run_dashboard.sh                # Convenient run script
+├── layouts/                        # Tab layouts
 │   ├── __init__.py
-│   ├── ci25_layout.py        # CI_25 tab layout
-│   ├── ci50_layout.py        # CI_50 tab layout
-│   ├── cinoadd_layout.py     # CI_noadd tab layout
-│   └── comparison_layout.py  # Comparison tab layout
-├── utils/                    # Utility modules
+│   ├── single_scenario_layout.py   # Single scenario analysis tab
+│   ├── cross_scenario_layout.py    # Cross-scenario comparison tab
+│   ├── deadzone_layout.py          # Dead zone/frontier analysis tab
+│   ├── timeseries_layout.py        # Timeseries exploration tab
+│   └── insights_layout.py          # Key insights tab (static)
+├── utils/                          # Utility modules
 │   ├── __init__.py
-│   ├── data_loader.py        # Data loading and filtering utilities
-│   └── colors.py             # Color mapping from colors.csv
-└── assets/                   # Static assets
-    └── custom.css            # Custom styling
+│   ├── data_loader.py              # Data loading and filtering utilities
+│   └── colors.py                   # Color mapping from colors.csv
+└── assets/                         # Static assets
+    └── custom.css                  # Custom styling
 ```
 
 ## How It Works

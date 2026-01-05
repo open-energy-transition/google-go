@@ -1,21 +1,18 @@
 """
-Layout for single scenario analysis (unified layout for CI_25, CI_50, CI_noadd)
+Layout for single scenario analysis
 """
 from dash import dcc, html
 import dash_bootstrap_components as dbc
-from utils.colors import format_scenario_name, format_main_scenario_name
+from utils.colors import format_scenario_name
 
 
 def create_layout(data_loader):
     """Create the single scenario analysis tab layout"""
 
-    # Get available data - use CI_25 as template for years and metrics
-    all_main_scenarios = ['CI_25', 'CI_50', 'CI_noadd']
-    stats = data_loader.get_summary_stats('CI_25')
+    # Get available data from consolidated results
+    stats = data_loader.get_summary_stats()
     years = stats.get('years', [])
     metrics = stats.get('metrics', [])
-
-    # Get scenarios for the first main scenario as default
     scenarios = stats.get('scenarios', [])
 
     return dbc.Container([
@@ -24,24 +21,7 @@ def create_layout(data_loader):
         # Control panel
         dbc.Card([
             dbc.CardBody([
-                # First row - Main scenario selector
-                dbc.Row([
-                    dbc.Col([
-                        html.Label("Main Scenario:", style={'fontWeight': 'bold', 'fontSize': '16px'}),
-                        dcc.Dropdown(
-                            id='single-main-scenario-selector',
-                            options=[
-                                {'label': format_main_scenario_name(s), 'value': s}
-                                for s in all_main_scenarios
-                            ],
-                            value='CI_25',
-                            clearable=False,
-                            style={'fontSize': '14px'}
-                        )
-                    ], width=12),
-                ], className="mb-3"),
-
-                # Second row - Other selectors
+                # Selectors
                 dbc.Row([
                     # Year selector
                     dbc.Col([
@@ -54,9 +34,9 @@ def create_layout(data_loader):
                         )
                     ], width=2),
 
-                    # Sub-scenario selector
+                    # Scenario selector
                     dbc.Col([
-                        html.Label("Sub-Scenario:", style={'fontWeight': 'bold'}),
+                        html.Label("Scenario:", style={'fontWeight': 'bold'}),
                         dcc.Dropdown(
                             id='single-scenario-selector',
                             options=[{'label': format_scenario_name(s), 'value': s} for s in scenarios],
