@@ -2,297 +2,9 @@
 
 ## Overview
 
-The Google-Go Interactive Dashboard is a web-based visualization tool built with Python Dash for exploring energy system modeling results. It provides an intuitive interface to analyze multiple scenarios, compare results across different policy configurations, and explore both aggregated metrics and detailed hourly timeseries data.
+The Google-Go Interactive Dashboard is a web-based visualization tool for exploring energy system modeling results. It provides an intuitive interface to analyze multiple scenarios, compare results across different policy configurations, and explore both aggregated metrics and detailed hourly timeseries data.
 
-The dashboard is designed to handle large-scale energy system analysis results with millions of data points, providing fast, interactive visualizations with intelligent caching and data management.
-
----
-
-## Key Features
-
-The dashboard provides five main analysis tabs:
-
-### 1. **Single Scenario Analysis**
-- Visualize individual scenario results in detail
-- Multiple plot types: bar charts, stacked bars, area charts, pie charts
-- Year-over-year evolution tracking
-- Carrier-level filtering and analysis
-
-### 2. **Cross-Scenario Comparison**
-- Compare up to 4 scenarios side-by-side
-- Side-by-side bar charts with scenario grouping
-- Year-over-year evolution comparisons
-- Summary statistics and difference analysis
-
-### 3. **Dead Zone Analysis**
-- Frontier curve visualization across spatial scopes
-- Compare cost-effectiveness frontiers
-- Multi-year and multi-scenario frontier analysis
-- Country-level dead zone identification
-
-### 4. **Timeseries Exploration**
-- Explore hourly timeseries data (8,760 hours/year)
-- Interactive time range selection (week, month, full year)
-- Multi-scenario overlay comparisons
-- Carrier-level filtering for detailed analysis
-
-### 5. **Key Insights**
-- Statistical analysis findings (12 critical insights)
-- Strategic recommendations for energy procurement
-- Regional analysis and policy implications
-- Interactive summary cards with detailed explanations
-
----
-
-## Technical Architecture
-
-### Technology Stack
-
-**Core Framework:**
-- **Dash (Plotly)**: Web application framework for Python
-- **Plotly**: Interactive visualization library
-- **Dash Bootstrap Components**: UI component library
-
-**Data Processing:**
-- **Pandas**: Data manipulation and analysis
-- **NumPy**: Numerical computing
-- **Parquet/CSV**: Data storage formats
-
-**Deployment:**
-- **Flask**: WSGI web server (built into Dash)
-- **Gunicorn**: Production WSGI server (optional)
-
-### Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Browser (User Interface)                 │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
-│  │ Tab 1    │ │ Tab 2    │ │ Tab 3    │ │ Tab 4    │ ...  │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
-└────────────────────────┬────────────────────────────────────┘
-                         │ HTTP/WebSocket
-┌────────────────────────┴────────────────────────────────────┐
-│                   Dash Application (app.py)                  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              Callback Management Layer                │  │
-│  │  • User input handlers                                │  │
-│  │  • Plot generation                                    │  │
-│  │  • Data filtering                                     │  │
-│  └────────┬─────────────────────────────────────┬────────┘  │
-└───────────┼─────────────────────────────────────┼───────────┘
-            │                                     │
-┌───────────┴───────────┐           ┌────────────┴────────────┐
-│   Layout Components   │           │   Utility Modules       │
-│   (layouts/)          │           │   (utils/)              │
-│                       │           │                         │
-│ • single_scenario     │           │ • DataLoader            │
-│ • cross_scenario      │           │   - CSV/Parquet I/O    │
-│ • deadzone            │           │   - Caching            │
-│ • timeseries          │           │   - Data filtering     │
-│ • insights            │           │                         │
-└───────────────────────┘           │ • ColorMapper           │
-                                    │   - Carrier colors     │
-                                    │   - Consistent themes  │
-                                    └────────┬────────────────┘
-                                             │
-┌────────────────────────────────────────────┴────────────────┐
-│                    Data Layer (results/)                     │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  results.csv (Consolidated)                           │  │
-│  │  • Multi-level headers (year, scenario, scope)        │  │
-│  │  • Multi-level index (metric, y-label, carrier)       │  │
-│  │  • ~145 rows × ~400 columns                           │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  results_frontier.csv                                 │  │
-│  │  • Frontier analysis data                             │  │
-│  │  • Multiple scenarios, years, countries               │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  results_time_series.parquet                          │  │
-│  │  • Hourly data (8,760 hours/year)                     │  │
-│  │  • ~millions of data points                           │  │
-│  │  • Chunked loading with caching                       │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  colors.csv                                           │  │
-│  │  • Carrier color mappings                             │  │
-│  │  • Ensures visual consistency                         │  │
-│  └──────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Data Flow
-
-1. **Startup**: `DataLoader` loads all consolidated results into memory
-2. **User Selection**: User selects year, scenario, metric via dropdowns
-3. **Callback Trigger**: Dash detects input changes and fires registered callbacks
-4. **Data Filtering**: `DataLoader` filters data based on user selections
-5. **Plot Generation**: Callback creates Plotly figure with filtered data
-6. **Color Mapping**: `ColorMapper` applies consistent colors to carriers
-7. **Rendering**: Plotly renders interactive visualization in browser
-
-### File Structure
-
-```
-dashboard/
-├── app.py                          # Main application entry point
-├── callbacks.py                    # All callback functions (17 callbacks)
-├── layouts/                        # Tab-specific layouts
-│   ├── __init__.py
-│   ├── single_scenario_layout.py   # Single scenario analysis
-│   ├── cross_scenario_layout.py    # Multi-scenario comparison
-│   ├── deadzone_layout.py          # Frontier analysis
-│   ├── timeseries_layout.py        # Hourly timeseries
-│   └── insights_layout.py          # Statistical insights (static)
-├── utils/                          # Utility modules
-│   ├── __init__.py
-│   ├── data_loader.py              # Data loading and caching
-│   └── colors.py                   # Color mapping utilities
-└── assets/                         # Static assets (CSS, images)
-    └── custom.css                  # Custom styling
-```
-
----
-
-## Data Structure
-
-### Consolidated Results Format
-
-The dashboard uses a consolidated data structure where all scenarios are stored in a single file, eliminating redundancy and simplifying data management.
-
-#### results.csv
-
-**Multi-level column headers:**
-```
-Level 0: year          | 2025              | 2025              | 2030 ...
-Level 1: scenario      | baseline          | energy-match-25   | baseline ...
-Level 2: scope         | system            | system            | system ...
-```
-
-**Multi-level row index:**
-```
-Level 0: Results       | (a) Energy mix    | (a) Energy mix    | (b) Capacity ...
-Level 1: y_label       | Net generation... | Net generation... | Capacity ...
-Level 2: carrier       | solar             | onwind            | solar ...
-```
-
-**Example data snippet:**
-```csv
-year,,,2025,2025,2025,2030,2030,2030
-scenario,,,baseline,energy-match-25,hourly-match-25-90,baseline,energy-match-25,hourly-match-25-90
-scope,,,system,system,system,system,system,system
-Results,y_label,carrier,,,,,,,
-(a) Energy mix,Net generation (TWh),solar,245.3,267.8,289.1,312.5,345.7,378.2
-(a) Energy mix,Net generation (TWh),onwind,456.2,478.9,501.3,534.8,567.1,599.4
-(a) Energy mix,Net generation (TWh),CCGT,151.1,119.3,48.4,104.5,31.7,14.9
-```
-
-**Key characteristics:**
-- **Dimensions**: ~145 rows × ~400 columns
-- **Scenarios**: All policy scenarios in one file
-- **Years**: 2025, 2030, 2035, 2040
-- **Metrics**: 13+ categories (energy mix, capacity, costs, emissions, etc.)
-- **Carriers**: 15-20 energy carriers (solar, wind, gas, hydrogen, etc.)
-
-#### results_frontier.csv
-
-Stores frontier analysis data for dead zone visualization:
-
-**Structure:**
-```
-Row 0: Years (metadata)
-Row 1: Countries (metadata)
-Row 2+: Frontier points (matching percentages and costs)
-Columns: scenario | year | country triplets
-```
-
-**Use case:** Identifying cost-effectiveness frontiers and "dead zones" where policies become prohibitively expensive.
-
-#### results_time_series.parquet
-
-**Format**: Parquet (compressed columnar format) or CSV fallback
-
-**Structure:**
-- **Multi-index**: scenario, year, Results, y_label, country, type, carrier
-- **Columns**: 8,760 hourly timestamps (full year)
-- **Size**: ~50-100MB compressed, ~500MB-1GB uncompressed
-
-**Performance optimizations:**
-- Parquet format provides 10-20x faster loading than CSV
-- Chunked reading for memory efficiency
-- Intelligent caching (50 most recent queries)
-- Multi-index for fast filtering
-
-**Example query:**
-```python
-# Load electricity balance for baseline scenario, 2035, EU, summer week
-data = data_loader.load_timeseries_data(
-    year=2035,
-    scenarios=['baseline'],
-    ts_type='Electricity Balance',
-    country='EU',
-    carriers=['solar', 'onwind', 'battery_discharge'],
-    time_range='week_summer'
-)
-```
-
-#### colors.csv
-
-Maps energy carriers to consistent colors across all visualizations:
-
-```csv
-Results,carrier,color
-(a) Energy mix,solar,#f9d002
-(a) Energy mix,onwind,#235ebc
-(a) Energy mix,offwind-ac,#6895dd
-(a) Energy mix,offwind-dc,#74c6f2
-(a) Energy mix,CCGT,#a85522
-(a) Energy mix,hydrogen,#ea048a
-(a) Energy mix,battery_discharge,#b474de
-```
-
----
-
-## Available Scenarios
-
-The consolidated dataset includes all policy scenarios:
-
-### Baseline
-- **baseline**: Base case without policy constraints
-
-### Energy Matching
-- **energy-match-25**: 25% annual energy matching
-- **energy-match-50**: 50% annual energy matching
-
-### Hourly Matching (25% additionality)
-- **hourly-match-25-90**: 25% additionality, 90% hourly matching
-- **hourly-match-25-95**: 25% additionality, 95% hourly matching
-- **hourly-match-25-98**: 25% additionality, 98% hourly matching
-- **hourly-match-25-99**: 25% additionality, 99% hourly matching
-
-### Hourly Matching (50% additionality)
-- **hourly-match-50-90**: 50% additionality, 90% hourly matching
-- **hourly-match-50-95**: 50% additionality, 95% hourly matching
-- **hourly-match-50-98**: 50% additionality, 98% hourly matching
-- **hourly-match-50-99**: 50% additionality, 99% hourly matching
-
-### No Additionality
-- **hourly-match-noadd-10-99**: No additionality requirement, 10% target, 99% hourly
-- **hourly-match-noadd-50-99**: No additionality requirement, 50% target, 99% hourly
-- **hourly-match-noadd-90-99**: No additionality requirement, 90% target, 99% hourly
-
-### Policy Variants
-- **baseline-co2-price25**: Baseline with €25/ton CO2 price
-- **no-LDES**: Scenarios without long-duration energy storage
-- **no-clean-firm**: Scenarios without clean firm capacity
-- **EU-25**: EU-wide coordination at 25% matching
-- **EU-50**: EU-wide coordination at 50% matching
+The dashboard handles large-scale energy system analysis results with millions of data points, providing fast, interactive visualizations with intelligent caching and data management.
 
 ---
 
@@ -303,18 +15,13 @@ The consolidated dataset includes all policy scenarios:
 **Python version**: 3.8+
 
 **Core dependencies:**
-```
-dash>=2.14.0
-dash-bootstrap-components>=1.5.0
-plotly>=5.17.0
-pandas>=2.0.0
-numpy>=1.24.0
-pyarrow>=12.0.0  # For parquet support
+```bash
+pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 ```
 
 ### Installation Steps
 
-1. **Clone or navigate to the repository:**
+1. **Navigate to the repository:**
 ```bash
 cd /path/to/google-go
 ```
@@ -361,11 +68,87 @@ gunicorn app:server -b 0.0.0.0:8050 --workers 4 --timeout 300
 
 ---
 
+## Data Structure
+
+The dashboard uses a consolidated data structure where all scenarios are stored in a single file.
+
+### Required Files
+
+```
+results/
+├── colors.csv                    # Color mappings for carriers
+├── results.csv                   # Consolidated results for all scenarios
+├── results-*.csv                 # Country-specific results (optional)
+├── results_frontier.csv          # Frontier analysis data
+├── results_time_series.parquet   # Timeseries data (parquet format, preferred)
+└── results_time_series.csv       # Timeseries data (CSV fallback)
+```
+
+### results.csv Format
+
+The consolidated `results.csv` file has a **multi-level header structure**:
+
+**Column headers:**
+```
+Level 0: year          | 2025              | 2025              | 2030 ...
+Level 1: scenario      | baseline          | energy-match-25   | baseline ...
+Level 2: scope         | system            | system            | system ...
+```
+
+**Row index:**
+```
+Level 0: Results       | (a) Energy mix    | (a) Energy mix    | (b) Capacity ...
+Level 1: y_label       | Net generation... | Net generation... | Capacity ...
+Level 2: carrier       | solar             | onwind            | solar ...
+```
+
+**Example data snippet:**
+```csv
+year,,,2025,2025,2025,2030,2030,2030
+scenario,,,baseline,energy-match-25,hourly-match-25-90,baseline,energy-match-25,hourly-match-25-90
+scope,,,system,system,system,system,system,system
+Results,y_label,carrier,,,,,,,
+(a) Energy mix,Net generation (TWh),solar,245.3,267.8,289.1,312.5,345.7,378.2
+(a) Energy mix,Net generation (TWh),onwind,456.2,478.9,501.3,534.8,567.1,599.4
+(a) Energy mix,Net generation (TWh),CCGT,151.1,119.3,48.4,104.5,31.7,14.9
+```
+
+**Key characteristics:**
+- **Dimensions**: ~145 rows × ~400 columns
+- **Years**: 2025, 2030, 2035, 2040
+- **Metrics**: 13+ categories (energy mix, capacity, costs, emissions, etc.)
+- **Carriers**: 15-20 energy carriers (solar, wind, gas, hydrogen, etc.)
+
+### colors.csv Format
+
+Maps energy carriers to consistent colors across all visualizations:
+
+```csv
+Results,carrier,color
+(a) Energy mix,solar,#f9d002
+(a) Energy mix,onwind,#235ebc
+(a) Energy mix,offwind-ac,#6895dd
+(a) Energy mix,offwind-dc,#74c6f2
+(a) Energy mix,CCGT,#a85522
+(a) Energy mix,hydrogen,#ea048a
+(a) Energy mix,battery_discharge,#b474de
+```
+
+---
+
 ## User Guide
+
+The dashboard provides five main analysis tabs for exploring energy system results.
 
 ### Tab 1: Single Scenario Analysis
 
-**Purpose**: Deep dive into a single scenario's results
+**Purpose**: Deep dive into a single scenario's results to understand detailed energy system characteristics.
+
+**What You Can Do:**
+- Visualize individual scenario results in detail
+- View multiple plot types: bar charts, stacked bars, area charts, pie charts
+- Track year-over-year evolution
+- Filter by specific energy carriers
 
 **Controls:**
 - **Year**: Select 2025, 2030, 2035, 2040, or "All"
@@ -373,13 +156,31 @@ gunicorn app:server -b 0.0.0.0:8050 --workers 4 --timeout 300
 - **Metric**: Select analysis category (energy mix, capacity, costs, etc.)
 - **Plot Type**: Choose visualization style
 
-**Plot Types:**
-1. **Bar Chart**: Vertical bars showing carrier breakdown
+**Available Plot Types:**
+
+1. **Bar Chart**: Vertical bars showing carrier breakdown for a specific year
+   - Best for: Quick overview of a single year
+   - Shows: Individual carrier contributions
+
 2. **Stacked Bar (All Years)**: Multi-year comparison in one chart
+   - Best for: Seeing how the mix evolves over time
+   - Shows: All years side-by-side with stacked carriers
+
 3. **Stacked Area**: Cumulative area chart over years
+   - Best for: Visualizing cumulative contributions
+   - Shows: Smooth evolution of carrier mix
+
 4. **Pie Chart**: Proportional breakdown
+   - Best for: Understanding relative proportions
+   - Shows: Percentage contribution of each carrier
+
 5. **Year Comparison**: Side-by-side bars for all years
+   - Best for: Comparing specific carriers across years
+   - Shows: How each carrier changes year-to-year
+
 6. **Year on Year Evolution**: Line chart showing trends
+   - Best for: Identifying growth/decline trends
+   - Shows: Line trajectories for each carrier
 
 **Example Workflow:**
 
@@ -397,23 +198,46 @@ gunicorn app:server -b 0.0.0.0:8050 --workers 4 --timeout 300
 - Click legend items to show/hide specific carriers
 - Hover over bars for exact values
 
+---
+
 ### Tab 2: Cross-Scenario Comparison
 
-**Purpose**: Compare up to 4 scenarios side-by-side
+**Purpose**: Compare up to 4 scenarios side-by-side to understand how different policies affect the energy system.
+
+**What You Can Do:**
+- Compare multiple scenarios simultaneously
+- View side-by-side bar charts with scenario grouping
+- Analyze year-over-year evolution across scenarios
+- Review summary statistics and differences
 
 **Controls:**
 - **Year**: Select specific year or "All"
 - **Metric**: Choose analysis category
 - **Plot Type**: Choose comparison style
 - **Group By**: Group by year or scenario
-- **Scenario 1-4**: Select up to 4 scenarios
+- **Scenario 1-4**: Select up to 4 scenarios to compare
 
-**Plot Types:**
-1. **Side-by-Side**: Grouped bar chart
+**Available Plot Types:**
+
+1. **Side-by-Side**: Grouped bar chart comparing scenarios
+   - Best for: Direct scenario comparisons
+   - Shows: Scenarios grouped for each carrier
+
 2. **Stacked Bar (All Years)**: Multi-year stacked comparison
+   - Best for: Seeing evolution across scenarios and years
+   - Shows: Stacked carriers for each scenario/year combination
+
 3. **Stacked Bar + Total Line**: Stacked bars with total overlay
-4. **Year Comparison**: Compare specific years
+   - Best for: Comparing totals while seeing composition
+   - Shows: Stacked bars with line showing total
+
+4. **Year Comparison**: Compare specific years across scenarios
+   - Best for: Year-specific analysis
+   - Shows: How scenarios differ in specific years
+
 5. **Year on Year Evolution**: Evolution lines for multiple scenarios
+   - Best for: Trend comparison
+   - Shows: Multiple scenario trajectories on one plot
 
 **Example Workflow:**
 
@@ -433,9 +257,17 @@ gunicorn app:server -b 0.0.0.0:8050 --workers 4 --timeout 300
 - Use "Group By: Scenario" to see scenario differences at each year
 - Summary statistics show total changes and percentages
 
+---
+
 ### Tab 3: Dead Zone Analysis
 
-**Purpose**: Visualize cost-effectiveness frontiers and identify dead zones
+**Purpose**: Visualize cost-effectiveness frontiers and identify "dead zones" where policies become prohibitively expensive.
+
+**What You Can Do:**
+- View frontier curves showing cost vs. clean energy matching
+- Identify tipping points where costs accelerate dramatically
+- Compare frontiers across multiple scenarios and countries
+- Analyze regional sensitivities to policy constraints
 
 **Controls:**
 - **Year**: Select specific year or "All"
@@ -443,9 +275,11 @@ gunicorn app:server -b 0.0.0.0:8050 --workers 4 --timeout 300
 - **Countries**: Select up to 5 countries (or "All")
 
 **What is a Dead Zone?**
+
 A "dead zone" is a region on the frontier where small increases in clean energy matching requirements lead to disproportionately large cost increases, indicating diminishing returns.
 
-**Frontier Curve Interpretation:**
+**How to Read Frontier Curves:**
+
 - **X-axis**: Clean energy matching percentage (0-100%)
 - **Y-axis**: Total system cost increase (%)
 - **Steep sections**: Dead zones (avoid these targets)
@@ -469,9 +303,17 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 - Country-level analysis reveals regional sensitivities
 - Look for "tipping points" where curves suddenly steepen
 
+---
+
 ### Tab 4: Timeseries Exploration
 
-**Purpose**: Explore hourly operational data (8,760 hours/year)
+**Purpose**: Explore hourly operational data (8,760 hours/year) to understand how the energy system operates in detail.
+
+**What You Can Do:**
+- Explore hourly timeseries data for the full year
+- Select specific time ranges (week, month, season)
+- Overlay multiple scenarios for comparison
+- Filter by specific energy carriers
 
 **Controls:**
 - **Year**: Select year to analyze
@@ -508,26 +350,58 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 - Look for correlation between demand, solar/wind, and storage
 - Winter weeks show system stress, summer weeks show surplus
 
+---
+
 ### Tab 5: Key Insights
 
-**Purpose**: View comprehensive statistical analysis and strategic recommendations
+**Purpose**: View comprehensive statistical analysis and strategic recommendations derived from 3,080 scenario runs.
 
-**Content:**
-- **Executive Summary**: 12 critical findings from 3,080 scenario runs
-- **Tipping Points**: Universal 10% barrier analysis
-- **LDES Criticality**: Statistical significance of long-duration storage
-- **Frontier Curve Analysis**: Cost elasticity rankings
-- **Robustness Paradox**: Stricter policies → more predictable outcomes
-- **Low-Dimensional Structure**: 3 factors explain 98.72% of variation
-- **Temporal Patterns**: Seasonal and hourly dynamics
-- **Deep-Dive Findings**: Regional extremes, non-linear costs, scenario divergence
-- **Strategic Recommendations**: Data-driven procurement strategies
-- **Policy Recommendations**: Cost-effectiveness rankings
+**What You'll Find:**
+
+**Executive Summary**: 12 critical findings including:
+- Universal 10% tipping point analysis
+- LDES (Long-Duration Energy Storage) criticality
+- EU frontier anomaly
+- Regional extremes (25x variation)
+- Non-linear cost patterns
+
+**Key Sections:**
+
+1. **Critical Tipping Points**
+   - The universal 10% barrier
+   - Cost acceleration patterns
+   - Technology-specific thresholds
+
+2. **LDES Criticality**
+   - Statistical significance (p<0.001)
+   - Cost impact (+4.24% without LDES)
+   - System feasibility analysis
+
+3. **Frontier Curve Analysis**
+   - Cost elasticity rankings
+   - Maximum acceleration points
+   - Scenario-specific patterns
+
+4. **Robustness Paradox**
+   - Stricter policies → more predictable outcomes
+   - Variability analysis across scenarios
+   - Planning uncertainty implications
+
+5. **Regional Analysis**
+   - Country-specific sensitivities
+   - 25x variation (Luxembourg +25%, Czechia -7.3%)
+   - Recommended focus countries
+
+6. **Strategic Recommendations**
+   - Data-driven procurement strategies
+   - Optimal matching percentages (40-50%)
+   - Technology investment priorities
+   - Policy effectiveness rankings
 
 **Key Findings Highlight:**
 
 1. **10% Tipping Point**: All scenarios show dramatic cost acceleration at 10% hourly matching threshold
-2. **LDES Non-Negotiable**: +4.24% cost without it, p<0.001 significance
+2. **LDES Non-Negotiable**: +4.24% cost without it, statistically significant (p<0.001)
 3. **EU Frontier Anomaly**: EU scenarios accelerate at 2% vs 97-117% for national scenarios
 4. **Increasing Returns**: 46% cheaper per percentage point at 25-50% matching vs 0-25%
 5. **Regional Extremes**: 25x variation - Luxembourg +25%, Czechia -7.3%
@@ -540,11 +414,68 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 
 ---
 
-## Customization Guide
+## Scenario Configuration
+
+### Baseline
+- **baseline**: Base case without policy constraints
+- **baseline-co2-price25**: Baseline with €25/ton CO2 price
+
+### Energy Matching
+- **energy-match-25**: 25% annual energy matching
+- **energy-match-50**: 50% annual energy matching
+
+### Hourly Matching (25% additionality)
+- **hourly-match-25-90**: 25% additionality, 90% hourly matching
+- **hourly-match-25-95**: 25% additionality, 95% hourly matching
+- **hourly-match-25-98**: 25% additionality, 98% hourly matching
+- **hourly-match-25-99**: 25% additionality, 99% hourly matching
+
+### Hourly Matching (50% additionality)
+- **hourly-match-50-90**: 50% additionality, 90% hourly matching
+- **hourly-match-50-95**: 50% additionality, 95% hourly matching
+- **hourly-match-50-98**: 50% additionality, 98% hourly matching
+- **hourly-match-50-99**: 50% additionality, 99% hourly matching
+
+### No Additionality
+- **hourly-match-noadd-10-99**: No additionality requirement, 10% target, 99% hourly
+- **hourly-match-noadd-50-99**: No additionality requirement, 50% target, 99% hourly
+- **hourly-match-noadd-90-99**: No additionality requirement, 90% target, 99% hourly
+
+### Policy Variants
+- **no-LDES**: Scenarios without long-duration energy storage
+- **no-clean-firm**: Scenarios without clean firm capacity
+- **EU-25**: EU-wide coordination at 25% matching
+- **EU-50**: EU-wide coordination at 50% matching
+
+### Understanding Scenario Names
+
+**Format**: `[type]-[additionality]-[matching]`
+
+**Examples:**
+- `energy-match-25` = Energy matching with 25% additionality
+- `hourly-match-50-99` = Hourly matching with 50% additionality at 99% matching level
+- `hourly-match-noadd-50-99` = Hourly matching with NO additionality, 50% target, 99% matching
+
+**Key Parameters:**
+
+**Additionality Level:**
+- `25` = 25% of clean energy must be new/additional
+- `50` = 50% of clean energy must be new/additional
+- `noadd` = No additionality requirement (can use existing clean energy)
+
+**Matching Level:**
+- `90` = 90% hourly matching requirement
+- `95` = 95% hourly matching requirement
+- `98` = 98% hourly matching requirement
+- `99` = 99% hourly matching requirement
+
+---
+
+## Customization
 
 ### Changing Analyzed Scenarios
 
-The dashboard automatically detects all scenarios present in `results.csv`. To add or remove scenarios:
+The dashboard automatically detects all scenarios in `results.csv`. To add or remove scenarios:
 
 1. **Modify results.csv**:
    - Add new columns with format: `year | scenario | scope`
@@ -561,7 +492,7 @@ The dashboard automatically detects all scenarios present in `results.csv`. To a
 
 ### Adding Custom Metrics
 
-To add new metrics to analysis:
+To add new metrics:
 
 1. **Add data to results.csv**:
    ```csv
@@ -590,97 +521,13 @@ Results,carrier,color
 
 **Apply changes**: Restart dashboard
 
-### Modifying Plot Types
-
-To add new visualizations, edit `dashboard/callbacks.py`:
-
-```python
-def create_plot(data, metric, plot_type, color_mapper):
-    if plot_type == 'my_custom_plot':
-        fig = go.Figure()
-        # Add your custom plot logic
-        for carrier in data.index:
-            fig.add_trace(go.Scatter(
-                x=years,
-                y=data.loc[carrier],
-                name=carrier,
-                marker=dict(color=color_mapper.get_color(metric, carrier))
-            ))
-        return fig
-```
-
-Then add to dropdown in `layouts/single_scenario_layout.py`:
-
-```python
-options=[
-    {'label': 'Bar Chart', 'value': 'bar'},
-    {'label': 'My Custom Plot', 'value': 'my_custom_plot'},
-    # ...
-]
-```
-
-### Adjusting Data Caching
-
-Edit `dashboard/utils/data_loader.py`:
-
-```python
-# Change cache size (default: 50 entries)
-if len(self.timeseries_cache) > 100:  # Increase to 100
-    self.timeseries_cache.pop(next(iter(self.timeseries_cache)))
-```
-
-**Trade-off**: Larger cache → more memory usage, faster repeated queries
-
----
-
-## Performance Optimization
-
-### Memory Management
-
-**Typical memory usage:**
-- Dashboard base: ~100-200 MB
-- Consolidated results: ~50-100 MB
-- Frontier data: ~10-20 MB
-- Timeseries cache: ~500 MB (50 queries)
-- **Total**: ~1-2 GB for typical usage
-
-**For large datasets:**
-1. Use Parquet format (10-20x compression vs CSV)
-2. Limit timeseries cache size
-3. Use time range filtering instead of loading full year
-4. Deploy with adequate RAM (4GB+ recommended)
-
-### Loading Speed
-
-**Startup time:**
-- Consolidated results.csv: ~1-2 seconds
-- Frontier data: ~0.5 seconds
-- Timeseries metadata: ~5-10 seconds (parquet), ~30-60 seconds (CSV)
-
-**Query response time:**
-- Aggregated plots: ~0.1-0.5 seconds
-- Timeseries plots (cached): ~0.2-0.5 seconds
-- Timeseries plots (uncached): ~2-10 seconds (parquet), ~10-30 seconds (CSV)
-
-**Optimization recommendations:**
-1. **Convert timeseries to Parquet**:
-   ```python
-   import pandas as pd
-   df = pd.read_csv('results_time_series.csv')
-   df.to_parquet('results_time_series.parquet', compression='snappy')
-   ```
-
-2. **Increase cache size** for repeated queries
-3. **Use shorter time ranges** for exploratory analysis
-4. **Deploy with SSD** for faster I/O
-
 ---
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### 1. Dashboard won't start
+#### Dashboard won't start
 
 **Error**: `ModuleNotFoundError: No module named 'dash'`
 
@@ -689,7 +536,7 @@ if len(self.timeseries_cache) > 100:  # Increase to 100
 pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 ```
 
-#### 2. No data showing
+#### No data showing
 
 **Error**: Blank plots or "No data available"
 
@@ -704,7 +551,7 @@ pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 3. Verify multi-level headers are correct
 4. Check dashboard logs for specific errors
 
-#### 3. Timeseries loading very slow
+#### Timeseries loading very slow
 
 **Issue**: Timeseries queries take 30+ seconds
 
@@ -721,7 +568,7 @@ pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
    ```
 3. Restart dashboard
 
-#### 4. Colors not matching
+#### Colors not matching
 
 **Issue**: Carriers show default colors instead of custom colors
 
@@ -735,7 +582,7 @@ pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 2. Check carrier name spelling (case-sensitive)
 3. Ensure format: `Results,carrier,color`
 
-#### 5. Port already in use
+#### Port already in use
 
 **Error**: `OSError: [Errno 98] Address already in use`
 
@@ -749,108 +596,16 @@ lsof -ti:8050 | xargs kill -9
 app.run_server(debug=True, host='0.0.0.0', port=8051)
 ```
 
-#### 6. Memory errors
+#### Memory errors
 
 **Error**: `MemoryError` or dashboard crashes
 
 **Cause**: Insufficient RAM for large datasets
 
 **Solutions**:
-1. Reduce timeseries cache size (edit `data_loader.py`)
+1. Use Parquet format for timeseries (better compression)
 2. Use time range filtering instead of full year
 3. Deploy on machine with more RAM (4GB+ recommended)
-4. Use Parquet format for better compression
-
----
-
-## Advanced Topics
-
-### Callback Architecture
-
-The dashboard uses Dash's callback system for interactivity:
-
-```python
-@app.callback(
-    Output('plot-id', 'figure'),      # What to update
-    [Input('dropdown-id', 'value')]   # What triggers the update
-)
-def update_plot(selected_value):
-    # Filter data based on input
-    data = data_loader.get_data(selected_value)
-    # Generate plot
-    fig = create_plot(data)
-    return fig
-```
-
-**17 callbacks** handle all dashboard interactivity:
-- 5 for Single Scenario Analysis
-- 1 for Cross-Scenario Comparison
-- 3 for Dead Zone Analysis
-- 5 for Timeseries Exploration
-- 3 for dynamic dropdown population
-
-### Multi-Index Data Handling
-
-Pandas MultiIndex is used extensively for efficient data organization:
-
-```python
-# Column MultiIndex
-columns = pd.MultiIndex.from_tuples([
-    (2025, 'baseline', 'system'),
-    (2025, 'energy-match-25', 'system'),
-    # ...
-], names=['year', 'scenario', 'scope'])
-
-# Row MultiIndex
-index = pd.MultiIndex.from_tuples([
-    ('(a) Energy mix', 'Net generation (TWh)', 'solar'),
-    ('(a) Energy mix', 'Net generation (TWh)', 'onwind'),
-    # ...
-], names=['Results', 'y_label', 'carrier'])
-
-# Fast filtering with IndexSlice
-idx = pd.IndexSlice
-data = df.loc[idx['(a) Energy mix', :, :], idx[2025, 'baseline', :]]
-```
-
-### Adding New Tabs
-
-To add a new analysis tab:
-
-1. **Create layout** in `layouts/my_new_tab.py`:
-```python
-def create_my_tab_layout(data_loader):
-    return dbc.Container([
-        html.H3("My New Analysis"),
-        dcc.Graph(id='my-plot'),
-        # Add controls...
-    ])
-```
-
-2. **Register in app.py**:
-```python
-from layouts import my_new_tab
-
-# Add tab
-dcc.Tab(label='My Analysis', value='my-tab')
-
-# Add layout
-html.Div(my_new_tab.create_my_tab_layout(data_loader),
-         id='my-content', style={'display': 'none'})
-```
-
-3. **Add callback** in `callbacks.py`:
-```python
-@app.callback(
-    Output('my-plot', 'figure'),
-    [Input('my-selector', 'value')]
-)
-def update_my_plot(value):
-    # Your plot logic
-    return fig
-```
-
-4. **Update tab visibility** callback in `app.py`
 
 ---
 
@@ -866,10 +621,10 @@ def update_my_plot(value):
 
 ### Performance Tips
 
-1. **Use Parquet format** for timeseries data (10-20x faster)
+1. **Use Parquet format** for timeseries data (10-20x faster than CSV)
 2. **Start with smaller time ranges** (week/month) before loading full year
 3. **Use caching** - repeated queries are instant
-4. **Limit scenarios** in multi-scenario comparisons (max 4)
+4. **Limit scenarios** in multi-scenario comparisons (max 4 recommended)
 5. **Close unused browser tabs** to free memory
 
 ### Presentation Tips
@@ -877,129 +632,25 @@ def update_my_plot(value):
 1. **Use consistent plot types** across related analyses
 2. **Include baseline** in comparisons for reference
 3. **Use "Year on Year Evolution"** to show trends clearly
-4. **Export plots** via browser's screenshot or save feature
-5. **Cite specific insights** from Key Insights tab
+4. **Export plots** via browser's screenshot or Plotly's built-in save feature
+5. **Cite specific insights** from Key Insights tab in presentations
 
 ---
 
-## API Reference
+## Browser Compatibility
 
-### DataLoader Class
-
-**Location**: `dashboard/utils/data_loader.py`
-
-**Methods:**
-
-```python
-# Load all data at startup
-data_loader.load_all_data()
-
-# Get summary statistics
-stats = data_loader.get_summary_stats()
-# Returns: {'years': [...], 'scenarios': [...], 'metrics': [...]}
-
-# Get filtered data
-data = data_loader.get_data(
-    year=2035,              # int or None
-    scenario_name='baseline',  # str or None
-    metric='(a) Energy mix'     # str or None
-)
-
-# Get carriers for a metric
-carriers = data_loader.get_carriers_for_metric('(a) Energy mix')
-
-# Get frontier data
-frontier = data_loader.get_frontier_data(
-    year=2035,
-    country='EU'
-)
-
-# Get frontier countries
-countries = data_loader.get_frontier_countries(year=2035)
-
-# Get timeseries metadata
-metadata = data_loader.get_timeseries_metadata()
-
-# Load timeseries data
-data, timestamps = data_loader.load_timeseries_data(
-    year=2035,
-    scenarios=['baseline', 'energy-match-25'],
-    ts_type='Electricity Balance',
-    country='EU',
-    carriers=['solar', 'onwind'],
-    time_range='week_winter'
-)
-```
-
-### ColorMapper Class
-
-**Location**: `dashboard/utils/colors.py`
-
-**Methods:**
-
-```python
-# Initialize with colors.csv
-color_mapper = ColorMapper('../results/colors.csv')
-
-# Get color for carrier in metric
-color = color_mapper.get_color('(a) Energy mix', 'solar')
-
-# Get all colors for a metric
-colors = color_mapper.get_colors_for_metric('(a) Energy mix')
-
-# Format scenario names for display
-display_name = format_scenario_name('hourly-match-50-90')
-# Returns: "Hourly 90% (CI 50%)"
-```
-
----
-
-## Contributing
-
-### Code Style
-
-- Follow PEP 8 style guidelines
-- Use descriptive variable names
-- Add docstrings to all functions
-- Comment complex logic
-
-### Testing Changes
-
-1. Test with full dataset
-2. Verify all tabs load correctly
-3. Check all dropdown combinations
-4. Test edge cases (empty data, single year, etc.)
-5. Verify timeseries loading with both Parquet and CSV
-
-### Submitting Updates
-
-1. Document all changes
-2. Update this guide if adding features
-3. Test on clean Python environment
-4. Ensure backward compatibility
-
----
-
-## Further Resources
-
-- **Dash Documentation**: https://dash.plotly.com/
-- **Plotly Python**: https://plotly.com/python/
-- **Pandas MultiIndex**: https://pandas.pydata.org/docs/user_guide/advanced.html
-- **Parquet Format**: https://parquet.apache.org/
-
----
-
-## Version History
-
-- **v1.0** (Dec 2024): Initial release with separate CI_25/CI_50/CI_noadd files
-- **v2.0** (Jan 2025): Consolidated data structure, added Key Insights tab, improved performance
-- **Current**: v2.0
+Tested and working on:
+- Chrome 90+
+- Firefox 85+
+- Safari 14+
+- Edge 90+
 
 ---
 
 ## Support
 
 For questions, issues, or feature requests:
+
 1. Check this guide's Troubleshooting section
 2. Review dashboard logs for error messages
 3. Verify data structure matches expected format
