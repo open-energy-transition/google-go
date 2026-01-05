@@ -1100,7 +1100,7 @@ def create_year_on_year_evolution_plot(scenario_name, metric, carriers, data_loa
             ))
 
         fig.update_layout(
-            title=f"Year on Year Evolution: {metric}<br><sub>{format_main_scenario_name(scenario)} - {format_scenario_name(scenario_name)}</sub>",
+            title=f"Year on Year Evolution: {metric}<br><sub>{format_scenario_name(scenario_name)}</sub>",
             xaxis_title="Year",
             yaxis_title="Value",
             template="plotly_white",
@@ -1250,7 +1250,7 @@ def create_cross_difference_plot(year, metric, subscenario1, subscenario2, data_
         year_label = f"Year {display_year}" if year == 'all' else display_year
 
         fig.update_layout(
-            title=f"Difference: {format_scenario_name(subscenario2)} - {format_scenario_name(subscenario1)}<br><sub>{format_main_scenario_name(main_scenario)}: {metric} ({year_label})</sub>",
+            title=f"Difference: {format_scenario_name(subscenario2)} - {format_scenario_name(subscenario1)}<br><sub>{metric} ({year_label})</sub>",
             xaxis_title="Carrier",
             yaxis_title="Difference (Positive = Higher in Scenario 2)",
             template="plotly_white",
