@@ -65,6 +65,7 @@ from scripts._helpers import (
     PYPSA_V1,
     configure_logging,
     get_snapshots,
+    load_costs,
     rename_techs,
     set_scenario_config,
     update_p_nom_max,
@@ -259,150 +260,6 @@ def add_co2_emissions(n, costs, carriers):
     n.carriers.loc[carriers, "co2_emissions"] = costs.loc[
         suptechs, "CO2 intensity"
     ].values
-
-
-def load_costs(
-    cost_file: str, config: dict, max_hours: dict = None, nyears: float = 1.0
-) -> pd.DataFrame:
-    """
-    Load cost data from CSV and prepare it.
-
-    Parameters
-    ----------
-    cost_file : str
-        Path to the CSV file containing cost data
-    config : dict
-        Dictionary containing cost-related configuration parameters
-    max_hours : dict, optional
-        Dictionary specifying maximum hours for storage technologies
-    nyears : float, optional
-        Number of years for investment, by default 1.0
-
-    Returns
-    -------
-    costs : pd.DataFrame
-        DataFrame containing the processed cost data
-    """
-    # Copy marginal_cost and capital_cost for backward compatibility
-    for key in ("marginal_cost", "capital_cost"):
-        if key in config:
-            config["overwrites"][key] = config[key]
-
-    # set all asset costs and other parameters
-    costs = pd.read_csv(cost_file, index_col=[0, 1]).sort_index()
-
-    # correct units to MW and EUR
-    costs.loc[costs.unit.str.contains("/kW"), "value"] *= 1e3
-    costs.loc[costs.unit.str.contains("/GW"), "value"] /= 1e3
-
-    costs.unit = costs.unit.str.replace("/kW", "/MW")
-    costs.unit = costs.unit.str.replace("/GW", "/MW")
-
-    # min_count=1 is important to generate NaNs which are then filled by fillna
-    costs = costs.value.unstack(level=1).groupby("technology").sum(min_count=1)
-    costs = costs.fillna(config["fill_values"])
-
-    # Process overwrites for various attributes
-    for attr in (
-        "investment",
-        "lifetime",
-        "FOM",
-        "VOM",
-        "efficiency",
-        "fuel",
-        "standing losses",
-    ):
-        overwrites = config["overwrites"].get(attr)
-        if overwrites is not None:
-            overwrites = pd.Series(overwrites)
-            
-            new_idx = overwrites.index.difference(costs.index)
-            if not new_idx.empty:
-                new_rows = pd.DataFrame(index=new_idx, columns=costs.columns)
-                new_rows = new_rows.fillna(np.nan)
-                costs = pd.concat([costs, new_rows])
-
-            costs.loc[overwrites.index, attr] = overwrites
-            logger.info(f"Overwriting {attr} with:\n{overwrites}")
-
-    annuity_factor = calculate_annuity(costs["lifetime"], costs["discount rate"])
-    annuity_factor_fom = annuity_factor + costs["FOM"] / 100.0
-    costs["capital_cost"] = annuity_factor_fom * costs["investment"] * nyears
-
-    costs.at["OCGT", "fuel"] = costs.at["gas", "fuel"]
-    costs.at["CCGT", "fuel"] = costs.at["gas", "fuel"]
-
-    costs["marginal_cost"] = costs["VOM"] + costs["fuel"] / costs["efficiency"]
-
-    costs.at["OCGT", "CO2 intensity"] = costs.at["gas", "CO2 intensity"]
-    costs.at["CCGT", "CO2 intensity"] = costs.at["gas", "CO2 intensity"]
-
-    costs.at["solar", "capital_cost"] = costs.at["solar-utility", "capital_cost"]
-    costs = costs.rename({"solar-utility single-axis tracking": "solar-hsat"})
-
-    costs = costs.rename(columns={"standing losses": "standing_losses"})
-
-    # Calculate storage costs if max_hours is provided
-    if max_hours is not None:
-
-        def costs_for_storage(store, link1=None, link2=None, max_hours=1.0):
-            capital_cost = max_hours * store["capital_cost"]
-            if link1 is not None:
-                capital_cost += link1["capital_cost"]
-            if link2 is not None:
-                capital_cost += link2["capital_cost"]
-            return pd.Series(
-                {
-                    "capital_cost": capital_cost,
-                    "marginal_cost": 0.0,
-                    "CO2 intensity": 0.0,
-                    "standing_losses": 0.0,
-                }
-            )
-
-        costs_i = costs.index
-        for k, v in max_hours.items():
-            tech = STORE_LOOKUP[k]
-            store = tech.get("store") if tech.get("store") in costs_i else None
-            bicharger = (
-                tech.get("bicharger") if tech.get("bicharger") in costs_i else None
-            )
-            charger = tech.get("charger") if tech.get("charger") in costs_i else None
-            discharger = (
-                tech.get("discharger") if tech.get("discharger") in costs_i else None
-            )
-            if bicharger:
-                costs.loc[k] = costs_for_storage(
-                    costs.loc[store],
-                    costs.loc[bicharger],
-                    max_hours=v,
-                )
-            elif store:
-                costs.loc[k] = costs_for_storage(
-                    costs.loc[store],
-                    costs.loc[charger] if charger else None,
-                    costs.loc[discharger] if discharger else None,
-                    max_hours=v,
-                )
-
-    for attr in ("marginal_cost", "capital_cost"):
-        overwrites = config["overwrites"].get(attr)
-        if overwrites is not None:
-            overwrites = pd.Series(overwrites)
-
-            new_idx = overwrites.index.difference(costs.index)
-            if not new_idx.empty:
-                new_rows = pd.DataFrame(index=new_idx, columns=costs.columns)
-                new_rows = new_rows.fillna(np.nan)
-                costs = pd.concat([costs, new_rows])
-
-            #idx = overwrites.index.intersection(costs.index)
-            idx = overwrites.index
-
-            costs.loc[idx, attr] = overwrites.loc[idx]
-            logger.info(f"Overwriting {attr} with:\n{overwrites}")
-
-    return costs
 
 
 def load_and_aggregate_powerplants(
@@ -1285,14 +1142,7 @@ if __name__ == "__main__":
     time = get_snapshots(snakemake.params.snapshots, snakemake.params.drop_leap_day)
     n.set_snapshots(time)
 
-    Nyears = n.snapshot_weightings.objective.sum() / 8760.0
-
-    costs = load_costs(
-        snakemake.input.tech_costs,
-        params.costs,
-        max_hours,
-        Nyears,
-    )
+    costs = load_costs(snakemake.input.costs)
 
     ppl = load_and_aggregate_powerplants(
         snakemake.input.powerplants,

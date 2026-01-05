@@ -117,17 +117,6 @@ sector:
   gas_network: false
 
 costs:
-  marginal_cost:
-    green_ocgt: 223.8
-    adv_firm_tech: 13.6
-  overwrites:
-    capital_cost:
-      green_ocgt: 72790
-      adv_firm_tech: 585153
-    lifetime:
-      green_ocgt: 25
-      adv_firm_tech: 40
-
   emission_prices:
     enable: true
     co2: 0.
@@ -195,24 +184,3 @@ certificate:
     new_demand: [0.5, 0.5]
     market: [0, 0]
     market AIB: [0, 0.5]
-
-overwrite_years:
-  2025:
-    costs:
-      marginal_cost:
-        green_ocgt: 444.7
-
-  2030:
-    costs:
-      marginal_cost:
-        green_ocgt: 371.1
-
-  2035:
-    costs:
-      marginal_cost:
-        green_ocgt: 297.5
-
-  2040:
-    costs:
-      marginal_cost:
-        green_ocgt: 223.8
