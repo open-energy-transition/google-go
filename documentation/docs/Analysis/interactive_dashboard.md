@@ -62,6 +62,7 @@ gunicorn app:server -b 0.0.0.0:8050 --workers 4 --timeout 300
 ```
 
 **Configuration options:**
+
 - `--workers 4`: Use 4 worker processes
 - `--timeout 300`: 5-minute timeout for large data queries
 - `-b 0.0.0.0:8050`: Bind to all network interfaces
@@ -114,6 +115,7 @@ Results,y_label,carrier,,,,,,,
 ```
 
 **Key characteristics:**
+
 - **Dimensions**: ~145 rows × ~400 columns
 - **Years**: 2025, 2030, 2035, 2040
 - **Metrics**: 13+ categories (energy mix, capacity, costs, emissions, etc.)
@@ -145,12 +147,14 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 **Purpose**: Deep dive into a single scenario's results to understand detailed energy system characteristics.
 
 **What You Can Do:**
+
 - Visualize individual scenario results in detail
 - View multiple plot types: bar charts, stacked bars, area charts, pie charts
 - Track year-over-year evolution
 - Filter by specific energy carriers
 
 **Controls:**
+
 - **Year**: Select 2025, 2030, 2035, 2040, or "All"
 - **Scenario**: Choose from available policy scenarios
 - **Metric**: Select analysis category (energy mix, capacity, costs, etc.)
@@ -158,29 +162,35 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 
 **Available Plot Types:**
 
-1. **Bar Chart**: Vertical bars showing carrier breakdown for a specific year
-   - Best for: Quick overview of a single year
-   - Shows: Individual carrier contributions
+**1. Bar Chart**: Vertical bars showing carrier breakdown for a specific year
 
-2. **Stacked Bar (All Years)**: Multi-year comparison in one chart
-   - Best for: Seeing how the mix evolves over time
-   - Shows: All years side-by-side with stacked carriers
+- Best for: Quick overview of a single year
+- Shows: Individual carrier contributions
 
-3. **Stacked Area**: Cumulative area chart over years
-   - Best for: Visualizing cumulative contributions
-   - Shows: Smooth evolution of carrier mix
+**2. Stacked Bar (All Years)**: Multi-year comparison in one chart
 
-4. **Pie Chart**: Proportional breakdown
-   - Best for: Understanding relative proportions
-   - Shows: Percentage contribution of each carrier
+- Best for: Seeing how the mix evolves over time
+- Shows: All years side-by-side with stacked carriers
 
-5. **Year Comparison**: Side-by-side bars for all years
-   - Best for: Comparing specific carriers across years
-   - Shows: How each carrier changes year-to-year
+**3. Stacked Area**: Cumulative area chart over years
 
-6. **Year on Year Evolution**: Line chart showing trends
-   - Best for: Identifying growth/decline trends
-   - Shows: Line trajectories for each carrier
+- Best for: Visualizing cumulative contributions
+- Shows: Smooth evolution of carrier mix
+
+**4. Pie Chart**: Proportional breakdown
+
+- Best for: Understanding relative proportions
+- Shows: Percentage contribution of each carrier
+
+**5. Year Comparison**: Side-by-side bars for all years
+
+- Best for: Comparing specific carriers across years
+- Shows: How each carrier changes year-to-year
+
+**6. Year on Year Evolution**: Line chart showing trends
+
+- Best for: Identifying growth/decline trends
+- Shows: Line trajectories for each carrier
 
 **Example Workflow:**
 
@@ -193,6 +203,7 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 5. View the line chart showing how each carrier evolves
 
 **Tips:**
+
 - Use "Year on Year Evolution" to identify trends
 - Use "Stacked Bar" to see proportional changes
 - Click legend items to show/hide specific carriers
@@ -205,12 +216,14 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 **Purpose**: Compare up to 4 scenarios side-by-side to understand how different policies affect the energy system.
 
 **What You Can Do:**
+
 - Compare multiple scenarios simultaneously
 - View side-by-side bar charts with scenario grouping
 - Analyze year-over-year evolution across scenarios
 - Review summary statistics and differences
 
 **Controls:**
+
 - **Year**: Select specific year or "All"
 - **Metric**: Choose analysis category
 - **Plot Type**: Choose comparison style
@@ -219,25 +232,30 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 
 **Available Plot Types:**
 
-1. **Side-by-Side**: Grouped bar chart comparing scenarios
-   - Best for: Direct scenario comparisons
-   - Shows: Scenarios grouped for each carrier
+**1. Side-by-Side**: Grouped bar chart comparing scenarios
 
-2. **Stacked Bar (All Years)**: Multi-year stacked comparison
-   - Best for: Seeing evolution across scenarios and years
-   - Shows: Stacked carriers for each scenario/year combination
+- Best for: Direct scenario comparisons
+- Shows: Scenarios grouped for each carrier
 
-3. **Stacked Bar + Total Line**: Stacked bars with total overlay
-   - Best for: Comparing totals while seeing composition
-   - Shows: Stacked bars with line showing total
+**2. Stacked Bar (All Years)**: Multi-year stacked comparison
 
-4. **Year Comparison**: Compare specific years across scenarios
-   - Best for: Year-specific analysis
-   - Shows: How scenarios differ in specific years
+- Best for: Seeing evolution across scenarios and years
+- Shows: Stacked carriers for each scenario/year combination
 
-5. **Year on Year Evolution**: Evolution lines for multiple scenarios
-   - Best for: Trend comparison
-   - Shows: Multiple scenario trajectories on one plot
+**3. Stacked Bar + Total Line**: Stacked bars with total overlay
+
+- Best for: Comparing totals while seeing composition
+- Shows: Stacked bars with line showing total
+
+**4. Year Comparison**: Compare specific years across scenarios
+
+- Best for: Year-specific analysis
+- Shows: How scenarios differ in specific years
+
+**5. Year on Year Evolution**: Evolution lines for multiple scenarios
+
+- Best for: Trend comparison
+- Shows: Multiple scenario trajectories on one plot
 
 **Example Workflow:**
 
@@ -252,6 +270,7 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 7. Compare the solar bars between scenarios
 
 **Tips:**
+
 - Compare baseline against policy scenarios to measure impact
 - Use "Group By: Year" to see temporal evolution
 - Use "Group By: Scenario" to see scenario differences at each year
@@ -264,12 +283,14 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 **Purpose**: Visualize cost-effectiveness frontiers and identify "dead zones" where policies become prohibitively expensive.
 
 **What You Can Do:**
+
 - View frontier curves showing cost vs. clean energy matching
 - Identify tipping points where costs accelerate dramatically
 - Compare frontiers across multiple scenarios and countries
 - Analyze regional sensitivities to policy constraints
 
 **Controls:**
+
 - **Year**: Select specific year or "All"
 - **Scenarios**: Select up to 5 scenarios (or "All")
 - **Countries**: Select up to 5 countries (or "All")
@@ -310,12 +331,14 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 **Purpose**: Explore hourly operational data (8,760 hours/year) to understand how the energy system operates in detail.
 
 **What You Can Do:**
+
 - Explore hourly timeseries data for the full year
 - Select specific time ranges (week, month, season)
 - Overlay multiple scenarios for comparison
 - Filter by specific energy carriers
 
 **Controls:**
+
 - **Year**: Select year to analyze
 - **Scenarios**: Multi-select scenarios to overlay
 - **Timeseries Type**: Choose data type (Electricity Balance, Storage Levels, etc.)
@@ -324,6 +347,7 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 - **Time Range**: Select temporal zoom level
 
 **Time Range Options:**
+
 - **Full Year**: All 8,760 hours
 - **Week 1**: First week of January
 - **Winter Week**: Representative winter week (Jan 15-21)
@@ -359,6 +383,7 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 **What You'll Find:**
 
 **Executive Summary**: 12 critical findings including:
+
 - Universal 10% tipping point analysis
 - LDES (Long-Duration Energy Storage) criticality
 - EU frontier anomaly
@@ -367,36 +392,42 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 
 **Key Sections:**
 
-1. **Critical Tipping Points**
-   - The universal 10% barrier
-   - Cost acceleration patterns
-   - Technology-specific thresholds
+**1. Critical Tipping Points**
 
-2. **LDES Criticality**
-   - Statistical significance (p<0.001)
-   - Cost impact (+4.24% without LDES)
-   - System feasibility analysis
+- The universal 10% barrier
+- Cost acceleration patterns
+- Technology-specific thresholds
 
-3. **Frontier Curve Analysis**
-   - Cost elasticity rankings
-   - Maximum acceleration points
-   - Scenario-specific patterns
+**2. LDES Criticality**
 
-4. **Robustness Paradox**
-   - Stricter policies → more predictable outcomes
-   - Variability analysis across scenarios
-   - Planning uncertainty implications
+- Statistical significance (p<0.001)
+- Cost impact (+4.24% without LDES)
+- System feasibility analysis
 
-5. **Regional Analysis**
-   - Country-specific sensitivities
-   - 25x variation (Luxembourg +25%, Czechia -7.3%)
-   - Recommended focus countries
+**3. Frontier Curve Analysis**
 
-6. **Strategic Recommendations**
-   - Data-driven procurement strategies
-   - Optimal matching percentages (40-50%)
-   - Technology investment priorities
-   - Policy effectiveness rankings
+- Cost elasticity rankings
+- Maximum acceleration points
+- Scenario-specific patterns
+
+**4. Robustness Paradox**
+
+- Stricter policies → more predictable outcomes
+- Variability analysis across scenarios
+- Planning uncertainty implications
+
+**5. Regional Analysis**
+
+- Country-specific sensitivities
+- 25x variation (Luxembourg +25%, Czechia -7.3%)
+- Recommended focus countries
+
+**6. Strategic Recommendations**
+
+- Data-driven procurement strategies
+- Optimal matching percentages (40-50%)
+- Technology investment priorities
+- Policy effectiveness rankings
 
 **Key Findings Highlight:**
 
@@ -407,6 +438,7 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 5. **Regional Extremes**: 25x variation - Luxembourg +25%, Czechia -7.3%
 
 **Tips:**
+
 - Read this tab first to understand key findings
 - Reference specific insights when exploring other tabs
 - Use findings to guide scenario comparisons
@@ -416,42 +448,10 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 
 ## Scenario Configuration
 
-### Baseline
-- **baseline**: Base case without policy constraints
-- **baseline-co2-price25**: Baseline with €25/ton CO2 price
-
-### Energy Matching
-- **energy-match-25**: 25% annual energy matching
-- **energy-match-50**: 50% annual energy matching
-
-### Hourly Matching (25% additionality)
-- **hourly-match-25-90**: 25% additionality, 90% hourly matching
-- **hourly-match-25-95**: 25% additionality, 95% hourly matching
-- **hourly-match-25-98**: 25% additionality, 98% hourly matching
-- **hourly-match-25-99**: 25% additionality, 99% hourly matching
-
-### Hourly Matching (50% additionality)
-- **hourly-match-50-90**: 50% additionality, 90% hourly matching
-- **hourly-match-50-95**: 50% additionality, 95% hourly matching
-- **hourly-match-50-98**: 50% additionality, 98% hourly matching
-- **hourly-match-50-99**: 50% additionality, 99% hourly matching
-
-### No Additionality
-- **hourly-match-noadd-10-99**: No additionality requirement, 10% target, 99% hourly
-- **hourly-match-noadd-50-99**: No additionality requirement, 50% target, 99% hourly
-- **hourly-match-noadd-90-99**: No additionality requirement, 90% target, 99% hourly
-
-### Policy Variants
-- **no-LDES**: Scenarios without long-duration energy storage
-- **no-clean-firm**: Scenarios without clean firm capacity
-- **EU-25**: EU-wide coordination at 25% matching
-- **EU-50**: EU-wide coordination at 50% matching
-
-### Understanding Scenario Names
-
 **Format**: `[type]-[additionality]-[matching]`
 
 **Examples:**
+
 - `energy-match-25` = Energy matching with 25% additionality
 - `hourly-match-50-99` = Hourly matching with 50% additionality at 99% matching level
 - `hourly-match-noadd-50-99` = Hourly matching with NO additionality, 50% target, 99% matching
@@ -459,11 +459,13 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 **Key Parameters:**
 
 **Additionality Level:**
+
 - `25` = 25% of clean energy must be new/additional
 - `50` = 50% of clean energy must be new/additional
 - `noadd` = No additionality requirement (can use existing clean energy)
 
 **Matching Level:**
+
 - `90` = 90% hourly matching requirement
 - `95` = 95% hourly matching requirement
 - `98` = 98% hourly matching requirement
@@ -477,16 +479,18 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 
 The dashboard automatically detects all scenarios in `results.csv`. To add or remove scenarios:
 
-1. **Modify results.csv**:
-   - Add new columns with format: `year | scenario | scope`
-   - Ensure new scenarios follow existing data structure
+**1. Modify results.csv**:
 
-2. **Restart dashboard**:
+- Add new columns with format: `year | scenario | scope`
+- Ensure new scenarios follow existing data structure
+
+**2. Restart dashboard**:
+
    ```bash
    python app.py
    ```
 
-3. **Verify**: New scenarios appear in dropdown menus
+**3. Verify**: New scenarios appear in dropdown menus
 
 **No code changes required** - the dashboard dynamically loads all available scenarios.
 
@@ -494,18 +498,20 @@ The dashboard automatically detects all scenarios in `results.csv`. To add or re
 
 To add new metrics:
 
-1. **Add data to results.csv**:
+**1. Add data to results.csv**:
+
    ```csv
    (n) New Metric,Y-axis Label,carrier,value1,value2,value3,...
    ```
 
-2. **Add color mappings** (optional) in `colors.csv`:
+**2. Add color mappings** (optional) in `colors.csv`:
+
    ```csv
    (n) New Metric,carrier1,#color1
    (n) New Metric,carrier2,#color2
    ```
 
-3. **Restart dashboard** - new metric appears in dropdown
+**3. Restart dashboard** - new metric appears in dropdown
 
 ### Customizing Colors
 
@@ -541,11 +547,13 @@ pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 **Error**: Blank plots or "No data available"
 
 **Possible causes**:
+
 - `results.csv` not found or incorrectly formatted
 - Column headers don't match expected structure
 - Missing year/scenario/metric in data
 
 **Solution**:
+
 1. Verify file exists: `ls -lh results/results.csv`
 2. Check first few lines: `head -5 results/results.csv`
 3. Verify multi-level headers are correct
@@ -556,28 +564,35 @@ pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 **Issue**: Timeseries queries take 30+ seconds
 
 **Solution**:
-1. Convert CSV to Parquet:
-   ```python
-   import pandas as pd
-   df = pd.read_csv('results/results_time_series.csv')
-   df.to_parquet('results/results_time_series.parquet', compression='snappy')
-   ```
-2. Verify parquet file is detected:
-   ```bash
-   ls -lh results/results_time_series.parquet
-   ```
-3. Restart dashboard
+
+**1.** Convert CSV to Parquet:
+
+```python
+import pandas as pd
+df = pd.read_csv('results/results_time_series.csv')
+df.to_parquet('results/results_time_series.parquet', compression='snappy')
+```
+
+**2.** Verify parquet file is detected:
+
+```bash
+ls -lh results/results_time_series.parquet
+```
+
+**3.** Restart dashboard
 
 #### Colors not matching
 
 **Issue**: Carriers show default colors instead of custom colors
 
 **Possible causes**:
+
 - `colors.csv` not found
 - Carrier names don't match between `results.csv` and `colors.csv`
 - Incorrect CSV format
 
 **Solution**:
+
 1. Verify file: `cat results/colors.csv | head -10`
 2. Check carrier name spelling (case-sensitive)
 3. Ensure format: `Results,carrier,color`
@@ -603,6 +618,7 @@ app.run_server(debug=True, host='0.0.0.0', port=8051)
 **Cause**: Insufficient RAM for large datasets
 
 **Solutions**:
+
 1. Use Parquet format for timeseries (better compression)
 2. Use time range filtering instead of full year
 3. Deploy on machine with more RAM (4GB+ recommended)
@@ -640,6 +656,7 @@ app.run_server(debug=True, host='0.0.0.0', port=8051)
 ## Browser Compatibility
 
 Tested and working on:
+
 - Chrome 90+
 - Firefox 85+
 - Safari 14+

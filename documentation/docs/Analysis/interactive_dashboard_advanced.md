@@ -9,16 +9,19 @@ This guide covers technical architecture, customization, performance optimizatio
 ### Technology Stack
 
 **Core Framework:**
+
 - **Dash (Plotly)**: Web application framework for Python
 - **Plotly**: Interactive visualization library
 - **Dash Bootstrap Components**: UI component library
 
 **Data Processing:**
+
 - **Pandas**: Data manipulation and analysis
 - **NumPy**: Numerical computing
 - **Parquet/CSV**: Data storage formats
 
 **Deployment:**
+
 - **Flask**: WSGI web server (built into Dash)
 - **Gunicorn**: Production WSGI server (optional)
 
@@ -138,6 +141,7 @@ def update_plot(selected_value):
 ```
 
 **17 callbacks** handle all dashboard interactivity:
+
 - 5 for Single Scenario Analysis
 - 1 for Cross-Scenario Comparison
 - 3 for Dead Zone Analysis
@@ -192,6 +196,7 @@ data = df.loc[idx['(a) Energy mix', :, :], idx[2025, 'baseline', :]]
 ### Memory Management
 
 **Typical memory usage:**
+
 - Dashboard base: ~100-200 MB
 - Consolidated results: ~50-100 MB
 - Frontier data: ~10-20 MB
@@ -199,6 +204,7 @@ data = df.loc[idx['(a) Energy mix', :, :], idx[2025, 'baseline', :]]
 - **Total**: ~1-2 GB for typical usage
 
 **For large datasets:**
+
 1. Use Parquet format (10-20x compression vs CSV)
 2. Limit timeseries cache size
 3. Use time range filtering instead of loading full year
@@ -207,32 +213,37 @@ data = df.loc[idx['(a) Energy mix', :, :], idx[2025, 'baseline', :]]
 ### Loading Speed
 
 **Startup time:**
+
 - Consolidated results.csv: ~1-2 seconds
 - Frontier data: ~0.5 seconds
 - Timeseries metadata: ~5-10 seconds (parquet), ~30-60 seconds (CSV)
 
 **Query response time:**
+
 - Aggregated plots: ~0.1-0.5 seconds
 - Timeseries plots (cached): ~0.2-0.5 seconds
 - Timeseries plots (uncached): ~2-10 seconds (parquet), ~10-30 seconds (CSV)
 
 ### Optimization Recommendations
 
-1. **Convert timeseries to Parquet**:
-   ```python
-   import pandas as pd
-   df = pd.read_csv('results_time_series.csv')
-   df.to_parquet('results_time_series.parquet', compression='snappy')
-   ```
+**1. Convert timeseries to Parquet**:
 
-2. **Increase cache size** for repeated queries (edit `data_loader.py`):
-   ```python
-   if len(self.timeseries_cache) > 100:  # Increase to 100
-       self.timeseries_cache.pop(next(iter(self.timeseries_cache)))
-   ```
+```python
+import pandas as pd
+df = pd.read_csv('results_time_series.csv')
+df.to_parquet('results_time_series.parquet', compression='snappy')
+```
 
-3. **Use shorter time ranges** for exploratory analysis
-4. **Deploy with SSD** for faster I/O
+**2. Increase cache size** for repeated queries (edit `data_loader.py`):
+
+```python
+if len(self.timeseries_cache) > 100:  # Increase to 100
+    self.timeseries_cache.pop(next(iter(self.timeseries_cache)))
+```
+
+**3. Use shorter time ranges** for exploratory analysis
+
+**4. Deploy with SSD** for faster I/O
 
 ---
 
@@ -271,7 +282,7 @@ options=[
 
 To add a new analysis tab:
 
-1. **Create layout** in `layouts/my_new_tab.py`:
+**1. Create layout** in `layouts/my_new_tab.py`:
 ```python
 def create_my_tab_layout(data_loader):
     return dbc.Container([
@@ -281,7 +292,7 @@ def create_my_tab_layout(data_loader):
     ])
 ```
 
-2. **Register in app.py**:
+**2. Register in app.py**:
 ```python
 from layouts import my_new_tab
 
@@ -293,7 +304,7 @@ html.Div(my_new_tab.create_my_tab_layout(data_loader),
          id='my-content', style={'display': 'none'})
 ```
 
-3. **Add callback** in `callbacks.py`:
+**3. Add callback** in `callbacks.py`:
 ```python
 @app.callback(
     Output('my-plot', 'figure'),
@@ -462,6 +473,7 @@ gunicorn app:server -b 0.0.0.0:8050 --workers 4 --timeout 300 --log-level info
 ```
 
 **Configuration options:**
+
 - `--workers 4`: Number of worker processes (use 2-4 × CPU cores)
 - `--timeout 300`: Request timeout in seconds (5 minutes for large queries)
 - `-b 0.0.0.0:8050`: Bind address (0.0.0.0 = all interfaces)
@@ -638,37 +650,42 @@ def health():
 **Symptoms**: Dashboard consumes >4GB RAM
 
 **Solutions**:
+
 1. Reduce timeseries cache size
-2. Clear cache periodically:
-   ```python
-   # Add to data_loader.py
-   def clear_cache(self):
-       self.timeseries_cache.clear()
-   ```
+2. Clear cache periodically: (see below)
 3. Use time-based cache eviction
 4. Deploy with more RAM
+
+```python
+# Add to data_loader.py
+def clear_cache(self):
+    self.timeseries_cache.clear()
+```
 
 ### Slow Callback Execution
 
 **Symptoms**: Plots take >5 seconds to render
 
 **Solutions**:
-1. Profile callbacks:
-   ```python
-   import time
-   start = time.time()
-   # ... callback code ...
-   print(f"Callback took {time.time() - start:.2f}s")
-   ```
+
+1. Profile callbacks: (see below)
 2. Optimize data filtering queries
 3. Pre-compute expensive calculations
 4. Use Parquet for timeseries
+
+```python
+import time
+start = time.time()
+# ... callback code ...
+print(f"Callback took {time.time() - start:.2f}s")
+```
 
 ### Concurrent User Issues
 
 **Symptoms**: Dashboard slows with multiple users
 
 **Solutions**:
+
 1. Increase Gunicorn workers
 2. Use Redis for shared caching
 3. Deploy multiple instances with load balancer

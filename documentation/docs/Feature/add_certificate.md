@@ -1,5 +1,41 @@
 This script, `add_certificate.py`, is a specialized script developed for the Google-GO project within the PyPSA-Eur workflow. It is designed to integrate Guarantee of Origin (GO) certificates into energy system models. It essentially creates "virtual" representations of power plants and storage units, and sets up a market for these certificates within the PyPSA network.
 
+## GO Market
+
+The model incorporates two frameworks for simulating GO markets:
+
+### Background GO Market
+
+The Background Market is built upon the standards of the Association of Issuing Bodies (AIB), which currently facilitates the transfer of certificates across 25 of the 34 modeled countries. This framework utilizes annual volume matching based on historical AIB demand statistics rather than granular hourly tracking. 
+
+![GO Market AIB](../supporting-material/GO Market AIB.svg)
+
+To integrate certificate trading into the energy system model without interfering with physical grid constraints, the script employs a specialized schematic consisting of three "virtual" buses. This structure allows the model to track the "green" attributes of electricity separately from the physical electrons.
+
+- The Supply Bus: This bus acts as a collection point, aggregating all power plants within a specific country that meet the eligibility criteria to participate in the GO market.
+- The Market Bus: This serves as the clearinghouse for the system. In the AIB configuration, all potential certificate providers and consumers are pooled into a single market bus.
+- The Demand Bus: This bus contains the certificate loads. These loads represent the specific demand for GOs driven by historical AIB cancellation data.
+
+To read more about equations mentioned in the schematic, see [Solve Network Constraints](solve_network_constraints.md)
+ 
+> **Note:** Although this specific feature is not currently utilized in the primary modeling scenarios, the architecture remains fully integrated and available for sensitivity analysis or historical comparisons.
+
+### New GO Market
+
+The New GO Market is designed for high levels of customization in both present and future energy scenarios. Participation in this market is restricted to production capacities commissioned within their first five years of operation, ensuring a focus on relatively new infrastructure. Certificate demand is allocated proportionally according to the electricity consumption of commercial and industrial sectors. Unlike the AIB-based system, this market can include all modeled countries and offers the flexibility to be configured as either a series of national markets or a single, EU-wide trading zone.
+
+![GO Market New](../supporting-material/GO Market New.svg)
+
+These are the main difference compared to the Background GO Market
+
+- All countries have the option to participate in the GO Market.
+- In the New Market configuration, market buses can be nationalized or expanded to a European wide scale. Only national based GO markets have the option for batteries to participate in the GO market.
+- Demand buses are not based on AIB, but rather on customizable load profiles that can be based on electricity load profiles and refactored by industrial and commercial consumers (CIs).
+
+> **Note:** The background and new GO market are independent of each other. This means it is possible to turn both on at the same time.
+
+## Functions
+
 Here's a breakdown of its main functions, categorized by their roles:
 
 *   **Functions for Filtering and Binding with GO Market**:

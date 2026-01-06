@@ -37,6 +37,7 @@ theme:
     - navigation.top
 
 nav:
+  - index.md
   - Introduction:
     - Introduction/index.md
     - Background: Introduction/background.md
@@ -55,7 +56,8 @@ nav:
   - Analysis:
     - Analysis/index.md
     - Main Results: Analysis/main_results_generation.md
-    - Interactive Dashboard: Analysis/interactive_dasboard.md
+    - Interactive Dashboard: Analysis/interactive_dashboard.md
+    - Interactive Dashboard (Adv): Analysis/interactive_dashboard_advanced.md
     - Jupyter Notebook: Analysis/jupyter_notebooks.md
 
 markdown_extensions:

@@ -50,7 +50,36 @@ Both demand components are computed following a consistent methodology:
 - The source ([TYNDP 2024-Scenarios Report-Data and Figures](https://2024.entsos-tyndp-scenarios.eu/download/)) provides 2030- and 2040-National Trends. So, 2025 and 2035 were interpolated assuming null demand in 2020
 - These shares account for heat-related demand at the denominator, so they should be used only when heating demand is also included. However, the code is flexible and allows separate handling of demands if needed
 
-For implementation details, see `config.go.yaml` and `strip_network.py` (described in `go_project_config.md` and `strip_network_explanation.md`).
+> **Note:** To activate the hydrogen demand assumptions, append this in `config/config.go.yaml`
+
+```yaml
+overwrite_years:
+  2025:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.04
+
+  2030:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.07
+
+  2035:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.14
+
+  2040:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.21
+```
+
+For implementation details, see `config.go.yaml` and `strip_network.py` (described in [Project Config](../Configuration/go_project_config.md) and [Strip Network](../Feature/strip_network.md)).
 
 ### 1.2 Commercial and Industry Demand
 
@@ -61,7 +90,7 @@ Demand from commercial and industry customers is derived from the C&I share over
 - Only the latest full available data are used: Eurostat-2023, IEA-2022
 - C&I shares are kept constant across the time horizon, without accounting for potential future changes (e.g., data center growth or deindustrialization). However, values can be manually modified by users
 
-For implementation details, see `config.go.yaml` (described in `go_project_config.md`).
+For implementation details, see `config.go.yaml` (described in [Project Config](../Configuration/go_project_config.md)).
 
 ![C&I share](../supporting-material/C&I-share.png)
 **Figure 1** - 2023 C&I share over the final electricity consumption (Source: [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en)).
@@ -95,11 +124,15 @@ The input data were processed to derive the two input cost parameters used in Py
 The final cost parameters are computed as follows, where the annuity factor is calculated following the standard PyPSA-Eur approach (see `process_cost_data.py`), using the lifetime and a discount rate of 7% ($r$ is the discount rate and $n$ is the lifetime in years):
 
 $$
-\text{Annualized Capital Cost (€2020/MW-a)} = \text{annuity} \times \text{investment cost} + \text{FOM}
+\text{annuity factor} = \frac{r}{1 - \frac{1}{(1 + r)^n}}
 $$
 
 $$
-\text{annuity} = \frac{r}{1 - \frac{1}{(1 + r)^n}}
+\text{annuity_factor_fom} = \text{annuity factor} +  \frac{text{FOM}}{100.0}
+$$
+
+$$
+\text{Annualized Capital Cost (€2020/MW-a)} = \text{annuity_factor_fom} \times \text{investment cost}
 $$
 
 $$
@@ -113,7 +146,7 @@ $$
 | **Green OCGT**       | 1,150 – 1,450              | 10.00 – 17.00    | 3.50 – 5.00     | '30: 150.0 (5.0)<br>'40: 90.0 (3.0) | 0.40       | 30       | 72,790                               | '25: 444.7<br>'30: 371.1<br>'35: 297.5<br>'40: 223.8 |
 | **Advanced Clean Firm** | 9,020 – 14,820          | 136.00 – 158.00  | 4.40 – 5.15     | 3.41                        | 0.33      | 70       | 585,153                              | 13.6                      |
 
-For implementation details, see `config.go.yaml` (described in `go_project_config.md`). For details on the techno-economic characterization of the other power plants and storage technologies, see [PyPSA Technology Data](https://github.com/PyPSA/technology-data/blob/master/outputs).
+For implementation details, see `config.go.yaml` (described in [Project Config](../Configuration/go_project_config.md)). For details on the techno-economic characterization of the other power plants and storage technologies, see [PyPSA Technology Data](https://github.com/PyPSA/technology-data/blob/master/outputs).
 
 ## 3. CO2 Price
 
@@ -124,7 +157,7 @@ Four CO2 price levels are identified to study their interaction with GO markets 
 - **Medium: 50 €/t** - Proxy for EU market based on average annual value for 2024 EU ETS ~64.74 €2024/t (~53 €2020/t) (Source: [International Carbon Action Partnership](https://icapcarbonaction.com/en/ets/eu-emissions-trading-system-eu-ets)) and stated policies values ([IEA World Energy Outlook 2024](https://iea.blob.core.windows.net/assets/140a0470-5b90-4922-a0e9-838b3ac6918c/WorldEnergyOutlook2024.pdf))
 - **High: 100 €/t** - Proxy for net zero emission scenarios ([IEA World Energy Outlook 2024](https://iea.blob.core.windows.net/assets/140a0470-5b90-4922-a0e9-838b3ac6918c/WorldEnergyOutlook2024.pdf))
 
-For implementation details, see `config.go.yaml` (described in `go_project_config.md`).
+For implementation details, see `config.go.yaml` (described in [Project Config](../Configuration/go_project_config.md)).
 
 ## 4. Generation Expansion
 
@@ -134,7 +167,7 @@ The assumptions on extendable generators follow the default PyPSA-Eur configurat
 - Open Cycle Gas Turbine (OCGT) and Combined Cycle Gas Turbine (CCGT)
 - Clean firm technologies described in Section 2
 
-Additionally, renewable generation targets are derived from [TYNDP-2024-National Trends scenario results](https://2024.entsos-tyndp-scenarios.eu/visualisation-platform/). These targets are designed for use in the Renewable Portfolio Standard (RPS) sensitivity (see `go_project_scenarios.md`) as minimum generation constraints relative to total electricity generation. For implementation details, see `config.go.yaml` (described in `go_project_config.md`) and `solve_network_constraints.md`.
+Additionally, renewable generation targets are derived from [TYNDP-2024-National Trends scenario results](https://2024.entsos-tyndp-scenarios.eu/visualisation-platform/). These targets are designed for use in the Renewable Portfolio Standard (RPS) sensitivity (see [Scenarios Config](../Configuration/go_project_scenarios.md)) as minimum generation constraints relative to total electricity generation. For implementation details, see `config.go.yaml` (described in [Project Config](../Configuration/go_project_config.md)) and [Solve Network Constraints](../Feature/solve_network_constraints.md).
 
 Such shares are defined for each planning horizon and country, including system-level (denoted as EU+). Values are taken from TYNDP-2024 National Trends scenario, which provides data for 2030 and 2040 only. Therefore, 2035 values were interpolated. Kosovo is the only country absent from TYNDP data, for which a 43% target is imposed for all years based on 2030 value from an [Ember study](https://ember-energy.org/data/global-renewable-power-sector-targets-2030/). (TYNDP and Ember are well aligned, e.g., system-level targets at 2030 from both sources are essentially the same ~73%).
 

@@ -120,6 +120,8 @@ The `costs` section defines economic parameters for different technologies.
 | - - enable           | boolean        | -      | true  | Enables the use of emission prices in the model.                                |
 | - - co2              | €/t_CO2        | -      | 0.    | Sets the price of CO2 emissions.                                                |
 
+> **Note:** Recent improvements to PyPSA-EUR allow for the creation of customized cost assumptions in `data/custom_costs.csv`. This information is then migrated there.
+
 ### `strip_network`
 
 This entire section is a new configuration in `config.go.yaml`, designed to interact with `scripts/strip_network.py` for simplifying the network.
@@ -203,11 +205,31 @@ This entire section is a new and critical configuration in `config.go.yaml`, dir
 
 ### `overwrite_years`
 
-This entire section is a new project-specific configuration in `config.go.yaml`. Its current purpose is to define year-specific cost overwrites, specifically for reducing the marginal price of `green_ocgt` in future planning horizons.
+This entire section is a new project-specific configuration in `config.go.yaml`. Its current purpose is to define year-specific configuration overwrites. Here is an example to activate the hydrogen demand as describe in the [Assumption section](../Introduction/assumptions.md).
 
-| Parameter                      | Unit  | Values | `config.go.yaml` | Description                                                                    |
-| :----------------------------- | :---- | :----- | :--------------------------- | :----------------------------------------------------------------------------- |
-| `2025.costs.marginal_cost.green_ocgt` | €/MWh | -      | `444.7`                      | Marginal cost for green OCGT in 2025.                                          |
-| `2030.costs.marginal_cost.green_ocgt` | €/MWh | -      | `371.1`                      | Marginal cost for green OCGT in 2030.                                          |
-| `2035.costs.marginal_cost.green_ocgt` | €/MWh | -      | `297.5`                      | Marginal cost for green OCGT in 2035.                                          |
-| `2040.costs.marginal_cost.green_ocgt` | €/MWh | -      | `223.8`                      | Marginal cost for green OCGT in 2040.                                          |
+```yaml
+overwrite_years:
+  2025:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.04
+
+  2030:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.07
+
+  2035:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.14
+
+  2040:
+    electricity:
+        hydrogen_demand:
+            enable: true
+            share: 0.21
+```

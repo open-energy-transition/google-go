@@ -7,6 +7,7 @@ This section outlines specific functions within the `solve_network.py` script th
 **`add_rps_constraints(n, planning_horizons)`**: This function is utilized when national renewable energy targets are activated. It adds Renewable Portfolio Standard (RPS) constraints to the network, based on TYNDP (Ten-Year Network Development Plan) results or manual inputs. These constraints enforce a minimum share of renewable energy generation at a national or system-wide level for each planning horizon.
 
 **Mathematical Formulation:**
+
 For country-specific targets:
 
 $$
@@ -36,10 +37,21 @@ The following functions (`add_virtual_ppl_matching`, `add_buffer_matching`, and 
 
 **`add_virtual_ppl_matching(n)`**: This function is crucial for binding the generation of electricity in the background PyPSA model to the Guarantee of Origin (GO) layer. It ensures that the output of virtual power plants (VPPs) in the GO layer accurately reflects the aggregated power generation from their corresponding real power plant units (generators and links) in the background model.
 
+**Visualization:**
+![GO Market EQ 1](../supporting-material/GO Market EQ 1.svg)
+
 **Mathematical Formulation:**
 
+For power plants defined as generators:
+
 $$
-P^{\text{VPP}}_{v,t} \leq \sum_{g \in \text{VPP}_v} P^{\text{gen}}_{g,t} + \sum_{l \in \text{VPP}_v} P^{\text{link}}_{l,t} \cdot \eta_l
+P^{\text{VPP}}_{v,t} \leq \sum_{g \in \text{VPP}_v} P^{\text{gen}}_{g,t}
+$$
+
+For power plants defined as links:
+
+$$
+P^{\text{VPP}}_{v,t} \leq \sum_{l \in \text{VPP}_v} P^{\text{link}}_{l,t} \cdot \eta_l
 $$
 
 Where:
@@ -65,8 +77,8 @@ Where:
     Where:
 
     - \( P^{\text{gen}}_{g,t} \) is the dispatch of buffer generator \(g\) at time \(t\).
-    - \( \text{Chargers} \) are buffer generators with sign -1.
-    - \( \text{Dischargers} \) are buffer generators with sign 1.
+    - \( \text{Chargers} \) are buffer generators that consumes GOs (sign -1).
+    - \( \text{Dischargers} \) are buffer generators that produces GOs (sign 1).
 
 2.  **Hourly Matching Limit Constraint:**
 
@@ -79,11 +91,14 @@ Where:
     - \( P^{\text{gen}}_{g,t} \) is the dispatch of buffer generator \(g\) at time \(t\).
     - \( w_t \) is the snapshot weighting for time \(t\).
     - \( P^{\text{nom}}_{g} \) is the nominal capacity of buffer generator \(g\).
-    - \( \text{Dischargers} \) are buffer generators with sign 1.
+    - \( \text{Dischargers} \) are buffer generators that produces GOs (sign 1).
 
 ### Add Virtual Storage Matching
 
 **`add_virtual_storage_matching(n)`**: Similar to `add_virtual_ppl_matching`, this function binds the storage operations in the background PyPSA model to the GO layer. It ensures that the virtual storage units in the GO layer accurately reflect the charging and discharging activities of their corresponding real storage units in the background model.
+
+**Visualization:**
+![GO Market EQ 3](../supporting-material/GO Market EQ 3.svg)
 
 **Mathematical Formulation:**
 
