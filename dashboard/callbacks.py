@@ -444,11 +444,13 @@ def register_callbacks(app, data_loader):
         [Output('ts-year-selector', 'options'),
          Output('ts-year-selector', 'value'),
          Output('ts-scenario-selector', 'options'),
-         Output('ts-scenario-selector', 'value')],
-        [Input('ts-type-selector', 'value')]
+         Output('ts-scenario-selector', 'value'),
+         Output('ts-type-selector', 'options'),
+         Output('ts-type-selector', 'value')],
+        [Input('ts-country-selector', 'id')]
     )
-    def update_ts_years_and_scenarios(_):
-        """Initialize available years and scenarios for timeseries"""
+    def initialize_ts_selectors(_):
+        """Initialize all timeseries selectors on page load"""
         metadata = data_loader.get_timeseries_metadata()
 
         # Years
@@ -461,20 +463,12 @@ def register_callbacks(app, data_loader):
         scenario_options = [{'label': s, 'value': s} for s in scenarios]
         scenario_default = [scenarios[0]] if scenarios else []
 
-        return year_options, year_default, scenario_options, scenario_default
-
-    @app.callback(
-        [Output('ts-type-selector', 'options'),
-         Output('ts-type-selector', 'value')],
-        [Input('ts-year-selector', 'value')]
-    )
-    def update_ts_types(year):
-        """Update available timeseries types"""
-        metadata = data_loader.get_timeseries_metadata()
+        # Types
         types = metadata.get('types', [])
-        options = [{'label': t, 'value': t} for t in types]
-        default_value = types[0] if types else None
-        return options, default_value
+        type_options = [{'label': t, 'value': t} for t in types]
+        type_default = types[0] if types else None
+
+        return year_options, year_default, scenario_options, scenario_default, type_options, type_default
 
     @app.callback(
         [Output('ts-country-selector', 'options'),
