@@ -313,14 +313,13 @@ A "dead zone" is a region where the realized hourly matching as well as energy m
 
 **Example Workflow:**
 
-*Question: At what matching percentage does the no-LDES scenario become prohibitively expensive?*
+*Question: To which extent policies on renewable targets and CO2 price can affect the dead zone?*
 
 1. Navigate to **Dead Zone Analysis** tab
-2. Select **Year**: 2035
-3. Select **Scenarios**: no-LDES, baseline (for comparison)
+2. Select **Year**: All
+3. Select **Scenarios**: baseline-rps, baseline-co2-price25, baseline (for comparison)
 4. Select **Countries**: EU
-5. Observe the frontier curves - look for steep increases
-6. **Finding**: no-LDES shows 21.6x cost acceleration at 10% matching
+5. Observe the dead zone extension
 
 **Tips:**
 - Compare dead zones between multple scenarios
