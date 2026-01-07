@@ -285,12 +285,12 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 
 ### Tab 3: Dead Zone Analysis
 
-**Purpose**: Visualize cost-effectiveness frontiers and identify "dead zones" where policies become prohibitively expensive.
+**Purpose**: Visualize the energy procurement frontier, which quantifies the trade-off between energy matching and hourly matching.
 
 **What You Can Do:**
 
-- View frontier curves showing cost vs. clean energy matching
-- Identify tipping points where costs accelerate dramatically
+- View frontier curves showing clean hourly matching vs. energy matching.
+- Identify trade-offs between the two matching types.
 - Compare frontiers across multiple scenarios and countries
 - Analyze regional sensitivities to policy constraints
 
@@ -302,14 +302,13 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 
 **What is a Dead Zone?**
 
-A "dead zone" is a region on the frontier where small increases in clean energy matching requirements lead to disproportionately large cost increases, indicating diminishing returns.
+A "dead zone" is a region where the realized hourly matching as well as energy matching levels take place based on economics.
 
 **How to Read Frontier Curves:**
 
 - **X-axis**: Clean energy matching percentage (0-100%)
-- **Y-axis**: Total system cost increase (%)
-- **Steep sections**: Dead zones (avoid these targets)
-- **Flat sections**: Cost-effective operating ranges
+- **Y-axis**: Clean hourly matching percentage (0-100%)
+- **Procurement frontier**: Boundary of the dead zone, representing the maximum achievable hourly matching level for a given energy matching level.
 - **Tipping points**: Where curve suddenly steepens
 
 **Example Workflow:**
@@ -324,7 +323,7 @@ A "dead zone" is a region on the frontier where small increases in clean energy 
 6. **Finding**: no-LDES shows 21.6x cost acceleration at 10% matching
 
 **Tips:**
-- Compare multiple scenarios to identify which policies create dead zones
+- Compare dead zones between multple scenarios
 - Use "All" years to see how dead zones shift over time
 - Country-level analysis reveals regional sensitivities
 - Look for "tipping points" where curves suddenly steepen
