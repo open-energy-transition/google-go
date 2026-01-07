@@ -5,6 +5,8 @@ This section is an excerpt from the PyPSA-Eur documentation regarding installati
 The subsequently described installation steps are demonstrated as shell commands, where the path before the `$` sign denotes the
 directory in which the commands following the `$` should be entered.
 
+---
+
 ## Clone the Repository
 
 First of all, clone the [PyPSA-Eur repository](https://github.com/PyPSA/pypsa-eur) using the version control system `git` in the command line.
@@ -12,6 +14,7 @@ First of all, clone the [PyPSA-Eur repository](https://github.com/PyPSA/pypsa-eu
 ```bash
 $ git clone https://github.com/PyPSA/pypsa-eur.git
 ```
+---
 
 ## Install Python Dependencies
 
@@ -64,6 +67,7 @@ $ conda env create -f envs/environment.yaml
 
 $ conda activate pypsa-eur
 ```
+---
 
 ## Install a Solver
 

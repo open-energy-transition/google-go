@@ -9,6 +9,8 @@ The modeling assumptions are organized into four main groups, each addressing a 
 3. **CO2 Price**: Assumptions related to carbon pricing mechanisms
 4. **Generation Expansion**: Assumptions related to the capacity expansion of clean and conventional generation technologies
 
+---
+
 ## 1. Electricity Demand
 
 To simplify the model and focus on the electricity sector, demands from low-voltage, industry, agriculture, heating, and hydrogen are aggregated into a single electricity load, while transport demand remains separate due to its dependency on EV batteries. 
@@ -50,7 +52,7 @@ Both demand components are computed following a consistent methodology:
 - The source ([TYNDP 2024-Scenarios Report-Data and Figures](https://2024.entsos-tyndp-scenarios.eu/download/)) provides 2030- and 2040-National Trends. So, 2025 and 2035 were interpolated assuming null demand in 2020
 - These shares account for heat-related demand at the denominator, so they should be used only when heating demand is also included. However, the code is flexible and allows separate handling of demands if needed
 
-> **Note:** To activate the hydrogen demand assumptions, append this in `config/config.go.yaml`
+> **Note:** By default, only heating demand is added. To activate the hydrogen demand assumptions, append this in `config/config.go.yaml`
 
 ```yaml
 overwrite_years:
@@ -95,6 +97,8 @@ For implementation details, see `config.go.yaml` (described in [Project Config](
 ![C&I share](../supporting-material/C&I-share.png)
 **Figure 1** - 2023 C&I share over the final electricity consumption (Source: [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en)).
 
+---
+
 ## 2. Clean Firm Technologies
 
 Two types of clean firm technologies are considered:
@@ -108,7 +112,7 @@ The techno-economic parameters are derived from multiple sources:
 
 - **Investment cost, fixed operation and maintenance (FOM), variable operation and maintenance (VOM), and lifetime**: [Lazard LCOE - June 2025](https://www.lazard.com/media/uounhon4/lazards-lcoeplus-june-2025.pdf). Where ranges were provided, the mean values were used
 - **Fuel cost and efficiency**: [PyPSA Technology Data](https://github.com/PyPSA/technology-data/blob/master/outputs)
-- **Green hydrogen price**: [EU Clean Hydrogen Observatory](https://observatory.clean-hydrogen.europa.eu/index.php/hydrogen-landscape/production-trade-and-cost/cost-hydrogen-production)
+- **Green hydrogen price**: [EU Clean Hydrogen Observatory](https://observatory.clean-hydrogen.europa.eu/index.php/hydrogen-landscape/production-trade-and-cost/cost-hydrogen-production). The source provides 6.71 €/kg in 2024, which was assumed to decrease up to 5 €/kg by 2030 and 3 €/kg by 2040.
 
 **Currency Conversion:**
 
@@ -123,12 +127,14 @@ The input data were processed to derive the two input cost parameters used in Py
 
 The final cost parameters are computed as follows, where the annuity factor is calculated following the standard PyPSA-Eur approach (see `process_cost_data.py`), using the lifetime and a discount rate of 7% ($r$ is the discount rate and $n$ is the lifetime in years):
 
+> **Note:** 7% is the default in PyPSA-Eur for long-terms rate of returns.
+
 $$
 \text{annuity factor} = \frac{r}{1 - \frac{1}{(1 + r)^n}}
 $$
 
 $$
-\text{annuity_factor_fom} = \text{annuity factor} +  \frac{text{FOM}}{100.0}
+\text{annuity_factor_fom} = \text{annuity factor} +  \frac{\text{FOM}}{100.0}
 $$
 
 $$
@@ -148,6 +154,8 @@ $$
 
 For implementation details, see `config.go.yaml` (described in [Project Config](../Configuration/go_project_config.md)). For details on the techno-economic characterization of the other power plants and storage technologies, see [PyPSA Technology Data](https://github.com/PyPSA/technology-data/blob/master/outputs).
 
+---
+
 ## 3. CO2 Price
 
 Four CO2 price levels are identified to study their interaction with GO markets as sensitivities:
@@ -158,6 +166,8 @@ Four CO2 price levels are identified to study their interaction with GO markets 
 - **High: 100 €/t** - Proxy for net zero emission scenarios ([IEA World Energy Outlook 2024](https://iea.blob.core.windows.net/assets/140a0470-5b90-4922-a0e9-838b3ac6918c/WorldEnergyOutlook2024.pdf))
 
 For implementation details, see `config.go.yaml` (described in [Project Config](../Configuration/go_project_config.md)).
+
+---
 
 ## 4. Generation Expansion
 

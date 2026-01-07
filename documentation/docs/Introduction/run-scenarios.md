@@ -2,6 +2,8 @@
 
 The `run_scenarios.py` script is a command-line utility designed to streamline the process of running various scenarios for your project. It allows you to select base configurations, specific scenarios, and execution profiles (e.g., for local CPU usage or a computer cluster).
 
+---
+
 ## How it Works
 
 The script guides you through a series of interactive prompts to configure your run:
@@ -12,6 +14,8 @@ The script guides you through a series of interactive prompts to configure your 
 4.  **Select Execution Profile:** Finally, you decide whether to run the scenarios on a computer cluster (using `--profile slurm`) or locally, specifying the number of CPUs to utilize.
 
 Once all selections are made, the script dynamically updates a temporary configuration file, executes a `snakemake` command with the chosen parameters, and then cleans up the temporary file.
+
+---
 
 ## Steps to Create and Run Scenarios
 
