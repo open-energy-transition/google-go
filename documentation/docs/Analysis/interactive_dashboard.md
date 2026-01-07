@@ -21,43 +21,38 @@ pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 
 ### Installation Steps
 
-1. **Navigate to the repository:**
+1. Navigate to the repository:
+   ```bash
+   cd /path/to/google-go
+   ```
 
-    ```bash
-    cd /path/to/google-go
-    ```
+2. Install dependencies:
+   ```bash
+   pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
+   ```
 
-2. **Install dependencies:**
+3. Verify data structure:
+   ```bash
+   ls -lh results/
+   ```
+   
+   Should show:
+   
+   - `results.csv`
+   - `results_frontier.csv`
+   - `results_time_series.parquet` (or `.csv`)
+   - `colors.csv`
 
-    ```bash
-    pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
-    ```
+4. Launch the dashboard:
+   ```bash
+   cd dashboard
+   python app.py
+   ```
 
-3. **Verify data structure:**
-
-    ```bash
-    ls -lh results/
-    ```
-    
-    Should show:
-    
-    - `results.csv`
-    - `results_frontier.csv`
-    - `results_time_series.parquet` (or `.csv`)
-    - `colors.csv`
-
-4. **Launch the dashboard:**
-
-    ```bash
-    cd dashboard
-    python app.py
-    ```
-
-5. **Access in browser:**
-
-    ```
-    http://localhost:8050
-    ```
+5. Access in browser:
+   ```
+   http://localhost:8050
+   ```
 
 ### Production Deployment
 
