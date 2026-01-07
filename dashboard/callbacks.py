@@ -442,29 +442,26 @@ def register_callbacks(app, data_loader):
     # ==================== Timeseries Exploration Callbacks ====================
     @app.callback(
         [Output('ts-year-selector', 'options'),
-         Output('ts-year-selector', 'value')],
-        [Input('ts-scenario-selector', 'value')]
-    )
-    def update_ts_years(scenario):
-        """Update available years for timeseries"""
-        metadata = data_loader.get_timeseries_metadata()
-        years = metadata.get('years', [])
-        options = [{'label': str(y), 'value': y} for y in years]
-        default_value = years[-1] if years else None
-        return options, default_value
-
-    @app.callback(
-        [Output('ts-scenario-selector', 'options'),
+         Output('ts-year-selector', 'value'),
+         Output('ts-scenario-selector', 'options'),
          Output('ts-scenario-selector', 'value')],
-        [Input('ts-year-selector', 'value')]
+        [Input('ts-type-selector', 'value')]
     )
-    def update_ts_scenarios(year):
-        """Update available scenarios for timeseries"""
+    def update_ts_years_and_scenarios(_):
+        """Initialize available years and scenarios for timeseries"""
         metadata = data_loader.get_timeseries_metadata()
+
+        # Years
+        years = metadata.get('years', [])
+        year_options = [{'label': str(y), 'value': y} for y in years]
+        year_default = years[-1] if years else None
+
+        # Scenarios
         scenarios = metadata.get('scenarios', [])
-        options = [{'label': s, 'value': s} for s in scenarios]
-        default_value = [scenarios[0]] if scenarios else []
-        return options, default_value
+        scenario_options = [{'label': s, 'value': s} for s in scenarios]
+        scenario_default = [scenarios[0]] if scenarios else []
+
+        return year_options, year_default, scenario_options, scenario_default
 
     @app.callback(
         [Output('ts-type-selector', 'options'),
