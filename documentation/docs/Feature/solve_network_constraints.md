@@ -1,5 +1,7 @@
 This section outlines specific functions within the `solve_network.py` script that are particularly relevant to the Google-GO project. These functions introduce custom constraints and functionalities to the PyPSA network, enabling specialized modeling for Guarantee of Origin (GO) certificates and renewable energy targets.
 
+---
+
 ## Background Constraints
 
 ### Add RPS Constraints
@@ -29,6 +31,8 @@ Where:
 * \( \text{Share}_{\text{RES}} \) is the renewable energy share target for a country.
 * \( \text{Share}_{\text{RES,EU+}} \) is the system-wide renewable energy share target.
 
+---
+
 ## GO Constraints
 
 The following functions (`add_virtual_ppl_matching`, `add_buffer_matching`, and `add_virtual_storage_matching`) are activated only when the `certificate` option is set to `true` in the `enable` configuration.
@@ -39,6 +43,8 @@ The following functions (`add_virtual_ppl_matching`, `add_buffer_matching`, and 
 
 **Visualization:**
 ![GO Market EQ 1](../supporting-material/GO Market EQ 1.svg)
+
+> **Note**: onshore wind example.
 
 **Mathematical Formulation:**
 
@@ -113,7 +119,9 @@ Where:
 - \( \eta_l \) is the efficiency of link \(l\).
 - \( \text{VS}_s \) denotes the set of real links (chargers/dischargers) aggregated into virtual storage unit \(s\).
 
-# Additional Storage Constraints
+---
+
+## Additional Storage Constraints
 
 ### Add Storage Inverter Fix
 

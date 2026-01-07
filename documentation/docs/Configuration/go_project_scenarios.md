@@ -2,6 +2,8 @@
 
 This section provides a comprehensive overview of the scenario definitions used in the Google-GO project, specifically focusing on the `config/scenarios.go.yaml` file. This configuration file enables the systematic exploration of different Guarantee of Origin (GO) market designs and policy interactions through a structured set of scenarios.
 
+---
+
 ## 1. Overview and Purpose
 
 The `scenarios.go.yaml` file defines a collection of scenarios that share the base configuration from `config.default.yaml` and `config.go.yaml`, but override specific parameters to explore different modeling assumptions. The hierarchical configuration structure works as follows:
@@ -24,6 +26,8 @@ Each scenario name becomes part of the output file paths, enabling systematic or
 
 ![Scenario tree](../supporting-material/scenario-tree.jpg)
 **Figure 1** - Scenario tree of the Google GO Project.
+
+---
 
 ## 2. Main Scenarios
 
@@ -70,6 +74,8 @@ These scenarios mirror the 50% participation series but with lower C&I involveme
 | `certificate.new_demand.participant` | ci | ci | ci | ci |
 | `certificate.new_demand.energy_matching` (%) | 25 | 25 | 25 | 25 |
 | `certificate.new_demand.hourly_matching` (%) | 90 | 95 | 98 | 99.9 |
+
+---
 
 ## 3. Sensitivities
 

@@ -2,9 +2,13 @@
 
 This section details the configuration settings used in the Google-GO project, specifically focusing on the `config/config.go.yaml` file and its differences from the default PyPSA-Eur configuration found in `config/config.default.yaml`. These modifications enable the specialized modeling required for Guarantee of Origin (GO) certificates and renewable energy targets within the project's framework.
 
+---
+
 ## General Project Context
 
 The Google-GO project models a network with **39 nodes** (countries/regions) and employs a **myopic foresight** approach. The planning horizons are set to **2025, 2030, 2035, and 2040**, with a 5-year timestep between each horizon.
+
+---
 
 ## Configuration Differences and New Additions
 
