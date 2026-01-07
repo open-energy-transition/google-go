@@ -302,7 +302,7 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 
 **What is a Dead Zone?**
 
-A "dead zone" is a region where the realized hourly matching as well as energy matching levels take place based on economics.
+The "dead zone" is the region including the shares of hourly and energy matching being possible.
 
 **How to Read Frontier Curves:**
 
