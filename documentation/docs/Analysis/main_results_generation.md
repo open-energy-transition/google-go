@@ -10,6 +10,8 @@ The three primary result types are:
 
 Each script is designed to be executed independently from the command line, with optional arguments to customize output paths and enable tutorial mode for testing purposes.
 
+---
+
 ## 1 Energy Procurement Frontier (`generate_frontier.py`)
 
 (TBD: change when we establish the final name fro the frontier)

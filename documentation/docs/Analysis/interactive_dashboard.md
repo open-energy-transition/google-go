@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Google-Go Interactive Dashboard is a web-based visualization tool for exploring energy system modeling results. It provides an intuitive interface to analyze multiple scenarios, compare results across different policy configurations, and explore both aggregated metrics and detailed hourly timeseries data.
+The Google-Go Interactive Dashboard is a web-based visualization tool for exploring the project results. It provides an intuitive interface to analyze multiple scenarios, compare results across different policy configurations, and explore both aggregated metrics and detailed hourly timeseries data.
 
 The dashboard handles large-scale energy system analysis results with millions of data points, providing fast, interactive visualizations with intelligent caching and data management.
 
@@ -37,12 +37,14 @@ pip install dash dash-bootstrap-components plotly pandas numpy pyarrow
 
     ```bash
     ls -lh results/
-    # Should show:
-    # results.csv
-    # results_frontier.csv
-    # results_time_series.parquet (or .csv)
-    # colors.csv
     ```
+    
+    Should show:
+    
+    - `results.csv`
+    - `results_frontier.csv`
+    - `results_time_series.parquet` (or `.csv`)
+    - `colors.csv`
 
 4. **Launch the dashboard:**
 

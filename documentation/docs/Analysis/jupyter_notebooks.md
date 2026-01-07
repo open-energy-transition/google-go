@@ -2,8 +2,6 @@
 
 The project includes several Jupyter notebooks that provide flexible, interactive post-processing, and visualization capabilities. These notebooks allow users to select specific scenarios, years, and countries for customized analysis beyond the automated CSV generation workflow. The notebooks are organized into two categories: those that replicate and visualize the main results (Section 1), and those that produce additional analyses not included in the automated workflow.
 
----
-
 ## General Structure
 
 All notebooks follow a consistent three-section structure:
