@@ -11,7 +11,7 @@ The model incorporates two frameworks for simulating GO markets:
 The Background Market is built upon the standards of the Association of Issuing Bodies (AIB), which currently facilitates the transfer of certificates across 25 of the 34 modeled countries. This framework utilizes annual volume matching based on historical AIB demand statistics rather than granular hourly tracking. 
 
 ![GO Market AIB](../supporting-material/GO Market AIB.svg)
-**Figure 1** - Scheme of Background GO Market PyPSA components. For the equation details, refer to [Solve Network Constraints](solve_network_constraints.md)
+**Figure 1** - Scheme of Background GO Market PyPSA components.
 
 To integrate certificate trading into the energy system model without interfering with physical grid constraints, the script employs a specialized schematic consisting of three "virtual" buses. This structure allows the model to track the "green" attributes of electricity separately from the physical electrons.
 
@@ -28,7 +28,7 @@ To read more about equations mentioned in the schematic, see [Solve Network Cons
 The New GO Market is designed for high levels of customization in both present and future energy scenarios. Participation in this market is restricted to production capacities commissioned within their first five years of operation, ensuring a focus on relatively new infrastructure. Certificate demand is allocated proportionally according to the electricity consumption of commercial and industrial sectors. Unlike the AIB-based system, this market can include all modeled countries and offers the flexibility to be configured as either a series of national markets or a single, EU-wide trading zone.
 
 ![GO Market New](../supporting-material/GO Market New.svg)
-**Figure 2** - Scheme of New GO Market PyPSA components. For the equation details, refer to [Solve Network Constraints](solve_network_constraints.md)
+**Figure 2** - Scheme of New GO Market PyPSA components.
 
 These are the main difference compared to the Background GO Market
 
