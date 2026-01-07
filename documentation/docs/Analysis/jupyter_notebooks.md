@@ -2,7 +2,7 @@
 
 The project includes several Jupyter notebooks that provide flexible, interactive post-processing, and visualization capabilities. These notebooks allow users to select specific scenarios, years, and countries for customized analysis beyond the automated CSV generation workflow. The notebooks are organized into two categories: those that replicate and visualize the main results (Section 1), and those that produce additional analyses not included in the automated workflow.
 
-#### General Structure
+## General Structure
 
 All notebooks follow a consistent three-section structure:
 
@@ -25,7 +25,7 @@ All notebooks follow a consistent three-section structure:
 
 This modular structure enables rapid iteration: users can modify scenario selections in Section 1 and re-run Section 2 without reloading data, or adjust plotting parameters and regenerate specific figures independently.
 
-#### Notebooks for Main Results
+## Notebooks for Main Results
 
 The following notebooks correspond directly to the three main result types:
 
@@ -35,7 +35,7 @@ The following notebooks correspond directly to the three main result types:
 
 - **`plot_time_comparison.ipynb`**: Produces comparative visualizations using all functions from `generate_time_comparison.py`. Generates bar charts, heatmaps, and other plots for the 14 result types (a-n), with options to analyze system-wide or country-specific impacts.
 
-#### Notebooks for Additional Results
+## Notebooks for Additional Results
 
 Beyond the main automated results, the project includes notebooks for supplementary analyses:
 
@@ -57,7 +57,7 @@ Beyond the main automated results, the project includes notebooks for supplement
     
     This analysis corresponds to result type (n) in the time comparison framework and provides insights into grid integration constraints and siting limitations for renewable energy.
 
-#### Supporting Scripts
+## Supporting Scripts
 
 Other than the scripts used for the main results, the notebooks utilize other supporting Python scripts that are imported but not executed directly:
 
