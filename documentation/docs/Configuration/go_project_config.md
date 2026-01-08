@@ -1,6 +1,6 @@
 # Google-GO Project Configuration: `config.go.yaml`
 
-This section details the configuration settings used in the Google-GO project, specifically focusing on the `config/config.go.yaml` file and its differences from the default PyPSA-Eur configuration found in `config/config.default.yaml`. These modifications enable the specialized modeling required for Guarantee of Origin (GO) certificates and renewable energy targets within the project's framework.
+This section details the Google-GO project configuration in `config/config.go.yaml` and its differences from the default PyPSA-Eur configuration (`config/config.default.yaml`). These modifications enable specialized modeling of Guarantee of Origin (GO) certificates and renewable energy targets.
 
 ---
 
@@ -59,11 +59,11 @@ This section contains extensive modifications related to electricity generation,
 
 | Parameter                       | Unit       | Values                          | `config.go.yaml`                                    | Description       |
 | :------------------------------ | :--------- | :---| :-------------------------- | :------------------------------------------------- |
-| novel_carriers | - | - | [green_ocgt, adv_firm_tech]   | A project-specific feature enabling novel technologies. Refer to `scripts/prepare_sector_networks.py` function `add_novel_technologies()` for details on its implementation.                                                               |
+| novel_carriers | - | - | [green_ocgt, adv_firm_tech]   | Enables novel technologies (project-specific feature). See `scripts/prepare_sector_networks.py` function `add_novel_technologies()` for implementation details.                                                               |
 |extendable_carriers|||
 | - StorageUnit | - | -  | [li-ion, iron-air]            | Specifies a list of storage technologies that can be extended, which is currently a project-specific feature not upstreamed to PyPSA-Eur. |
 | - Store     | -   | -  | [li-ion, iron-air, H2 tank]   | Specifies a list of store technologies that can be extended, including project-specific options. |
-| make_Store_StorageUnit | boolean    | {true, false}    | true  | If `true`, activates constraints in `scripts/solve_network.py` (`add_storage_inverter_fix` and `add_storage_duration_fix`) to make PyPSA stores and links behave as storage units, allowing them to not participate in the market. |
+| make_Store_StorageUnit | boolean    | {true, false}    | true  | If `true`, activates constraints (`add_storage_inverter_fix` and `add_storage_duration_fix` in `scripts/solve_network.py`) that make PyPSA stores and links behave as storage units, excluding them from market participation. |
 | max_hours  |||
 | - li-ion   | hours | - | 6   | Defines the maximum hours of storage for lithium-ion batteries. |
 | - iron-air | hours | - | 100 | Defines the maximum hours of storage for iron-air batteries.    |

@@ -285,13 +285,13 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 
 ### Tab 3: Dead Zone Analysis
 
-**Purpose**: Visualize the energy procurement frontier, which quantifies the trade-off between energy matching and hourly matching.
+**Purpose**: Visualize the energy procurement frontier showing the trade-off between energy matching and hourly matching.
 
 **What You Can Do:**
 
-- View frontier curves showing clean hourly matching vs. energy matching.
-- Identify trade-offs between the two matching types.
-- Compare frontiers across multiple scenarios and countries
+- View frontier curves (clean hourly matching vs. energy matching)
+- Identify trade-offs between matching types
+- Compare frontiers across scenarios and countries
 - Analyze regional sensitivities to policy constraints
 
 **Controls:**
@@ -331,7 +331,7 @@ The "dead zone" is the region including the shares of hourly and energy matching
 
 ### Tab 4: Timeseries Exploration
 
-**Purpose**: Explore hourly operational data (8,760 hours/year) to understand how the energy system operates in detail.
+**Purpose**: Explore hourly operational data (8,760 hours/year) to understand detailed energy system operations.
 
 **What You Can Do:**
 

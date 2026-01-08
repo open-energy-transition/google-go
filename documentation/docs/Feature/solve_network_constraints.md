@@ -155,7 +155,7 @@ Where:
 - \( P^{\text{nom}}_{\text{charger}, s} \) is the nominal capacity of the charger for storage technology \(s\).
 - \( \text{max_hours}_s \) is the maximum hours of storage for technology \(s\).
 
-These constraints provides the possibility of having batteries that do not participate in the market, making stores 
+These constraints provide the possibility of having batteries that do not participate in the market, making stores 
 and storage units essentially equivalent for these battery types. Both `add_storage_inverter_fix(n)` and 
 `add_storage_duration_fix(n)` impact storages that are defined as PyPSA stores and links to make them behave as 
-storage_units. Storages defined as stores and links are binded with the GO Layer, whereas storage_units are not.
+storage_units. Storages defined as stores and links are bound with the GO Layer, whereas storage_units are not.

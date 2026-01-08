@@ -1,12 +1,12 @@
 # Google-GO Project Scenarios: `scenarios.go.yaml`
 
-This section provides a comprehensive overview of the scenario definitions used in the Google-GO project, specifically focusing on the `config/scenarios.go.yaml` file. This configuration file enables the systematic exploration of different Guarantee of Origin (GO) market designs and policy interactions through a structured set of scenarios.
+This section provides an overview of scenario definitions in the Google-GO project, focusing on the `config/scenarios.go.yaml` file. This configuration enables systematic exploration of different Guarantee of Origin (GO) market designs and policy interactions.
 
 ---
 
 ## 1. Overview and Purpose
 
-The `scenarios.go.yaml` file defines a collection of scenarios that share the base configuration from `config.default.yaml` and `config.go.yaml`, but override specific parameters to explore different modeling assumptions. The hierarchical configuration structure works as follows:
+The `scenarios.go.yaml` file defines scenarios that inherit base settings from `config.default.yaml` and `config.go.yaml`, then override specific parameters to explore different modeling assumptions. The configuration hierarchy is:
 
 1. **Base Configuration**: `config.default.yaml` provides the default PyPSA-Eur settings
 2. **Project Configuration**: `config.go.yaml` overrides defaults with Google-GO specific settings (as described in `go_project_config.md`)
@@ -37,6 +37,8 @@ All main scenarios (except baseline) enable the `certificate.new_demand` feature
 
 - **Energy matching**: The percentage of C&I electricity demand participating in GO procurement (25% or 50%)
 - **Hourly matching**: The percentage of hourly demand that must be matched with hourly renewable generation (0%, 90%, 95%, 98%, or 99.9%). Hourly matching of 0% refers to annual GO matching.
+
+> **Note**: 99.9% hourly matching level was used as a proxy of 100%, as the latter leads to infeasibility.
 
 ### 2.1 Baseline and Energy Matching Scenarios
 
@@ -101,17 +103,17 @@ These scenarios disable GO market modeling to isolate the effects of RPS and car
 
 #### GO Market with Carbon Pricing Scenarios
 
-These scenarios combine GO market modeling (50% C&I participation, 99.9% hourly matching) with carbon pricing to assess policy interactions.
+These scenarios combine GO market modeling with 99.9% hourly matching and carbon pricing to assess policy interactions. They test both 25% and 50% C&I participation levels across different carbon price points.
 
-| Parameter | hourly-match-co2-price25-50-99 | hourly-match-co2-price50-50-99 |
-| :-------- | :----------------------------- | :----------------------------- |
-| **Description** | GO market with 50% C&I participation and 99.9% hourly matching under low carbon price (US-style). | GO market with 50% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). |
-| `enable.certificate` | true (default) | true (default) |
-| `costs.emission_prices.co2` (€/t_CO2) | 25 | 50 |
-| `certificate.new_demand.enable` | true | true |
-| `certificate.new_demand.participant` | ci | ci |
-| `certificate.new_demand.energy_matching` (%) | 50 | 50 |
-| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 |
+| Parameter | hourly-match-co2-price25-25-99 | hourly-match-co2-price50-25-99 | hourly-match-co2-price100-25-99 | hourly-match-co2-price50-50-99 |
+| :-------- | :----------------------------- | :----------------------------- | :------------------------------ | :----------------------------- |
+| **Description** | GO market with 25% C&I participation and 99.9% hourly matching under low carbon price (US-style). | GO market with 25% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). | GO market with 25% C&I participation and 99.9% hourly matching under high carbon price. | GO market with 50% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). |
+| `enable.certificate` | true (default) | true (default) | true (default) | true (default) |
+| `costs.emission_prices.co2` (€/t_CO2) | 25 | 50 | 100 | 50 |
+| `certificate.new_demand.enable` | true | true | true | true |
+| `certificate.new_demand.participant` | ci | ci | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 25 | 25 | 25 | 50 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 | 99.9 | 99.9 |
 
 ### 3.2 GO Market Scope Sensitivities
 

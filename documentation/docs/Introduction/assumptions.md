@@ -13,16 +13,16 @@ The modeling assumptions are organized into four main groups, each addressing a 
 
 ## 1. Electricity Demand
 
-To simplify the model and focus on the electricity sector, demands from low-voltage, industry, agriculture, heating, and hydrogen are aggregated into a single electricity load, while transport demand remains separate due to its dependency on EV batteries. 
+To focus on the electricity sector, demands from low-voltage, industry, agriculture, heating, and hydrogen are aggregated into a single electricity load. Transport demand remains separate due to its dependency on EV batteries.
 
-To compensate for the absence of full sector coupling modeling, the electricity demand framework combines default [PyPSA-Eur](https://pypsa-eur.readthedocs.io/en/latest/introduction.html) assumptions with [TYNDP-2024](https://2024.entsos-tyndp-scenarios.eu/download/) projections. 
+The electricity demand framework combines default [PyPSA-Eur](https://pypsa-eur.readthedocs.io/en/latest/introduction.html) assumptions with [TYNDP-2024](https://2024.entsos-tyndp-scenarios.eu/download/) projections to compensate for the absence of full sector coupling. 
 
 Specifically:
 
 - **PyPSA-Eur**: provides demand for low-voltage, industry, agriculture, and transport
 - **TYNDP-2024**: provides demand for [heating](https://2024-data.entsos-tyndp-scenarios.eu/files/scenarios-inputs/Demand_Scenarios_TYNDP_2024_After_Public_Consultation.xlsb.zip) and [hydrogen](https://2024.entsos-tyndp-scenarios.eu/download/)
 
-Within the aggregated electricity demand, Commercial and Industry (C&I) demand - which participates in the GO market - is further characterized using data from [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en) and [IEA](https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights) to determine its share and load profile.
+Within the aggregated electricity demand, commercial and industrial (C&I) demand - which participates in the GO market - is further characterized using data from [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en) and [IEA](https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights) to determine its share and load profile.
 
 ### 1.1 Heating and Hydrogen Electrification
 
@@ -43,16 +43,16 @@ Both demand components are computed following a consistent methodology:
 **Heating Demand:**
 
 - Includes space heating, cooling, and hot water needs in buildings and households
-- The source provides only 2019-Historical and 2040 and 2050-Deviation Scenarios. So, 2019 data are kept constant across the planning horizon
+- The source provides only 2019-Historical and 2040/2050-Deviation Scenarios. Therefore, 2019 data remain constant across the planning horizon
 - These shares do not account for hydrogen-related demand at the denominator
 
 **Hydrogen Demand:**
 
 - Includes electricity demand from all electrolyzers
-- The source ([TYNDP 2024-Scenarios Report-Data and Figures](https://2024.entsos-tyndp-scenarios.eu/download/)) provides 2030- and 2040-National Trends. So, 2025 and 2035 were interpolated assuming null demand in 2020
-- These shares account for heat-related demand at the denominator, so they should be used only when heating demand is also included. However, the code is flexible and allows separate handling of demands if needed
+- The source ([TYNDP 2024-Scenarios Report-Data and Figures](https://2024.entsos-tyndp-scenarios.eu/download/)) provides 2030 and 2040 National Trends data. Values for 2025 and 2035 were interpolated assuming zero demand in 2020
+- These shares include heat-related demand in the denominator and should only be used when heating demand is included. The code allows separate handling if needed
 
-> **Note:** By default, only heating demand is added. To activate the hydrogen demand assumptions, append this in `config/config.go.yaml`
+> **Note:** By default, only heating demand is added. To activate the hydrogen demand assumptions, append this in `config/config.go.yaml`.
 
 ```yaml
 overwrite_years:
@@ -83,14 +83,14 @@ overwrite_years:
 
 For implementation details, see `config.go.yaml` and `strip_network.py` (described in [Project Config](../Configuration/go_project_config.md) and [Strip Network](../Feature/strip_network.md)).
 
-### 1.2 Commercial and Industry Demand
+### 1.2 Commercial and Industrial Demand
 
-Demand from commercial and industry customers is derived from the C&I share over total electricity consumption as it follows:
+Demand from commercial and industrial customers is derived from the C&I share over total electricity consumption as follows:
 
 - [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_e__custom_16270810/default/table?lang=en) is the main source
-- United Kingdom (GB) and Switzerland (CH) are absent in Eurostat, so energy balance statistics from [IEA](https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights) are used instead
-- Only the latest full available data are used: Eurostat-2023, IEA-2022
-- C&I shares are kept constant across the time horizon, without accounting for potential future changes (e.g., data center growth or deindustrialization). However, values can be manually modified by users
+- For United Kingdom (GB) and Switzerland (CH), which are absent from Eurostat, [IEA](https://www.iea.org/data-and-statistics/data-product/world-energy-balances-highlights) energy balance statistics are used
+- Latest available data: Eurostat-2023, IEA-2022
+- C&I shares remain constant across the time horizon, excluding potential future changes (e.g., data center growth or deindustrialization). Users can manually modify these values
 
 For implementation details, see `config.go.yaml` (described in [Project Config](../Configuration/go_project_config.md)).
 
