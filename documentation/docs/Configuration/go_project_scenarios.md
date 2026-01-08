@@ -20,7 +20,7 @@ This file is integrated into the Snakemake workflow through the `run.scenarios` 
 An overview of the scenarios analyzed is provided in the scenario tree in Figure 1. The scenarios are organized into two main groups:
 
 - **Main Scenarios** (11 scenarios): Core scenarios exploring different levels of Commercial & Industry (C&I) participation and hourly matching requirements
-- **Sensitivities** (12 scenarios): Additional scenarios examining policy interactions, market scope, technology constraints, and additionality requirements
+- **Sensitivities** (18 scenarios): Additional scenarios examining policy interactions, market scope, technology constraints, and additionality requirements
 
 Each scenario name becomes part of the output file paths, enabling systematic organization of results across multiple scenario runs.
 
@@ -105,28 +105,28 @@ These scenarios disable GO market modeling to isolate the effects of RPS and car
 
 These scenarios combine GO market modeling with 99.9% hourly matching and carbon pricing to assess policy interactions. They test both 25% and 50% C&I participation levels across different carbon price points.
 
-| Parameter | hourly-match-co2-price25-25-99 | hourly-match-co2-price50-25-99 | hourly-match-co2-price100-25-99 | hourly-match-co2-price50-50-99 |
-| :-------- | :----------------------------- | :----------------------------- | :------------------------------ | :----------------------------- |
-| **Description** | GO market with 25% C&I participation and 99.9% hourly matching under low carbon price (US-style). | GO market with 25% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). | GO market with 25% C&I participation and 99.9% hourly matching under high carbon price. | GO market with 50% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). |
-| `enable.certificate` | true (default) | true (default) | true (default) | true (default) |
-| `costs.emission_prices.co2` (€/t_CO2) | 25 | 50 | 100 | 50 |
-| `certificate.new_demand.enable` | true | true | true | true |
-| `certificate.new_demand.participant` | ci | ci | ci | ci |
-| `certificate.new_demand.energy_matching` (%) | 25 | 25 | 25 | 50 |
-| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 | 99.9 | 99.9 |
+| Parameter | hourly-match-co2-price25-25-99 | hourly-match-co2-price50-25-99 | hourly-match-co2-price100-25-99 | hourly-match-co2-price25-50-99 | hourly-match-co2-price50-50-99 |
+| :-------- | :----------------------------- | :----------------------------- | :------------------------------ | :----------------------------- | :----------------------------- |
+| **Description** | GO market with 25% C&I participation and 99.9% hourly matching under low carbon price (US-style). | GO market with 25% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). | GO market with 25% C&I participation and 99.9% hourly matching under high carbon price. | GO market with 50% C&I participation and 99.9% hourly matching under low carbon price (US-style). | GO market with 50% C&I participation and 99.9% hourly matching under medium carbon price (EU-style). |
+| `enable.certificate` | true (default) | true (default) | true (default) | true (default) | true (default) |
+| `costs.emission_prices.co2` (€/t_CO2) | 25 | 50 | 100 | 25 | 50 |
+| `certificate.new_demand.enable` | true | true | true | true | true |
+| `certificate.new_demand.participant` | ci | ci | ci | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 25 | 25 | 25 | 50 | 50 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 | 99.9 | 99.9 | 99.9 |
 
 ### 3.2 GO Market Scope Sensitivities
 
-This group explores the geographic scope of GO trading. The default configuration in `config.go.yaml` sets `certificate.new_demand.scope: national`, restricting GO trading to within each country. This sensitivity tests a `global` (European-wide) market scope.
+This group explores the geographic scope of GO trading. The default configuration in `config.go.yaml` sets `certificate.new_demand.scope: national`, restricting GO trading to within each country. These sensitivities test a `global` (European-wide) market scope.
 
-| Parameter | hourly-match-EU-50-99 |
-| :-------- | :-------------------- |
-| **Description** | EU-wide GO market allowing cross-border GO trading, with 50% C&I participation and 99.9% hourly matching. Compares to national scope in main scenarios. |
-| `certificate.new_demand.enable` | true |
-| `certificate.new_demand.scope` | global |
-| `certificate.new_demand.participant` | ci |
-| `certificate.new_demand.energy_matching` (%) | 50 |
-| `certificate.new_demand.hourly_matching` (%) | 99.9 |
+| Parameter | hourly-match-EU-50-99 | hourly-match-EU-25-99 |
+| :-------- | :-------------------- | :-------------------- |
+| **Description** | EU-wide GO market allowing cross-border GO trading, with 50% C&I participation and 99.9% hourly matching. Compares to national scope in main scenarios. | EU-wide GO market allowing cross-border GO trading, with 25% C&I participation and 99.9% hourly matching. Compares to national scope in main scenarios. |
+| `certificate.new_demand.enable` | true | true |
+| `certificate.new_demand.scope` | global | global |
+| `certificate.new_demand.participant` | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 | 25 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 |
 
 ### 3.3 Technology Portfolio Sensitivities
 
@@ -136,25 +136,25 @@ These scenarios systematically remove technology categories to understand their 
 
 #### LDES Restrictions
 
-| Parameter | hourly-match-no-LDES-50-99 |
-| :-------- | :------------------------- |
-| **Description** | Excludes long-duration energy storage (iron-air) from GO-eligible storage, allowing only short-duration lithium-ion batteries. Tests dependence on LDES for hourly matching. |
-| `certificate.storage_carriers` | [li-ion] |
-| `certificate.new_demand.enable` | true |
-| `certificate.new_demand.participant` | ci |
-| `certificate.new_demand.energy_matching` (%) | 50 |
-| `certificate.new_demand.hourly_matching` (%) | 99.9 |
+| Parameter | hourly-match-no-LDES-50-99 | hourly-match-no-LDES-25-99 |
+| :-------- | :------------------------- | :------------------------- |
+| **Description** | Excludes long-duration energy storage (iron-air) from GO-eligible storage, allowing only short-duration lithium-ion batteries. Tests dependence on LDES for hourly matching with 50% C&I participation. | Excludes long-duration energy storage (iron-air) from GO-eligible storage, allowing only short-duration lithium-ion batteries. Tests dependence on LDES for hourly matching with 25% C&I participation. |
+| `certificate.storage_carriers` | [li-ion] | [li-ion] |
+| `certificate.new_demand.enable` | true | true |
+| `certificate.new_demand.participant` | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 | 25 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 |
 
 #### Clean Firm Restrictions
 
-| Parameter | hourly-match-no-clean-firm-50-99 |
-| :-------- | :------------------------------- |
-| **Description** | Excludes advanced firm technologies (`adv_firm_tech`) from GO-eligible generators, removing dispatchable clean power. Tests reliance on firm generation for hourly matching. |
-| `certificate.plant_carriers` | [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt] |
-| `certificate.new_demand.enable` | true |
-| `certificate.new_demand.participant` | ci |
-| `certificate.new_demand.energy_matching` (%) | 50 |
-| `certificate.new_demand.hourly_matching` (%) | 99.9 |
+| Parameter | hourly-match-no-clean-firm-50-99 | hourly-match-no-clean-firm-25-99 |
+| :-------- | :------------------------------- | :------------------------------- |
+| **Description** | Excludes advanced firm technologies (`adv_firm_tech`) from GO-eligible generators, removing dispatchable clean power. Tests reliance on firm generation for hourly matching with 50% C&I participation. | Excludes advanced firm technologies (`adv_firm_tech`) from GO-eligible generators, removing dispatchable clean power. Tests reliance on firm generation for hourly matching with 25% C&I participation. |
+| `certificate.plant_carriers` | [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt] | [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt] |
+| `certificate.new_demand.enable` | true | true |
+| `certificate.new_demand.participant` | ci | ci |
+| `certificate.new_demand.energy_matching` (%) | 50 | 25 |
+| `certificate.new_demand.hourly_matching` (%) | 99.9 | 99.9 |
 
 ### 3.4 Additionality Sensitivities
 

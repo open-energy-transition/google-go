@@ -37,7 +37,7 @@ hourly-match-50-90:
       energy_matching: 50
       hourly_matching: 90
 
-#4) C&I 50% energy matching, 95% hourly matching
+# 4) C&I 50% energy matching, 95% hourly matching
 hourly-match-50-95:
   certificate:
     new_demand:
@@ -46,7 +46,7 @@ hourly-match-50-95:
       energy_matching: 50
       hourly_matching: 95
 
-#5) C&I 50% energy matching, 98% hourly matching
+# 5) C&I 50% energy matching, 98% hourly matching
 hourly-match-50-98:
   certificate:
     new_demand:
@@ -55,7 +55,7 @@ hourly-match-50-98:
       energy_matching: 50
       hourly_matching: 98
 
-#6) C&I 50% energy matching, 99.9% hourly matching
+# 6) C&I 50% energy matching, 99.9% hourly matching
 hourly-match-50-99:
   certificate:
     new_demand:
@@ -141,7 +141,7 @@ baseline-co2-price50:
     emission_prices:
       co2: 50
 
-# 4) High carbon price - baseline
+# 4) High carbon price (baseline)
 baseline-co2-price100:
   enable:
     certificate: false
@@ -163,7 +163,7 @@ hourly-match-co2-price25-25-99:
       energy_matching: 25
       hourly_matching: 99.9
 
-# 6) Medium carbon price, proxy of US market (C&I 25%, 99.9% hourly matching)
+# 6) Medium carbon price, proxy of EU market (C&I 25%, 99.9% hourly matching)
 hourly-match-co2-price50-25-99:
   costs:
     emission_prices:
@@ -181,6 +181,7 @@ hourly-match-co2-price100-25-99:
   costs:
     emission_prices:
       co2: 100
+
   certificate:
     new_demand:
       enable: true
@@ -188,7 +189,20 @@ hourly-match-co2-price100-25-99:
       energy_matching: 25
       hourly_matching: 99.9
 
-# 8) Medium carbon price, proxy of EU market (C&I 50%, 99.9% hourly matching)
+# 8) Low carbon price, proxy of US market (C&I 50%, 99.9% hourly matching)
+hourly-match-co2-price25-50-99:
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 9) Medium carbon price, proxy of EU market (C&I 50%, 99.9% hourly matching)
 hourly-match-co2-price50-50-99:
   costs:
     emission_prices:
@@ -203,7 +217,7 @@ hourly-match-co2-price50-50-99:
 
 # == GO market scope ==
 
-# 7) EU GO market (C&I 50%, 99.9% hourly matching)
+# 10) EU GO market (C&I 50%, 99.9% hourly matching)
 hourly-match-EU-50-99:
   certificate:
     new_demand:
@@ -213,9 +227,19 @@ hourly-match-EU-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
+# 11) EU GO market (C&I 25%, 99.9% hourly matching)
+hourly-match-EU-25-99:
+  certificate:
+    new_demand:
+      enable: true
+      scope: global
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
 # == Technology portfolio ==      
 
-#  8) No Advanced Clean Firm (C&I 50%, 99.9% hourly matching)
+#  12) No LDES (iron-air) (C&I 50%, 99.9% hourly matching)
 hourly-match-no-LDES-50-99:
   certificate:
     storage_carriers: [li-ion]
@@ -225,7 +249,17 @@ hourly-match-no-LDES-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
-#  9) No LDES (iron-air) (C&I 50%, 99.9% hourly matching)
+#  13) No LDES (iron-air) (C&I 25%, 99.9% hourly matching)
+hourly-match-no-LDES-25-99:
+  certificate:
+    storage_carriers: [li-ion]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+#  14) No Advanced Clean Firm (C&I 50%, 99.9% hourly matching)
 hourly-match-no-clean-firm-50-99:
   certificate:
     plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
@@ -237,9 +271,21 @@ hourly-match-no-clean-firm-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
+#  15) No Advanced Clean Firm (C&I 25%, 99.9% hourly matching)
+hourly-match-no-clean-firm-25-99:
+  certificate:
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
+                    ror, hydro, urban central solid biomass CHP, geothermal, 
+                    solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
 # == Additionality ==
 
-# 10) No additionality (C&I 50%, 99.9% hourly matching)
+# 16) No additionality (C&I 50%, 99.9% hourly matching)
 hourly-match-noadd-50-99:
   certificate:
     plant_status: [new, existing]
@@ -249,7 +295,7 @@ hourly-match-noadd-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
-# 11) No additionality, low participation (C&I 10%, 99.9% hourly matching
+# 17) No additionality, low participation (C&I 10%, 99.9% hourly matching
 hourly-match-noadd-10-99:
   certificate:
     plant_status: [new, existing]
@@ -259,7 +305,7 @@ hourly-match-noadd-10-99:
       energy_matching: 10
       hourly_matching: 99.9
   
-# 12) No additionality, high participation (C&I 90%, 99.9% hourly matching
+# 18) No additionality, high participation (C&I 90%, 99.9% hourly matching
 hourly-match-noadd-90-99:
   certificate:
     plant_status: [new, existing]
