@@ -283,7 +283,7 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 
 ---
 
-### Tab 3: Dead Zone Analysis
+### Tab 3: Energy Procurement Frontier
 
 **Purpose**: Visualize the energy procurement frontier showing the trade-off between energy matching and hourly matching.
 
@@ -300,9 +300,9 @@ The dashboard provides five main analysis tabs for exploring energy system resul
 - **Scenarios**: Select up to 5 scenarios (or "All")
 - **Countries**: Select up to 5 countries (or "All")
 
-**What is a Dead Zone?**
+**What is the Energy Procurement Frontier?**
 
-The "dead zone" is the region including the shares of hourly and energy matching being possible.
+The Energy Procurement Frontier includes the maximum achievable hourly matching level (percentage of hours where clean/renewable generation meets or exceeds demand) for a given energy matching level (percentage of annual clean energy produced over the demand). The region within the Energy Procurement Frontier includes the shares of hourly and energy matching being possible.
 
 **How to Read Frontier Curves:**
 

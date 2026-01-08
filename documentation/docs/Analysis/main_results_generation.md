@@ -14,7 +14,7 @@ Each script is designed to be executed independently from the command line, with
 
 ## 1 Energy Procurement Frontier (`generate_frontier.py`)
 
-This script generates the energy procurement frontier, which quantifies the trade-off between energy matching (percentage of annual renewable energy produced over the demand) and hourly matching (percentage of hours where renewable generation meets or exceeds demand) for different regions and scenarios.
+This script generates the energy procurement frontier, which quantifies the trade-off between energy matching (percentage of annual clean/renewable energy produced over the demand) and hourly matching (percentage of hours where clean/renewable generation meets or exceeds demand) for different regions and scenarios.
 
 #### Imported Modules and Dependencies
 
