@@ -98,9 +98,9 @@ Where:
     - \( w_t \) is the snapshot weighting for time \(t\).
     - \( P^{\text{nom}}_{g} \) is the nominal capacity of buffer generator \(g\), defined in the **`add_demand`** function described in [Add Certificate](add_certificate.md) as:
     
-    $$
-    P^{\text{nom}}_{g} = (1 - \text{HM}) \cdot \sum_{t} P^{\text{set}}_{l,t} \cdot w_t \quad \forall l \in \text{GO loads}
-    $$
+        $$
+        P^{\text{nom}}_{g} = (1 - \text{HM}) \cdot \sum_{t} P^{\text{set}}_{l,t} \cdot w_t \quad \forall l \in \text{GO loads}
+        $$
     
         where \( P^{\text{set}}_{l, t} \) is the input certificate consumption of the GO load \(l\) at time \(t\) and \( \text{HM} \) is the hourly matching requirement.
     
