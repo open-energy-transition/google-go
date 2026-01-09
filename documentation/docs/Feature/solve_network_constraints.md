@@ -96,13 +96,14 @@ Where:
 
     - \( P^{\text{gen}}_{g,t} \) is the dispatch of buffer generator \(g\) at time \(t\).
     - \( w_t \) is the snapshot weighting for time \(t\).
-    - \( P^{\text{nom}}_{g} \) is the nominal capacity of buffer generator \(g\) and is defined in the **`add_demand`** function described in [Add Certificate](add_certificate.md) as:
-      
-      $$
-      P^{\text{nom}}_{g} = (1 - \text{HM}) \cdot \sum_{t} P^{\text{set}}_{l,t} \cdot w_t \quad \forall l \in \text{GO loads}
-      $$
-      
-      where \( P^{\text{set}}_{l, t} \) is the input certificate consumption of the GO load \(l\) at time \(t\) and \( \text{HM} \) is the hourly matching requirement.
+    - \( P^{\text{nom}}_{g} \) is the nominal capacity of buffer generator \(g\), defined in the **`add_demand`** function described in [Add Certificate](add_certificate.md) as:
+    
+    $$
+    P^{\text{nom}}_{g} = (1 - \text{HM}) \cdot \sum_{t} P^{\text{set}}_{l,t} \cdot w_t \quad \forall l \in \text{GO loads}
+    $$
+    
+    where \( P^{\text{set}}_{l, t} \) is the input certificate consumption of the GO load \(l\) at time \(t\) and \( \text{HM} \) is the hourly matching requirement.
+    
     - \( \text{Dischargers} \) are buffer generators that produces GOs (sign 1).
 
 > **Note:** These equations refer to _Equation 2_ block in the schematics in [Add Certificate](add_certificate.md).
