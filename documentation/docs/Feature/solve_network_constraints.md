@@ -102,7 +102,7 @@ Where:
     P^{\text{nom}}_{g} = (1 - \text{HM}) \cdot \sum_{t} P^{\text{set}}_{l,t} \cdot w_t \quad \forall l \in \text{GO loads}
     $$
     
-    where \( P^{\text{set}}_{l, t} \) is the input certificate consumption of the GO load \(l\) at time \(t\) and \( \text{HM} \) is the hourly matching requirement.
+        where \( P^{\text{set}}_{l, t} \) is the input certificate consumption of the GO load \(l\) at time \(t\) and \( \text{HM} \) is the hourly matching requirement.
     
     - \( \text{Dischargers} \) are buffer generators that produces GOs (sign 1).
 
