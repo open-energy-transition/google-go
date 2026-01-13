@@ -14,137 +14,34 @@ SPDX-License-Identifier: CC-BY-4.0
 [![Discord](https://img.shields.io/discord/911692131440148490?logo=discord)](https://discord.gg/AnuJBk23FU)
 [![REUSE status](https://api.reuse.software/badge/github.com/pypsa/pypsa-eur)](https://api.reuse.software/info/github.com/pypsa/pypsa-eur)
 
-# {{project_name}}
-<img src="https://raw.githubusercontent.com/open-energy-transition/oet-website/main/assets/img/oet-logo-red-n-subtitle.png" alt="Open Energy Transition Logo" width="260" height="100" align="right">
+# Google GO project
+This repository is a soft-fork of [OET/PyPSA-Eur](https://github.com/open-energy-transition/pypsa-eur) and contains the entire project **Google GO** carried out by [Open Energy Transition (OET)](https://openenergytransition.org/) and [Google](https://about.google/), including code and visualization. The philosophy behind this repository is that no intermediary results are included, but all results are computed from raw data and code.
 
-This repository is a soft-fork of [PyPSA-Eur](https://github.com/pypsa/pypsa-eur) and contains the entire project `{{project_name}}` supported by [Open Energy Transition (OET)](https://openenergytransition.org/)<sup>*</sup>, including code and report. The philosophy behind this repository is that no intermediary results are included, but all results are computed from raw data and code. The structure is also inspired by [cookiecutter-project](https://github.com/PyPSA/cookiecutter-project).
+This repository is maintained using [OET's soft-fork strategy](https://open-energy-transition.github.io/handbook/docs/Engineering/SoftForkStrategy/). OET's primary aim is to contribute as much as possible to the open source (OS) upstream repositories. For long-term changes that cannot be directly merged upstream, the strategy organizes and maintains OET forks, ensuring they remain up-to-date and compatible with upstream, while also supporting future contributions back to the OS repositories.
 
-This repository is maintained using [OET's soft-fork strategy](https://open-energy-transition.github.io/handbook/docs/Engineering/SoftForkStrategy). OET's primary aim is to contribute as much as possible to the open source (OS) upstream repositories. For long-term changes that cannot be directly merged upstream, the strategy organizes and maintains OET forks, ensuring they remain up-to-date and compatible with upstream, while also supporting future contributions back to the OS repositories.
+OET, an international non-profit organization specializing in open energy modeling software development and support, brought its expertise to this project. The organization has a proven track record in promoting transparent, data-driven decision-making in energy policy and planning, with its software products (including PyPSA-Eur and PyPSA-Earth) used in more than 50 research and industry-related projects.
 
+## Background
+![GO Market AIB](documentation/docs/supporting-material/market_plot.png)
+**Figure 1** - Spatial scope of the existing Guarantees of Origin (GOs) European market(s).
 
-# Repository structure
+Guarantees of Origin (GOs) are certificates used in Europe that prove energy has been generated from renewable sources. This allows final customers, such as commercial and industrial (C&I) customers, to buy and claim renewable energy, separating the "green" attribute from the physical electrons. Annual GOs match renewable supply and consumption at the annual level. They are the standard GOs and are issued at national level. Then, the [Association of Issuing Bodies (AIB)](https://www.aib-net.org/) coordinates the national issuing bodies, ensuring consistency across countries and facilitating cross-border trading. Instead, hourly GOs, also referred to as hourly Granular Certificates (GCs), are newer and more granular type, enabling near real-time matching between renewable supply and consumption.
 
-* `benchmarks`: will store `snakemake` benchmarks (does not exist initially)
-* `config`: configurations used in the study
-* `cutouts`: will store raw weather data cutouts from `atlite` (does not exist initially)
-* `data`: includes input data that is not produced by any `snakemake` rule
-* `doc`: includes all files necessary to build the `readthedocs` documentation of PyPSA-Eur
-* `envs`: includes backup `conda` environments if `pixi` installation does not work.
-* `logs`: will store log files (does not exist initially)
-* `notebooks`: includes all the `notebooks` used for ad-hoc analysis
-* `report`: contains all files necessary to build the report; plots and result files are generated automatically
-* `rules`: includes all the `snakemake`rules loaded in the `Snakefile`
-* `resources`: will store intermediate results of the workflow which can be picked up again by subsequent rules (does not exist initially)
-* `results`: will store the solved PyPSA network data, summary files and plots (does not exist initially)
-* `scripts`: includes all the Python scripts executed by the `snakemake` rules to build the model
+This project aims to assess how annual and hourly GOs procurement can operate as an investment signal for the energy transition. This is done by comparing the system-level impacts in terms of: capacity expansion, asset-level dispatch, total system costs and emissions, GO pricing and market value. Also, the impacts are evaluated at country-level and by running several sensitivities. The latter aim to explore different: C&I demand participation, hourly matching requirements, and interaction with other market-based policies (e.g., CO2 price or renewable portfolio standards).
 
-# Installation and Usage
+## Model Scope
+To balance spatial and temporal resolution with computational efficiency, the model scope is defined as follows:
 
-## 1. Installation
-
-Clone the repository:
-
-```sh
-git clone https://github.com/open-energy-transition/{{repository}}
-```
-
-You need [pixi](https://pixi.sh/latest/) to run the analysis.
-Once installed, activate your pixi environment in a terminal session:
-
-```sh
-pixi shell
-```
-
->[!NOTE]
->`pixi` will create a distinct environment in every project directory, even if you have identical copies of a project cloned locally.
->As there is a common system-level package cache, `pixi` efficiently conserves disk space in such cases.
-
->[!TIP]
->If `pixi` isn't working, you can install from one of the fallback `conda` environment files found in `envs`.
->For more details see [the PyPSA-Eur installation guide](https://pypsa-eur.readthedocs.io/en/latest/installation.html).
-
-### Extra soft-fork dependencies
-
-If you add dependencies to your project, we recommend you add them to a [new `pixi` environment](https://pixi.sh/v0.21.1/features/multi_environment/#feature-environment-set-definitions).
-For instance, if you need access to `plotly`, want to pin the version of gurobi you are using, and want to add a PyPI dependency:
-
-```sh
-pixi add -f {{ project_short_name }} "gurobi<13" "plotly"
-pixi add -f {{ project_short_name }} --pypi pypsa-explorer
-```
-
-This will create these entries in your `pixi.toml`
-
-```toml
-[feature.{{ project_short_name }}.pypi-dependencies]
-pypsa-explorer = "*"
-
-[feature.{{ project_short_name }}.dependencies]
-gurobi = "<13"
-plotly = "*"
-```
-
-Then, you can create an environment from this feature in `pixi.toml`:
-
-```toml
-[environments]
-...
-{{ project_short_name }} = [{{ project_short_name }}]
-```
-
-These dependencies will be combined with the core PyPSA-Eur dependencies and can be accessed by calling:
-
-```sh
-pixi shell -e {{ project_short_name }}
-```
-
-#### Updating CI tests
-
-To run CI tests using your environment you should add the `test` feature to it and create test tasks for your environment, e.g.:
-
-```toml
-[feature.{{ project_short_name }}.tasks]
-{{ project_short_name }}-test = """
-	snakemake --configfile config/config.{{ project_short_name }}.default.yaml -n &&
-    """
-[environments]
-...
-{{ project_short_name }} = ["test", {{ project_short_name }}]
-```
-
-And then update `.github/workflows/test.yaml` to run that test:
-
-```yaml
-- name: Run project-specific snakemake test workflows
-  run: |
-    pixi run {{ project_short_name }}-test
-```
-
-If you also add your own unit tests, update the unit test runner to use your environment as well:
-
-```yaml
-- name: Run unit tests
-  run: |
-    pixi run -e {{ project_short_name }} unit-tests
-```
-
-
-## 2. Run the analysis
-
-```sh
-snakemake -call
-```
-
-This will run all analysis steps to reproduce results and build the report.
-
-To generate a PDF of the dependency graph of all steps `resources/dag.pdf` run:
-
-```sh
-snakemake -c1 dag
-```
-
-<sup>*</sup> Open Energy Transition (g)GmbH, Königsallee 52, 95448 Bayreuth, Germany
-
+* **Spatial Scope**:
+    * Geography: 34 countries.
+    * Resolution: 39 nodes (ensuring that each country is represented by at least one node).
+* **Temporal Scope**:
+    * Planning horizons: from 2025 to 2040, with 5-years interval.
+    * Resolution: 3-hours interval.
+* **Sectoral Scope**:
+The model is limited to the electricity sector, as it is the primary focus for clean procurement strategies. However, electrification of heating and hydrogen demand can be exogenously accounted for by means of dedicated configuration settings.
+* **Technology Scope**:
+The technologies eligible for the procurement involve all renewable energy sources, as well as short and long-duration energy storage options and clean firm technologies.
 ----
 
 ----

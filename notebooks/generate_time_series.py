@@ -145,8 +145,8 @@ def main(output="results_time_series", tutorial=False):
     data_all
 
     # Save to an csv
-    print(f"Saving results in {output}.csv")
-    data_all.to_csv(output + ".csv")
+    print(f"Saving results in {output}.parquet")
+    data_all.to_parquet(output + ".parquet")
 
 if __name__ == "__main__":
     

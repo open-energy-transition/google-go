@@ -21,6 +21,9 @@ baseline:
 
 # 2) C&I 50%, energy matching
 energy-match-50:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     new_demand:
       enable: true
@@ -30,6 +33,9 @@ energy-match-50:
 
 # 3) C&I 50% energy matching, 90% hourly matching
 hourly-match-50-90:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     new_demand:
       enable: true
@@ -37,8 +43,11 @@ hourly-match-50-90:
       energy_matching: 50
       hourly_matching: 90
 
-#4) C&I 50% energy matching, 95% hourly matching
+# 4) C&I 50% energy matching, 95% hourly matching
 hourly-match-50-95:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     new_demand:
       enable: true
@@ -46,8 +55,11 @@ hourly-match-50-95:
       energy_matching: 50
       hourly_matching: 95
 
-#5) C&I 50% energy matching, 98% hourly matching
+# 5) C&I 50% energy matching, 98% hourly matching
 hourly-match-50-98:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     new_demand:
       enable: true
@@ -55,8 +67,11 @@ hourly-match-50-98:
       energy_matching: 50
       hourly_matching: 98
 
-#6) C&I 50% energy matching, 99.9% hourly matching
+# 6) C&I 50% energy matching, 99.9% hourly matching
 hourly-match-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     new_demand:
       enable: true
@@ -113,7 +128,7 @@ hourly-match-25-99:
 # ===========================================
 
 # == Policy ==
-# 1) Renewable Portfolio Standard (baseline)
+# 12) Renewable Portfolio Standard (baseline)
 baseline-rps:
   enable:
     certificate: false
@@ -122,8 +137,7 @@ baseline-rps:
     system_share_target: true
     country_share_target: true
 
-# 2) Low carbon price, proxy of US market (baseline)
-
+# 13) Low carbon price, proxy of US market (baseline)
 baseline-co2-price25:
   enable:
     certificate: false
@@ -132,7 +146,7 @@ baseline-co2-price25:
     emission_prices:
       co2: 25
 
-# 3) Medium carbon price, proxy of EU market (baseline)
+# 14) Medium carbon price, proxy of EU market (baseline)
 baseline-co2-price50:
   enable:
     certificate: false
@@ -141,7 +155,7 @@ baseline-co2-price50:
     emission_prices:
       co2: 50
 
-# 4) High carbon price - baseline
+# 15) High carbon price - baseline
 baseline-co2-price100:
   enable:
     certificate: false
@@ -150,8 +164,11 @@ baseline-co2-price100:
     emission_prices:
       co2: 100
 
-# 5) Low carbon price, proxy of US market (C&I 50%, 99.9% hourly matching)
+# 16) Low carbon price, proxy of US market (C&I 50%, 99.9% hourly matching)
 hourly-match-co2-price25-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   costs:
     emission_prices:
       co2: 25
@@ -163,8 +180,24 @@ hourly-match-co2-price25-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
-# 6) Medium carbon price, proxy of EU market (C&I 50%, 99.9% hourly matching)
+# 17) Low carbon price, proxy of US market (C&I 25%, 99.9% hourly matching)
+hourly-match-co2-price25-25-99:
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# 18) Medium carbon price, proxy of EU market (C&I 50%, 99.9% hourly matching)
 hourly-match-co2-price50-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   costs:
     emission_prices:
       co2: 50
@@ -176,10 +209,39 @@ hourly-match-co2-price50-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
+# 19) Medium carbon price, proxy of EU market (C&I 25%, 99.9% hourly matching)
+hourly-match-co2-price50-25-99:
+  costs:
+    emission_prices:
+      co2: 50
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# 20) High carbon price - baseline (C&I 25%, 99.9% hourly matching)
+hourly-match-co2-price100-25-99:
+  costs:
+    emission_prices:
+      co2: 100
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
 # == GO market scope ==
 
-# 7) EU GO market (C&I 50%, 99.9% hourly matching)
+# 21) EU GO market (C&I 50%, 99.9% hourly matching)
 hourly-match-EU-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     new_demand:
       enable: true
@@ -188,10 +250,23 @@ hourly-match-EU-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
+# 22) EU GO market (C&I 25%, 99.9% hourly matching)
+hourly-match-EU-25-99:
+  certificate:
+    new_demand:
+      enable: true
+      scope: global
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
 # == Technology portfolio ==      
 
-#  8) No Advanced Clean Firm (C&I 50%, 99.9% hourly matching)
+# 23) No LDES (iron-air) (C&I 50%, 99.9% hourly matching)
 hourly-match-no-LDES-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     storage_carriers: [li-ion]
     new_demand:
@@ -200,8 +275,21 @@ hourly-match-no-LDES-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
-#  9) No LDES (iron-air) (C&I 50%, 99.9% hourly matching)
+# 24) No LDES (iron-air) (C&I 25%, 99.9% hourly matching)
+hourly-match-no-LDES-25-99:
+  certificate:
+    storage_carriers: [li-ion]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# 25) No Advanced Clean Firm (C&I 50%, 99.9% hourly matching)
 hourly-match-no-clean-firm-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
   certificate:
     plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
                     ror, hydro, urban central solid biomass CHP, geothermal, 
@@ -212,9 +300,21 @@ hourly-match-no-clean-firm-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
+# 26) No Advanced Clean Firm (C&I 25%, 99.9% hourly matching)
+hourly-match-no-clean-firm-25-99:
+  certificate:
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
+                    ror, hydro, urban central solid biomass CHP, geothermal, 
+                    solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
 # == Additionality ==
 
-# 10) No additionality (C&I 50%, 99.9% hourly matching)
+# 27) No additionality (C&I 50%, 99.9% hourly matching)
 hourly-match-noadd-50-99:
   certificate:
     plant_status: [new, existing]
@@ -224,7 +324,7 @@ hourly-match-noadd-50-99:
       energy_matching: 50
       hourly_matching: 99.9
 
-# 11) No additionality, low participation (C&I 10%, 99.9% hourly matching
+# 28) No additionality, low participation (C&I 10%, 99.9% hourly matching
 hourly-match-noadd-10-99:
   certificate:
     plant_status: [new, existing]
@@ -234,7 +334,7 @@ hourly-match-noadd-10-99:
       energy_matching: 10
       hourly_matching: 99.9
   
-# 12) No additionality, high participation (C&I 90%, 99.9% hourly matching
+# 29) No additionality, high participation (C&I 90%, 99.9% hourly matching
 hourly-match-noadd-90-99:
   certificate:
     plant_status: [new, existing]
