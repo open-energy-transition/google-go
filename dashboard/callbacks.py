@@ -613,6 +613,9 @@ def create_bar_plot(data, metric, color_mapper):
     carriers = data.index.get_level_values(2).tolist()
     values = data.values
 
+    # Extract unit from ylabel (level 1)
+    ylabel = data.index.get_level_values(1)[0] if len(data.index.get_level_values(1)) > 0 else "Value"
+
     # Clean carrier names
     carriers_clean = [clean_carrier_name(c) for c in carriers]
     colors = [color_mapper.get_color(c, metric) for c in carriers]
@@ -624,7 +627,7 @@ def create_bar_plot(data, metric, color_mapper):
     fig.update_layout(
         title=f"{metric}",
         xaxis_title="Carrier",
-        yaxis_title="Value",
+        yaxis_title=ylabel,
         template="plotly_white",
         hovermode='x unified'
     )
@@ -644,6 +647,9 @@ def create_pie_plot(data, metric, color_mapper):
     carriers = data.index.get_level_values(2).tolist()
     values = data.values
 
+    # Extract unit from ylabel (level 1)
+    ylabel = data.index.get_level_values(1)[0] if len(data.index.get_level_values(1)) > 0 else "Value"
+
     # Filter out negative or zero values for pie chart
     mask = values > 0
     carriers = [c for c, m in zip(carriers, mask) if m]
@@ -658,7 +664,7 @@ def create_pie_plot(data, metric, color_mapper):
     ])
 
     fig.update_layout(
-        title=f"{metric} Distribution",
+        title=f"{metric} Distribution<br><sub>{ylabel}</sub>",
         template="plotly_white"
     )
 
@@ -910,6 +916,7 @@ def create_stacked_bar_all_years(scenario_name, metric, carriers, data_loader, c
             return create_empty_figure("Select scenario and metric")
 
         fig = go.Figure()
+        ylabel = "Value"  # Default
 
         # Get data for each year
         for year in years:
@@ -926,6 +933,10 @@ def create_stacked_bar_all_years(scenario_name, metric, carriers, data_loader, c
                 data_series = df.iloc[:, 0]
             else:
                 data_series = df.iloc[:, 0] if len(df.columns) > 0 else df
+
+            # Extract unit from ylabel (level 1) - get from first year with data
+            if year == years[0] and len(data_series.index.get_level_values(1)) > 0:
+                ylabel = data_series.index.get_level_values(1)[0]
 
             # Get carriers and values
             year_carriers = data_series.index.get_level_values(2).tolist()
@@ -949,7 +960,7 @@ def create_stacked_bar_all_years(scenario_name, metric, carriers, data_loader, c
         fig.update_layout(
             title=f"{metric} - All Years Comparison",
             xaxis_title="Year",
-            yaxis_title="Value",
+            yaxis_title=ylabel,
             barmode='stack',
             template="plotly_white",
             hovermode='x unified',
@@ -981,6 +992,7 @@ def create_year_comparison_plot(scenario_name, metric, carriers, data_loader, co
         # Collect data for all years
         year_data = {}
         all_carriers = set()
+        ylabel = "Value"  # Default
 
         for year in years:
             df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
@@ -996,6 +1008,10 @@ def create_year_comparison_plot(scenario_name, metric, carriers, data_loader, co
                 data_series = df.iloc[:, 0]
             else:
                 data_series = df.iloc[:, 0] if len(df.columns) > 0 else df
+
+            # Extract unit from ylabel (level 1) - get from first year with data
+            if year == years[0] and len(data_series.index.get_level_values(1)) > 0:
+                ylabel = data_series.index.get_level_values(1)[0]
 
             year_carriers = data_series.index.get_level_values(2).tolist()
             all_carriers.update(year_carriers)
@@ -1019,7 +1035,7 @@ def create_year_comparison_plot(scenario_name, metric, carriers, data_loader, co
         fig.update_layout(
             title=f"{metric} - Year Comparison",
             xaxis_title="Carrier",
-            yaxis_title="Value",
+            yaxis_title=ylabel,
             barmode='group',
             template="plotly_white",
             hovermode='x unified',
@@ -1044,6 +1060,7 @@ def create_year_on_year_evolution_plot(scenario_name, metric, carriers, data_loa
         # Collect data for all years
         year_data = {}
         all_carriers = set()
+        ylabel = "Value"  # Default
 
         for year in years:
             df = data_loader.get_data(year=year, scenario_name=scenario_name, metric=metric)
@@ -1059,6 +1076,10 @@ def create_year_on_year_evolution_plot(scenario_name, metric, carriers, data_loa
                 data_series = df.iloc[:, 0]
             else:
                 data_series = df.iloc[:, 0] if len(df.columns) > 0 else df
+
+            # Extract unit from ylabel (level 1) - get from first year with data
+            if year == years[0] and len(data_series.index.get_level_values(1)) > 0:
+                ylabel = data_series.index.get_level_values(1)[0]
 
             year_carriers = data_series.index.get_level_values(2).tolist()
             all_carriers.update(year_carriers)
@@ -1093,7 +1114,7 @@ def create_year_on_year_evolution_plot(scenario_name, metric, carriers, data_loa
         fig.update_layout(
             title=f"Year on Year Evolution: {metric}<br><sub>{format_scenario_name(scenario_name)}</sub>",
             xaxis_title="Year",
-            yaxis_title="Value",
+            yaxis_title=ylabel,
             template="plotly_white",
             hovermode='x unified',
             legend=dict(title="Technology", yanchor="top", y=0.99, xanchor="left", x=1.01)
@@ -1163,6 +1184,9 @@ def create_cross_comparison_plot(year, metric, plot_type, subscenarios, data_loa
         # Get carrier list from first dataset
         carrier_list = all_data[0][1].index.get_level_values(2).tolist()
 
+        # Extract unit from ylabel (level 1)
+        ylabel = all_data[0][1].index.get_level_values(1)[0] if len(all_data[0][1].index.get_level_values(1)) > 0 else "Value"
+
         # Add bars for all scenarios
         for i, (subscenario, data) in enumerate(all_data):
             fig.add_trace(go.Bar(
@@ -1176,7 +1200,7 @@ def create_cross_comparison_plot(year, metric, plot_type, subscenarios, data_loa
         fig.update_layout(
             title=f"{metric} ({year})<br><sub>{scenario_names}</sub>",
             xaxis_title="Carrier",
-            yaxis_title="Value",
+            yaxis_title=ylabel,
             template="plotly_white",
             barmode='group',
             hovermode='x unified',
@@ -1481,6 +1505,7 @@ def create_cross_stacked_bar_plot(metric, subscenarios, data_loader, color_mappe
         # Collect data for all years for all subscenarios
         all_carriers = set()
         year_data = {}  # Dict of dicts: {subscenario: {year: {carrier: value}}}
+        ylabel = "Value"  # Default
 
         for subscenario in subscenarios:
             year_data[subscenario] = {}
@@ -1488,6 +1513,12 @@ def create_cross_stacked_bar_plot(metric, subscenarios, data_loader, color_mappe
                 df = data_loader.get_data(year=year, scenario_name=subscenario, metric=metric)
                 if df is not None and not df.empty:
                     data = df.iloc[:, 0] if isinstance(df.columns, pd.MultiIndex) else df.iloc[:, 0]
+
+                    # Extract unit from ylabel (level 1) - get from first data point
+                    if not ylabel or ylabel == "Value":
+                        if len(data.index.get_level_values(1)) > 0:
+                            ylabel = data.index.get_level_values(1)[0]
+
                     carrier_list = data.index.get_level_values(2).tolist()
                     all_carriers.update(carrier_list)
                     year_data[subscenario][year] = {carrier: val for carrier, val in zip(carrier_list, data.values)}
@@ -1546,7 +1577,7 @@ def create_cross_stacked_bar_plot(metric, subscenarios, data_loader, color_mappe
         fig.update_layout(
             title=f"Stacked Bar - All Years: {metric}<br><sub>{scenario_names} ({group_label})</sub>",
             xaxis_title="Year and Scenario" if grouping == 'year' else "Scenario and Year",
-            yaxis_title="Value",
+            yaxis_title=ylabel,
             barmode='stack',
             bargap=0.3,
             template="plotly_white",
@@ -1738,6 +1769,7 @@ def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_m
         all_carriers = set()
         year_data1 = {}
         year_data2 = {}
+        ylabel = "Value"  # Default
 
         for year in years:
             df1 = data_loader.get_data(year=year, scenario_name=subscenario1, metric=metric)
@@ -1745,12 +1777,22 @@ def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_m
 
             if df1 is not None and not df1.empty:
                 data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
+
+                # Extract unit from ylabel (level 1) - get from first data point
+                if ylabel == "Value" and len(data1.index.get_level_values(1)) > 0:
+                    ylabel = data1.index.get_level_values(1)[0]
+
                 carriers1 = data1.index.get_level_values(2).tolist()
                 all_carriers.update(carriers1)
                 year_data1[year] = {carrier: val for carrier, val in zip(carriers1, data1.values)}
 
             if df2 is not None and not df2.empty:
                 data2 = df2.iloc[:, 0] if isinstance(df2.columns, pd.MultiIndex) else df2.iloc[:, 0]
+
+                # Extract unit from ylabel (level 1) - get from first data point
+                if ylabel == "Value" and len(data2.index.get_level_values(1)) > 0:
+                    ylabel = data2.index.get_level_values(1)[0]
+
                 carriers2 = data2.index.get_level_values(2).tolist()
                 all_carriers.update(carriers2)
                 year_data2[year] = {carrier: val for carrier, val in zip(carriers2, data2.values)}
@@ -1806,7 +1848,7 @@ def create_cross_year_comparison_plot(metric, subscenarios, data_loader, color_m
         fig.update_layout(
             title=f"Side by Side Bar Plot: {metric}<br><sub>{format_scenario_name(subscenario1)} vs {format_scenario_name(subscenario2)}</sub>",
             xaxis_title="Year - Carrier",
-            yaxis_title="Value",
+            yaxis_title=ylabel,
             barmode='group',
             template="plotly_white",
             hovermode='x unified',
@@ -1845,6 +1887,7 @@ def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper,
         all_carriers = set()
         year_data1 = {}
         year_data2 = {}
+        ylabel = "Value"  # Default
 
         for year in years:
             df1 = data_loader.get_data(year=year, scenario_name=subscenario1, metric=metric)
@@ -1852,12 +1895,22 @@ def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper,
 
             if df1 is not None and not df1.empty:
                 data1 = df1.iloc[:, 0] if isinstance(df1.columns, pd.MultiIndex) else df1.iloc[:, 0]
+
+                # Extract unit from ylabel (level 1) - get from first data point
+                if ylabel == "Value" and len(data1.index.get_level_values(1)) > 0:
+                    ylabel = data1.index.get_level_values(1)[0]
+
                 carriers1 = data1.index.get_level_values(2).tolist()
                 all_carriers.update(carriers1)
                 year_data1[year] = {carrier: val for carrier, val in zip(carriers1, data1.values)}
 
             if df2 is not None and not df2.empty:
                 data2 = df2.iloc[:, 0] if isinstance(df2.columns, pd.MultiIndex) else df2.iloc[:, 0]
+
+                # Extract unit from ylabel (level 1) - get from first data point
+                if ylabel == "Value" and len(data2.index.get_level_values(1)) > 0:
+                    ylabel = data2.index.get_level_values(1)[0]
+
                 carriers2 = data2.index.get_level_values(2).tolist()
                 all_carriers.update(carriers2)
                 year_data2[year] = {carrier: val for carrier, val in zip(carriers2, data2.values)}
@@ -1921,7 +1974,7 @@ def create_cross_evolution_plot(metric, subscenarios, data_loader, color_mapper,
         fig.update_layout(
             title=f"Year on Year Evolution: {metric}<br><sub>{format_scenario_name(subscenario1)} (solid) vs {format_scenario_name(subscenario2)} (dashed)</sub>",
             xaxis_title="Year",
-            yaxis_title="Value",
+            yaxis_title=ylabel,
             template="plotly_white",
             hovermode='x unified',
             legend=dict(title="Technology", yanchor="top", y=0.99, xanchor="left", x=1.01)

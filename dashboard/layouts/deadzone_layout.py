@@ -18,7 +18,7 @@ def create_deadzone_layout(data_loader):
     scenarios = stats.get('scenarios', [])
 
     return dbc.Container([
-        html.H3("Dead Zone Analysis - Frontier Comparisons", className="mb-4"),
+        html.H3("Energy Procurement Frontier - Frontier Comparisons", className="mb-4"),
 
         # Control panel
         dbc.Card([

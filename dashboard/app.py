@@ -56,7 +56,7 @@ app.layout = dbc.Container([
                        style={'fontWeight': 'bold'}),
                 dcc.Tab(label='Cross-Scenario Comparison', value='cross-scenario-tab',
                        style={'fontWeight': 'bold'}),
-                dcc.Tab(label='Dead Zone Analysis', value='deadzone-tab',
+                dcc.Tab(label='Energy Procurement Frontier', value='deadzone-tab',
                        style={'fontWeight': 'bold'}),
                 dcc.Tab(label='Timeseries Exploration', value='timeseries-tab',
                        style={'fontWeight': 'bold'}),
