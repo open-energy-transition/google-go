@@ -760,14 +760,6 @@ def add_co2_tracking(
     # this tracks CO2 in the atmosphere
     n.add("Bus", "co2 atmosphere", location="EU", carrier="co2", unit="t_co2")
 
-    # set carbon prices through setting marginal cost to storing CO2 in the atmosphere
-    if snakemake.params.costs["emission_prices"]["enable"]:
-        co2_price = snakemake.params.costs["emission_prices"]["co2"]
-
-        logger.info(f"Adding CO2 prices of {co2_price} EUR/tCO2")
-    else:
-        co2_price = 0
-
     # can also be negative
     n.add(
         "Store",
@@ -775,7 +767,6 @@ def add_co2_tracking(
         e_nom=np.inf,
         e_min_pu=-1,
         carrier="co2",
-        marginal_cost=-co2_price,
         bus="co2 atmosphere",
         marginal_cost=-co2_price,
     )
