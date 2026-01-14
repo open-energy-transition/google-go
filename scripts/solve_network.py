@@ -34,13 +34,13 @@ import sys
 from functools import partial
 from typing import Any
 
+import country_converter as coco
 import linopy
 import numpy as np
 import pandas as pd
 import pypsa
 import xarray as xr
 import yaml
-import country_converter as coco
 from linopy.remote.oetc import OetcCredentials, OetcHandler, OetcSettings
 from pypsa.descriptors import get_activity_mask
 from pypsa.descriptors import get_switchable_as_dense as get_as_dense
@@ -1222,12 +1222,14 @@ def add_co2_atmosphere_constraint(n, snapshots):
 
             n.model.add_constraints(lhs <= rhs, name=f"GlobalConstraint-{name}")
 
-def retrieve_tyndp_data(tyndp_scenario, planning_horizons):
+
+def retrieve_tyndp_data(tyndp_scenario, planning_horizons, countries):
     """
     Retrieve TYNDP data from the specified URL and scenario.
     """
 
     import os
+
     data_file = "../data/tyndp_results/tyndp_res_targets.csv"
     # Check if file already exists
     if os.path.exists(data_file):
@@ -1237,28 +1239,34 @@ def retrieve_tyndp_data(tyndp_scenario, planning_horizons):
         import zipfile
 
         url = "https://storage.googleapis.com/open-tyndp-data-store/250117-TYNDP-2024-Visualisation-Platform.zip"
-        target_file = "../data/tyndp_results/250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx"
+        target_file = (
+            "../data/tyndp_results/250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx"
+        )
         data_file = "../data/tyndp_results/tyndp_res_targets.csv"
 
         # Download
         os.makedirs("../data/tyndp_results", exist_ok=True)
         zip_file = "../data/tyndp_results/tyndp.zip"
-        
+
         print("Downloading and extracting TYNDP data...")
         urllib.request.urlretrieve(url, zip_file)
-        
-        with zipfile.ZipFile(zip_file, 'r') as z:
+
+        with zipfile.ZipFile(zip_file, "r") as z:
             z.extract("250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx", ".")
-            os.rename("250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx", target_file)
-        
+            os.rename(
+                "250117_TYNDP2024Scenarios_Electricity_SupplyMix.xlsx", target_file
+            )
+
         os.remove(zip_file)
         print("Download completed!")
-    
+
         # Read
         years = [2030, 2035, 2040, 2050]
-        scenarios = ["National Trends",
-                    "Distributed Energy",
-                    "Global Ambition",]
+        scenarios = [
+            "National Trends",
+            "Distributed Energy",
+            "Global Ambition",
+        ]
         climate_year = "CY2009"
         target = "Generation"
         columns_to_drop = [
@@ -1272,67 +1280,118 @@ def retrieve_tyndp_data(tyndp_scenario, planning_horizons):
             "Nuclear",
             "Other thermal",
         ]
-        countries_pypsa = n.config["countries"]
-        
+
         elc_generation_tyndp = pd.read_excel(target_file, index_col="Country")
         elc_generation_tyndp = elc_generation_tyndp.copy()
-        elc_generation_tyndp_subset = elc_generation_tyndp[(elc_generation_tyndp["Climate_Year"] == climate_year)
-                                                    & (elc_generation_tyndp["Property_Name"] == target)
-                                                    ].drop(columns=columns_to_drop)
+        elc_generation_tyndp_subset = elc_generation_tyndp[
+            (elc_generation_tyndp["Climate_Year"] == climate_year)
+            & (elc_generation_tyndp["Property_Name"] == target)
+        ].drop(columns=columns_to_drop)
 
         # Process
         country_names = elc_generation_tyndp_subset.index
 
         manual_country_mapping = {
-            'Lybia': 'LY',
-            'Moldavia': 'MD',
+            "Lybia": "LY",
+            "Moldavia": "MD",
         }
-        processed_names = [manual_country_mapping.get(name, name) for name in country_names]
+        processed_names = [
+            manual_country_mapping.get(name, name) for name in country_names
+        ]
         country_codes = coco.CountryConverter().convert(processed_names, to="ISO2")
         elc_generation_tyndp_subset.index = country_codes
-        elc_generation_tyndp_pypsa = elc_generation_tyndp_subset.copy()[elc_generation_tyndp_subset.index.isin(countries_pypsa)]
+        elc_generation_tyndp_pypsa = elc_generation_tyndp_subset.copy()[
+            elc_generation_tyndp_subset.index.isin(countries)
+        ]
 
         shares_res_scen = {}
-        for scen in scenarios:   
+        for scen in scenarios:
             for yy in years:
                 # Skip years that don't exist for each scenario
-                if (scen == "National Trends" and (yy == 2035 or yy == 2050)) or (scen == "Distributed Energy" and yy == 2030):
+                if (scen == "National Trends" and (yy == 2035 or yy == 2050)) or (
+                    scen == "Distributed Energy" and yy == 2030
+                ):
                     continue
 
-                generation = elc_generation_tyndp_pypsa[(elc_generation_tyndp_pypsa["Scenario"] == scen)
-                                                        & (elc_generation_tyndp_pypsa["Year"] == yy)].drop(
-                                                            columns=["Year", "Scenario"]
-                                                        )
-                generation_by_country = generation.groupby([generation.index, "Category_Simple"]).sum()
-                generation_by_country_unstacked = generation_by_country.unstack().fillna(0)
-                generation_by_country_unstacked.columns = generation_by_country_unstacked.columns.droplevel(0).rename("Carrier")
-                
-                shares_by_country = (generation_by_country_unstacked.div(generation_by_country_unstacked.sum(axis=1), axis=0))
-                shares_by_country_res = shares_by_country.loc[:,~shares_by_country.columns.isin(non_res)].sum(axis=1).round(2)
-                shares_total = (generation_by_country_unstacked.sum().div(generation_by_country_unstacked.sum().sum()))
-                shares_total_res = shares_total[~shares_total.index.isin(non_res)].sum().round(2)
-                
+                generation = elc_generation_tyndp_pypsa[
+                    (elc_generation_tyndp_pypsa["Scenario"] == scen)
+                    & (elc_generation_tyndp_pypsa["Year"] == yy)
+                ].drop(columns=["Year", "Scenario"])
+                generation_by_country = generation.groupby(
+                    [generation.index, "Category_Simple"]
+                ).sum()
+                generation_by_country_unstacked = (
+                    generation_by_country.unstack().fillna(0)
+                )
+                generation_by_country_unstacked.columns = (
+                    generation_by_country_unstacked.columns.droplevel(0).rename(
+                        "Carrier"
+                    )
+                )
+
+                shares_by_country = generation_by_country_unstacked.div(
+                    generation_by_country_unstacked.sum(axis=1), axis=0
+                )
+                shares_by_country_res = (
+                    shares_by_country.loc[:, ~shares_by_country.columns.isin(non_res)]
+                    .sum(axis=1)
+                    .round(2)
+                )
+                shares_total = generation_by_country_unstacked.sum().div(
+                    generation_by_country_unstacked.sum().sum()
+                )
+                shares_total_res = (
+                    shares_total[~shares_total.index.isin(non_res)].sum().round(2)
+                )
+
                 shares_res = shares_by_country_res.copy()
                 shares_res.loc["EU+"] = shares_total_res
                 shares_res_scen[(scen, yy)] = shares_res
 
         df_shares_res_scen = pd.DataFrame(shares_res_scen)
         # Add interpolated data to the existing DataFrame
-        df_shares_res_scen[("National Trends", 2035)] = ((df_shares_res_scen[("National Trends", 2030)] + df_shares_res_scen[("National Trends", 2040)]) / 2).round(2)
-        df_shares_res_scen[("Distributed Energy", 2030)] = df_shares_res_scen[("National Trends", 2030)]
-        df_shares_res_scen[("Distributed Energy", 2045)] = ((df_shares_res_scen[("Distributed Energy", 2040)] + df_shares_res_scen[("Distributed Energy", 2050)]) / 2).round(2)
-        df_shares_res_scen[("Global Ambition", 2030)] = df_shares_res_scen[("National Trends", 2030)]
-        df_shares_res_scen[("Global Ambition", 2045)] = ((df_shares_res_scen[("Global Ambition", 2040)] + df_shares_res_scen[("Global Ambition", 2050)]) / 2).round(2)
+        df_shares_res_scen[("National Trends", 2035)] = (
+            (
+                df_shares_res_scen[("National Trends", 2030)]
+                + df_shares_res_scen[("National Trends", 2040)]
+            )
+            / 2
+        ).round(2)
+        df_shares_res_scen[("Distributed Energy", 2030)] = df_shares_res_scen[
+            ("National Trends", 2030)
+        ]
+        df_shares_res_scen[("Distributed Energy", 2045)] = (
+            (
+                df_shares_res_scen[("Distributed Energy", 2040)]
+                + df_shares_res_scen[("Distributed Energy", 2050)]
+            )
+            / 2
+        ).round(2)
+        df_shares_res_scen[("Global Ambition", 2030)] = df_shares_res_scen[
+            ("National Trends", 2030)
+        ]
+        df_shares_res_scen[("Global Ambition", 2045)] = (
+            (
+                df_shares_res_scen[("Global Ambition", 2040)]
+                + df_shares_res_scen[("Global Ambition", 2050)]
+            )
+            / 2
+        ).round(2)
 
-        df_shares_res_scen = df_shares_res_scen.reindex(sorted(df_shares_res_scen.columns), axis=1)
+        df_shares_res_scen = df_shares_res_scen.reindex(
+            sorted(df_shares_res_scen.columns), axis=1
+        )
 
         # Save
         df_shares_res_scen.to_csv("../data/tyndp_results/tyndp_res_targets.csv")
 
-    tyndp_shares_all = pd.read_csv("../data/tyndp_results/tyndp_res_targets.csv", index_col=0, header=[0, 1])
+    tyndp_shares_all = pd.read_csv(
+        "../data/tyndp_results/tyndp_res_targets.csv", index_col=0, header=[0, 1]
+    )
     tyndp_shares = tyndp_shares_all[(tyndp_scenario, str(planning_horizons))]
-    
+
     return tyndp_shares.to_frame()
+
 
 def add_rps_constraints(n, planning_horizons):
     """
@@ -1341,51 +1400,63 @@ def add_rps_constraints(n, planning_horizons):
     Also, they can be defined for individual countries or for the entire system.
     """
     res_target = n.config["res_target"]
-    
+    countries = n.config["countries"]
+
     # Retrieve data
     if res_target["tyndp_data"]["enable"]:
         source = "tyndp"
         tyndp_scenario = res_target["tyndp_data"]["tyndp_scenario"]
-        res_shares = retrieve_tyndp_data(tyndp_scenario, planning_horizons)
+        res_shares = retrieve_tyndp_data(tyndp_scenario, planning_horizons, countries)
     else:
         source = "manual"
         res_shares = pd.DataFrame([res_target["res_shares_overwrite"]]).T
-    
+
     # Add missing countries from res_shares_overwrite to res_shares DataFrame
     for cc in res_target["res_shares_overwrite"].keys():
         if cc not in res_shares.index:
             res_shares.loc[cc] = res_target["res_shares_overwrite"][cc]
-    
-    res_shares.columns = [f'RES_target_{planning_horizons}']
-    country_names = ["System" if code == "not found" else code for code in coco.CountryConverter().convert(res_shares.index, to="short_name")]
+
+    res_shares.columns = [f"RES_target_{planning_horizons}"]
+    country_names = [
+        "System" if code == "not found" else code
+        for code in coco.CountryConverter().convert(res_shares.index, to="short_name")
+    ]
     res_shares_log = res_shares.copy()
     res_shares_log["Country"] = country_names
-    logger.info(f"Setting res_shares-{source}:\n{res_shares_log[res_shares_log.columns[::-1]]}")
+    logger.info(
+        f"Setting res_shares-{source}:\n{res_shares_log[res_shares_log.columns[::-1]]}"
+    )
 
     # Build constraints
     weights = n.snapshot_weightings["generators"]
     res_carriers = n.config["grid_policy"]["renewable_carriers"]
-    negative_carriers = determine_storage_carrier(n) # PHS, battery chargers/dischargers, and H2 links (FCs, turbines, electrolysers)
+    negative_carriers = determine_storage_carrier(
+        n
+    )  # PHS, battery chargers/dischargers, and H2 links (FCs, turbines, electrolysers)
     grid_carriers = ["electricity distribution grid", "AC", "DC", "low voltage"]
     bus_grid = n.buses[n.buses.carrier.isin(grid_carriers)].index
-    
-    res_shares_xr = xr.DataArray(res_shares[f"RES_target_{planning_horizons}"]).rename(dim_0 = "country")
+
+    res_shares_xr = xr.DataArray(res_shares[f"RES_target_{planning_horizons}"]).rename(
+        dim_0="country"
+    )
     dispatch_tot_cc = 0
     dispatch_res_cc = 0
     for c in {"Generator", "StorageUnit", "Link"}:
         assets = n.df(c)
         if assets.empty:
             continue
-        
+
         bus = "bus" if c in n.one_port_components else "bus1"
         attr = "p_dispatch" if c == "StorageUnit" else "p"
         dispatch = n.model[f"{c}-{attr}"].mul(weights).sum(dim="snapshot")
         attr = pypsa.descriptors.nominal_attrs[c]
 
         # Identify assets producing electricity
-        assets_elc = assets[(assets[bus].isin(bus_grid)) # attached to AC or low-voltage grids...
-            & (~assets.carrier.isin(grid_carriers + negative_carriers))] # ...but excluding grid links (DC, elc distribution, dischargers) and storage w/ net-negative dispatch (PHS)
-        
+        assets_elc = assets[
+            (assets[bus].isin(bus_grid))  # attached to AC or low-voltage grids...
+            & (~assets.carrier.isin(grid_carriers + negative_carriers))
+        ]  # ...but excluding grid links (DC, elc distribution, dischargers) and storage w/ net-negative dispatch (PHS)
+
         # Select total (res + non-res) assets
         efficiency = 1 if c != "Link" else assets_elc.efficiency
         dispatch = dispatch.loc[assets_elc.index] * efficiency
@@ -1397,14 +1468,20 @@ def add_rps_constraints(n, planning_horizons):
         if res_index.empty:
             continue
         dispatch_res = dispatch.loc[res_index]
-        grouper_res = assets[assets.index.isin(res_index)][bus].map(n.buses.country).rename("country")
+        grouper_res = (
+            assets[assets.index.isin(res_index)][bus]
+            .map(n.buses.country)
+            .rename("country")
+        )
         dispatch_res_cc += dispatch_res.groupby(grouper_res).sum()
 
     if res_target["country_share_target"]:
         logger.info("Setting country-specific RPS constraints")
-        gen_res_cc, gen_tot_cc, shares_cc = linopy.align(dispatch_res_cc, dispatch_tot_cc, res_shares_xr)
+        gen_res_cc, gen_tot_cc, shares_cc = linopy.align(
+            dispatch_res_cc, dispatch_tot_cc, res_shares_xr
+        )
         n.model.add_constraints(
-            gen_res_cc >=  shares_cc *gen_tot_cc,
+            gen_res_cc >= shares_cc * gen_tot_cc,
             name="rps_constraints_country",
         )
 
@@ -1413,18 +1490,19 @@ def add_rps_constraints(n, planning_horizons):
         logger.info("Setting system-wide (EU+) RPS constraints")
         dispatch_res_eu_sum = dispatch_res_cc.sum().expand_dims(country=["EU+"])
         dispatch_tot_eu_sum = dispatch_tot_cc.sum().expand_dims(country=["EU+"])
-        gen_res_eu, gen_tot_eu, shares_eu = linopy.align(dispatch_res_eu_sum, dispatch_tot_eu_sum, res_shares_xr)
+        gen_res_eu, gen_tot_eu, shares_eu = linopy.align(
+            dispatch_res_eu_sum, dispatch_tot_eu_sum, res_shares_xr
+        )
         n.model.add_constraints(
             gen_res_eu >= shares_eu * gen_tot_eu,
             name="rps_constraints_system",
         )
 
 
-def add_virtual_ppl_matching(n):
+def add_virtual_ppl_matching(n, planning_horizons):
     from scripts.add_certificate import get_virtual_ppl_dataframe
 
     certificate = n.config["certificate"]
-    planning_horizons = snakemake.wildcards.get("planning_horizons", None)
 
     vpp = get_virtual_ppl_dataframe(n, certificate, planning_horizons)
 
@@ -1452,7 +1530,10 @@ def add_virtual_ppl_matching(n):
 
     if not df_gens.empty:
         rhs_gens = (
-            n.model["Generator-p"].loc[:, df_gens.index].groupby(df_gens.virtual_ppl).sum()
+            n.model["Generator-p"]
+            .loc[:, df_gens.index]
+            .groupby(df_gens.virtual_ppl)
+            .sum()
         )
         rhs += rhs_gens
 
@@ -1475,14 +1556,16 @@ def add_virtual_storage_matching(n):
 
     certificate = n.config["certificate"]
 
-    if ((
-        certificate["new_demand"]["enable"]
-        and certificate["new_demand"]["scope"] == "national"
-    ) or (
-        certificate["background_demand"]["enable"]
-        and certificate["background_demand"]["scope"] == "national"
-    )) and certificate["storage_carriers"]:
-        
+    if (
+        (
+            certificate["new_demand"]["enable"]
+            and certificate["new_demand"]["scope"] == "national"
+        )
+        or (
+            certificate["background_demand"]["enable"]
+            and certificate["background_demand"]["scope"] == "national"
+        )
+    ) and certificate["storage_carriers"]:
         storage_carriers = certificate["storage_carriers"]
 
         df = get_virtual_storage_dataframe(n, storage_carriers)
@@ -1497,9 +1580,7 @@ def add_virtual_storage_matching(n):
         df.index.name = "name"
         df.rename(columns={"virtual_storage": "name"}, inplace=True)
         rhs = (
-            (n.model["Link-p"].loc[:, df.index] * df.efficiency)
-            .groupby(df.name)
-            .sum()
+            (n.model["Link-p"].loc[:, df.index] * df.efficiency).groupby(df.name).sum()
         )
 
         n.model.add_constraints(
@@ -1516,9 +1597,11 @@ def add_buffer_matching(n):
 
     if df.empty:
         return
-    
+
     charger = n.model["Generator-p"].loc[:, df[df.sign == -1].index].sum(dim="snapshot")
-    discharger = n.model["Generator-p"].loc[:, df[df.sign == 1].index].sum(dim="snapshot")
+    discharger = (
+        n.model["Generator-p"].loc[:, df[df.sign == 1].index].sum(dim="snapshot")
+    )
 
     # 1st Constraint: the sum of buffer discharger must be the same as the sum of buffer charger
     n.model.add_constraints(
@@ -1527,8 +1610,10 @@ def add_buffer_matching(n):
     )
 
     # 2nd Constraint: the buffer discharge must not exceed the hourly matching limit
-    lhs = (weights * n.model["Generator-p"].loc[:, df[df.sign == 1].index]).sum(dim="snapshot")
-    rhs = df.loc[df.sign == 1,"p_nom"]
+    lhs = (weights * n.model["Generator-p"].loc[:, df[df.sign == 1].index]).sum(
+        dim="snapshot"
+    )
+    rhs = df.loc[df.sign == 1, "p_nom"]
 
     n.model.add_constraints(
         lhs <= rhs,
@@ -1592,10 +1677,10 @@ def extra_functionality(
             add_TES_energy_to_power_ratio_constraints(n)
             add_TES_charger_ratio_constraints(n)
 
-    if config["electricity"]["make_Store_StorageUnit"]:
+    if config["electricity"].get("make_Store_StorageUnit"):
         add_storage_inverter_fix(n)
         add_storage_duration_fix(n)
-    
+
     add_battery_constraints(n)
     add_lossy_bidirectional_link_constraints(n)
     add_pipe_retrofit_constraint(n)
@@ -1621,11 +1706,18 @@ def extra_functionality(
         custom_extra_functionality = getattr(module, module_name)
         custom_extra_functionality(n, snapshots, snakemake)  # pylint: disable=E0601
 
-    if config.get("res_target", False) and (config["res_target"].get("system_share_target", False) or config["res_target"].get("country_share_target", False)) and planning_horizons != "2025":
+    if (
+        config.get("res_target", False)
+        and (
+            config["res_target"].get("system_share_target", False)
+            or config["res_target"].get("country_share_target", False)
+        )
+        and planning_horizons != "2025"
+    ):
         add_rps_constraints(n, planning_horizons)
 
     if config["enable"].get("certificate"):
-        add_virtual_ppl_matching(n)
+        add_virtual_ppl_matching(n, planning_horizons)
         add_buffer_matching(n)
         add_virtual_storage_matching(n)
 
@@ -2109,7 +2201,7 @@ if __name__ == "__main__":
         logger.info(f"Labels:\n{labels}")
         n.model.print_infeasibilities()
         raise RuntimeError("Solving status 'infeasible'. Infeasibilities computed.")
-    
+
     grid_policy = snakemake.config.get("grid_policy", False)
     if grid_policy:
         res_techs = grid_policy["renewable_carriers"]

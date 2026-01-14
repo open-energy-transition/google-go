@@ -180,12 +180,12 @@ def get_virtual_ppl_dataframe(n, certificate, planning_horizons):
     plant_group = certificate["plant_grouping"].copy()
     bus_group = certificate["bus_grouping"]
     max_lifetime_as_new = certificate["max_plant_lifetime_as_new"]
-    
+
     # if_max_lifetime is defined as year of construction
-    if max_lifetime_as_new >= 100: 
+    if max_lifetime_as_new >= 100:
         new_threshold = max_lifetime_as_new
     # If max_lifetime is defined in year since construction
-    else: 
+    else:
         new_threshold = int(planning_horizons) - max_lifetime_as_new
 
     # Filtering out links with generator carriers (coal, oil, nuclear)
@@ -263,7 +263,7 @@ def get_virtual_ppl_dataframe(n, certificate, planning_horizons):
     return df_vpp
 
 
-def add_virtual_ppl(n, certificate, planning_horizons):
+def add_virtual_ppl(n, certificate, planning_horizons, country_shapes):
     """
     Adds virtual power plants (VPPs) to the PyPSA network based on real generator and link data,
     grouped according to certificate-based criteria.
@@ -290,7 +290,7 @@ def add_virtual_ppl(n, certificate, planning_horizons):
 
     df_bus = df_vpp.groupby(["virtual_bus", "country"]).size().reset_index("country")
     df_node = get_geo_center(
-        snakemake.input.country_shapes,
+        country_shapes,
         x_offset=certificate["map"]["supply"][0],
         y_offset=certificate["map"]["supply"][1],
     )
@@ -467,12 +467,9 @@ def retrieve_ci_load(load):
         index={"EL": "GR"}, inplace=True
     )  # Rename EL (Eurostat) to GR (PyPSA)
     load_year["ci_demand"] = (
-        load_year["industrial_demand"]
-        + load_year["commercial_demand"]
+        load_year["industrial_demand"] + load_year["commercial_demand"]
     )
-    load_year["ci_share"] = (
-        load_year["ci_demand"] / load_year["total_demand"]
-    )
+    load_year["ci_share"] = load_year["ci_demand"] / load_year["total_demand"]
 
     for country, value in load["ci_share_overwrite"].items():
         load_year.loc[country, "ci_share"] = value
@@ -617,7 +614,7 @@ def get_go_background_demand(n, aib_filepath, profile=""):
     return load
 
 
-def add_demand(n, load, cert_demand, cert_map, name, GO_penalty):
+def add_demand(n, load, cert_demand, cert_map, name, GO_penalty, country_shapes, df_ci):
     """
     Adds Guarantee of Origin (GO) demand to the PyPSA network.
 
@@ -645,7 +642,7 @@ def add_demand(n, load, cert_demand, cert_map, name, GO_penalty):
     hourly_matching = cert_demand["hourly_matching"] / 100
 
     df_demand = get_geo_center(
-        snakemake.input.country_shapes,
+        country_shapes,
         "GO Demand",
         x_offset=cert_map[0],
         y_offset=cert_map[1],
@@ -670,9 +667,7 @@ def add_demand(n, load, cert_demand, cert_map, name, GO_penalty):
     df_load = load * energy_matching
 
     if cert_demand["participant"] == "ci":
-        df_ci = retrieve_ci_load(snakemake.params.ci_load)["ci_share"]
-        df_ci = df_ci[df_load.columns]
-        df_load *= df_ci
+        df_load *= df_ci[df_load.columns]
 
     df_load.columns = [f"GO Demand {c}" for c in df_load.columns]
     df_load = df_load.astype("float64")
@@ -696,7 +691,6 @@ def add_demand(n, load, cert_demand, cert_map, name, GO_penalty):
         df_buffer.rename(index=lambda i: i.replace("Demand", "Buffer"), inplace=True)
 
         for sign, direction in {1: "discharger", -1: "charger"}.items():
-
             n.add(
                 "Generator",
                 df_buffer.index,
@@ -727,7 +721,8 @@ def add_demand(n, load, cert_demand, cert_map, name, GO_penalty):
 
         logger.info("GO Penalty added")
 
-def add_go_market(n, cert_demand, cert_map, name):
+
+def add_go_market(n, cert_demand, cert_map, name, input):
     """
     Adds a market bus for Guarantees of Origin (GO) to the PyPSA network.
 
@@ -775,11 +770,11 @@ def add_go_market(n, cert_demand, cert_map, name):
 
     # Assign bus0 and bus1 based on the type
     if scope == "national":
-        shape = snakemake.input.country_shapes
+        shape = input.country_shapes
         df_link["market_bus"] = ["GO Market " + c for c in df_link.country]
         country_list = df_link.country.unique()
     else:
-        shape = snakemake.input.europe_shape
+        shape = input.europe_shape
         df_link["market_bus"] = "GO Market EU"
         country_list = ["EU"]
 
@@ -1007,7 +1002,11 @@ if __name__ == "__main__":
         add_virtual_carriers(n, carriers)
 
     # Add national supply bus
-    add_virtual_ppl(n, certificate, planning_horizons)
+    add_virtual_ppl(
+        n, certificate, planning_horizons, country_shapes=snakemake.input.country_shapes
+    )
+
+    df_ci = retrieve_ci_load(snakemake.params.ci_load)["ci_share"]
 
     if certificate["background_demand"]["enable"]:
         load_background = get_go_background_demand(
@@ -1021,10 +1020,16 @@ if __name__ == "__main__":
             certificate["background_demand"],
             certificate["map"]["background_demand"],
             "Background",
-            GO_penalty=certificate["GO_penalty"]
+            GO_penalty=certificate["GO_penalty"],
+            country_shapes=snakemake.input.country_shapes,
+            df_ci=df_ci,
         )
         add_go_market(
-            n, certificate["background_demand"], certificate["map"], "Background"
+            n,
+            certificate["background_demand"],
+            certificate["map"],
+            "Background",
+            snakemake.input,
         )
     if certificate["new_demand"]["enable"]:
         load_new = get_load_demand(
@@ -1037,17 +1042,24 @@ if __name__ == "__main__":
             certificate["new_demand"],
             certificate["map"]["new_demand"],
             "New",
-            GO_penalty=certificate["GO_penalty"]
+            GO_penalty=certificate["GO_penalty"],
+            country_shapes=snakemake.input.country_shapes,
+            df_ci=df_ci,
         )
-        add_go_market(n, certificate["new_demand"], certificate["map"], "New")
+        add_go_market(
+            n, certificate["new_demand"], certificate["map"], "New", snakemake.input
+        )
 
-    if ((
-        certificate["new_demand"]["enable"]
-        and certificate["new_demand"]["scope"] == "national"
-    ) or (
-        certificate["background_demand"]["enable"]
-        and certificate["background_demand"]["scope"] == "national"
-    )) and certificate["storage_carriers"]:
+    if (
+        (
+            certificate["new_demand"]["enable"]
+            and certificate["new_demand"]["scope"] == "national"
+        )
+        or (
+            certificate["background_demand"]["enable"]
+            and certificate["background_demand"]["scope"] == "national"
+        )
+    ) and certificate["storage_carriers"]:
         add_virtual_storage(
             n,
             certificate["storage_carriers"],

@@ -31,7 +31,7 @@ import warnings
 import pandas as pd
 import pypsa
 
-from scripts.add_electricity import calculate_annuity, STORE_LOOKUP
+from scripts.add_electricity import STORE_LOOKUP, calculate_annuity
 
 logger = logging.getLogger(__name__)
 

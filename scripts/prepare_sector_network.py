@@ -26,9 +26,9 @@ from scripts._helpers import (
     configure_logging,
     get,
     load_costs,
+    overwrite_config_by_year,
     set_scenario_config,
     update_config_from_wildcards,
-    overwrite_config_by_year,
 )
 from scripts.add_electricity import (
     attach_storageunits,
@@ -1413,7 +1413,7 @@ def add_novel_technologies(
     novel_carriers: list,
 ):
     nodes = pop_layout.index
-    
+
     for carrier in novel_carriers:
         n.add(
             "Generator",
@@ -1425,7 +1425,6 @@ def add_novel_technologies(
             capital_cost=costs.at[carrier, "capital_cost"],
             lifetime=costs.at[carrier, "lifetime"],
         )
-    
 
 
 def add_ammonia(
@@ -6591,7 +6590,7 @@ if __name__ == "__main__":
         limit = co2_cap.loc[investment_year]
     else:
         limit = get(co2_budget, investment_year)
-    
+
     if limit:
         add_co2limit(
             n,

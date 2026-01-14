@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: Open Energy Transition gGmbH and contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
 #
 # SPDX-License-Identifier: MIT
-import os
 import glob
-import shutil
+import os
 
 import yaml
 
@@ -27,7 +26,9 @@ def select_scenario(scenarios, name="scenarios", info=True):
         print(f"{i}. {scenario}")
 
     if info:
-        print(f"(It must be placed within the config/ folder, has the letter '{name}' in the beginning and '.yaml' in the end)")
+        print(
+            f"(It must be placed within the config/ folder, has the letter '{name}' in the beginning and '.yaml' in the end)"
+        )
     print("(You can also select the list number)")
 
     while True:
@@ -147,10 +148,7 @@ def main():
         deep_update(config, config_s[selected_scenario])
 
         config_update = {
-            "run": {
-                "name": selected_scenario, 
-                "sector_name": selected_scenario
-            }
+            "run": {"name": selected_scenario, "sector_name": selected_scenario}
         }
 
         deep_update(config, config_update)

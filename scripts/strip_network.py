@@ -11,9 +11,9 @@ import pypsa
 
 from scripts._helpers import (
     configure_logging,
+    overwrite_config_by_year,
     set_scenario_config,
     update_config_from_wildcards,
-    overwrite_config_by_year,
 )
 
 logger = logging.getLogger(__name__)
@@ -82,13 +82,12 @@ carrier_to_keep = [
 
 
 def extend_carrier_list(config_elec):
-    
     config_carriers = [
         carrier
         for key in ["conventional_carriers", "renewable_carriers", "novel_carriers"]
         for carrier in config_elec[key]
     ]
-    
+
     storage_carriers = [
         suffix
         for key in ["StorageUnit", "Store", "Link"]
@@ -122,9 +121,7 @@ def strip_network(n, carriers):  # , country=None):
     #     countries_to_keep = m.buses.country.unique()
 
     nodes_to_keep = m.buses[
-        m.buses.carrier.isin(
-            carriers
-        )  # & m.buses.country.isin(countries_to_keep)
+        m.buses.carrier.isin(carriers)  # & m.buses.country.isin(countries_to_keep)
     ].index
     m.remove("Bus", n.buses.index.symmetric_difference(nodes_to_keep))
 
@@ -157,7 +154,7 @@ def merge_load(n, config_elec):
     ----------
     n : pypsa.Network
         The PyPSA network object to modify.
-    
+
     config_elec : dict
         The electricity configuration dictionary.
 
@@ -187,13 +184,15 @@ def merge_load(n, config_elec):
     if config_elec["heating_demand"].get("enable", False):
         logger.info("Adding exogenous electricity demand for heating")
         heat_share = config_elec["heating_demand"]["share"]
-        heat_elc_load = n.loads_t.p_set[p_set.index] * heat_share / (1-heat_share)
+        heat_elc_load = n.loads_t.p_set[p_set.index] * heat_share / (1 - heat_share)
         n.loads_t.p_set[p_set.index] += heat_elc_load
 
     if config_elec["hydrogen_demand"].get("enable", False):
         logger.info("Adding exogenous electricity demand for hydrogen production")
         hydrogen_share = config_elec["hydrogen_demand"]["share"]
-        hydrogen_elc_load = n.loads_t.p_set[p_set.index] * hydrogen_share / (1-hydrogen_share)
+        hydrogen_elc_load = (
+            n.loads_t.p_set[p_set.index] * hydrogen_share / (1 - hydrogen_share)
+        )
         n.loads_t.p_set[p_set.index] += hydrogen_elc_load
 
     logger.info("Merge electricity demand loads to one electricity loads per bus")
@@ -220,13 +219,17 @@ if __name__ == "__main__":
 
     config_elec = snakemake.params.electricity
     options = snakemake.params.strip_network
-    
+
     carrier = carrier_to_keep + extend_carrier_list(config_elec)
 
     n = strip_network(n, carrier)
 
     if options["merge_load"]:
-        overwrite_config_by_year(snakemake.config, snakemake.params, snakemake.wildcards.get("planning_horizons", None))
+        overwrite_config_by_year(
+            snakemake.config,
+            snakemake.params,
+            snakemake.wildcards.get("planning_horizons", None),
+        )
         merge_load(n, config_elec)
 
     if options["snapshots_start"]:

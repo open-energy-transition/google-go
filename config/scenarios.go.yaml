@@ -32,7 +32,7 @@ energy-match-50:
       hourly_matching: 0
 
 # 3) C&I 50% energy matching, 90% hourly matching
-hourly-match-50-90:
+hourly-match-50-90-test:
   scenario:
     planning_horizons: [2025, 2030]
 
@@ -291,9 +291,7 @@ hourly-match-no-clean-firm-50-99:
     planning_horizons: [2025, 2030]
 
   certificate:
-    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
-                    ror, hydro, urban central solid biomass CHP, geothermal, 
-                    solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
     new_demand:
       enable: true
       participant: ci
@@ -303,9 +301,7 @@ hourly-match-no-clean-firm-50-99:
 # 26) No Advanced Clean Firm (C&I 25%, 99.9% hourly matching)
 hourly-match-no-clean-firm-25-99:
   certificate:
-    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, 
-                    ror, hydro, urban central solid biomass CHP, geothermal, 
-                    solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
     new_demand:
       enable: true
       participant: ci
@@ -333,7 +329,7 @@ hourly-match-noadd-10-99:
       participant: ci
       energy_matching: 10
       hourly_matching: 99.9
-  
+
 # 29) No additionality, high participation (C&I 90%, 99.9% hourly matching
 hourly-match-noadd-90-99:
   certificate:
