@@ -1,0 +1,341 @@
+# -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
+#
+# SPDX-License-Identifier: MIT
+
+# This file is used to define the scenarios that are run by snakemake. Each entry on the first level is a scenario. Each scenario can contain configuration overrides with respect to the config/config.yaml settings.
+#
+# Example
+#
+# custom-scenario: # name of the scenario
+#   electricity:
+#       renewable_carriers: [wind, solar] # override the list of renewable carriers
+
+# ================= Main Scenarios ====================
+# =====================================================
+
+# 1) Baseline
+baseline:
+  enable:
+    certificate: false
+
+# 2) C&I 50%, energy matching
+energy-match-50:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 0
+
+# 3) C&I 50% energy matching, 90% hourly matching
+hourly-match-50-90-test:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 90
+
+# 4) C&I 50% energy matching, 95% hourly matching
+hourly-match-50-95:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 95
+
+# 5) C&I 50% energy matching, 98% hourly matching
+hourly-match-50-98:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 98
+
+# 6) C&I 50% energy matching, 99.9% hourly matching
+hourly-match-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 7) C&I 25%, energy matching
+energy-match-25:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 0
+
+# 8) C&I 25%, energy matching, 90% hourly matching
+hourly-match-25-90:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 90
+
+# 9) C&I 25%, energy matching, 95% hourly matching
+hourly-match-25-95:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 95
+
+# 10) C&I 25%, energy matching, 98% hourly matching
+hourly-match-25-98:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 98
+
+# 11) C&I 25%, energy matching, 99.9% hourly matching
+hourly-match-25-99:
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# ============== Sensitivities ==============
+# ===========================================
+
+# == Policy ==
+# 12) Renewable Portfolio Standard (baseline)
+baseline-rps:
+  enable:
+    certificate: false
+
+  res_target:
+    system_share_target: true
+    country_share_target: true
+
+# 13) Low carbon price, proxy of US market (baseline)
+baseline-co2-price25:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 25
+
+# 14) Medium carbon price, proxy of EU market (baseline)
+baseline-co2-price50:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 50
+
+# 15) High carbon price - baseline
+baseline-co2-price100:
+  enable:
+    certificate: false
+
+  costs:
+    emission_prices:
+      co2: 100
+
+# 16) Low carbon price, proxy of US market (C&I 50%, 99.9% hourly matching)
+hourly-match-co2-price25-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 17) Low carbon price, proxy of US market (C&I 25%, 99.9% hourly matching)
+hourly-match-co2-price25-25-99:
+  costs:
+    emission_prices:
+      co2: 25
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# 18) Medium carbon price, proxy of EU market (C&I 50%, 99.9% hourly matching)
+hourly-match-co2-price50-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  costs:
+    emission_prices:
+      co2: 50
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 19) Medium carbon price, proxy of EU market (C&I 25%, 99.9% hourly matching)
+hourly-match-co2-price50-25-99:
+  costs:
+    emission_prices:
+      co2: 50
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# 20) High carbon price - baseline (C&I 25%, 99.9% hourly matching)
+hourly-match-co2-price100-25-99:
+  costs:
+    emission_prices:
+      co2: 100
+
+  certificate:
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# == GO market scope ==
+
+# 21) EU GO market (C&I 50%, 99.9% hourly matching)
+hourly-match-EU-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    new_demand:
+      enable: true
+      scope: global
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 22) EU GO market (C&I 25%, 99.9% hourly matching)
+hourly-match-EU-25-99:
+  certificate:
+    new_demand:
+      enable: true
+      scope: global
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# == Technology portfolio ==      
+
+# 23) No LDES (iron-air) (C&I 50%, 99.9% hourly matching)
+hourly-match-no-LDES-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    storage_carriers: [li-ion]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 24) No LDES (iron-air) (C&I 25%, 99.9% hourly matching)
+hourly-match-no-LDES-25-99:
+  certificate:
+    storage_carriers: [li-ion]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# 25) No Advanced Clean Firm (C&I 50%, 99.9% hourly matching)
+hourly-match-no-clean-firm-50-99:
+  scenario:
+    planning_horizons: [2025, 2030]
+
+  certificate:
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 26) No Advanced Clean Firm (C&I 25%, 99.9% hourly matching)
+hourly-match-no-clean-firm-25-99:
+  certificate:
+    plant_carriers: [offwind, offwind-ac, offwind-dc, offwind-float, onwind, ror, hydro, urban central solid biomass CHP, geothermal, solar, solar-hsat, solar rooftop, nuclear, green_ocgt]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 25
+      hourly_matching: 99.9
+
+# == Additionality ==
+
+# 27) No additionality (C&I 50%, 99.9% hourly matching)
+hourly-match-noadd-50-99:
+  certificate:
+    plant_status: [new, existing]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 50
+      hourly_matching: 99.9
+
+# 28) No additionality, low participation (C&I 10%, 99.9% hourly matching
+hourly-match-noadd-10-99:
+  certificate:
+    plant_status: [new, existing]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 10
+      hourly_matching: 99.9
+
+# 29) No additionality, high participation (C&I 90%, 99.9% hourly matching
+hourly-match-noadd-90-99:
+  certificate:
+    plant_status: [new, existing]
+    new_demand:
+      enable: true
+      participant: ci
+      energy_matching: 90
+      hourly_matching: 99.9

@@ -26,10 +26,13 @@ from scripts._helpers import (
     configure_logging,
     get,
     load_costs,
+    overwrite_config_by_year,
     set_scenario_config,
     update_config_from_wildcards,
 )
 from scripts.add_electricity import (
+    attach_storageunits,
+    attach_stores,
     calculate_annuity,
     flatten,
     sanitize_carriers,
@@ -1403,6 +1406,27 @@ def add_generation(
         )
 
 
+def add_novel_technologies(
+    n: pypsa.Network,
+    costs: pd.DataFrame,
+    pop_layout: pd.DataFrame,
+    novel_carriers: list,
+):
+    nodes = pop_layout.index
+
+    for carrier in novel_carriers:
+        n.add(
+            "Generator",
+            nodes + " " + carrier,
+            bus=nodes,
+            p_nom_extendable=True,
+            carrier=carrier,
+            marginal_cost=costs.at[carrier, "marginal_cost"],
+            capital_cost=costs.at[carrier, "capital_cost"],
+            lifetime=costs.at[carrier, "lifetime"],
+        )
+
+
 def add_ammonia(
     n: pypsa.Network,
     costs: pd.DataFrame,
@@ -1758,7 +1782,7 @@ def add_electricity_grid_connection(n, costs):
     ]
 
 
-def add_storage_and_grids(
+def add_h2_gas_infrastructure(
     n,
     costs,
     pop_layout,
@@ -1770,7 +1794,7 @@ def add_storage_and_grids(
     options,
 ):
     """
-    Add storage and grid infrastructure to the network including hydrogen, gas, and battery systems.
+    Add hydrogen and gas infrastructure to the network.
 
     Parameters
     ----------
@@ -2094,44 +2118,6 @@ def add_storage_and_grids(
             carrier="H2 pipeline",
             lifetime=costs.at["H2 (g) pipeline", "lifetime"],
         )
-
-    n.add("Carrier", "battery")
-
-    n.add("Bus", nodes + " battery", location=nodes, carrier="battery", unit="MWh_el")
-
-    n.add(
-        "Store",
-        nodes + " battery",
-        bus=nodes + " battery",
-        e_cyclic=True,
-        e_nom_extendable=True,
-        carrier="battery",
-        capital_cost=costs.at["battery storage", "capital_cost"],
-        lifetime=costs.at["battery storage", "lifetime"],
-    )
-
-    n.add(
-        "Link",
-        nodes + " battery charger",
-        bus0=nodes,
-        bus1=nodes + " battery",
-        carrier="battery charger",
-        efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
-        capital_cost=costs.at["battery inverter", "capital_cost"],
-        p_nom_extendable=True,
-        lifetime=costs.at["battery inverter", "lifetime"],
-    )
-
-    n.add(
-        "Link",
-        nodes + " battery discharger",
-        bus0=nodes + " battery",
-        bus1=nodes,
-        carrier="battery discharger",
-        efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
-        p_nom_extendable=True,
-        lifetime=costs.at["battery inverter", "lifetime"],
-    )
 
     if options["methanation"]:
         n.add(
@@ -6287,10 +6273,12 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "prepare_sector_network",
+            run="baseline-rps-3H",
             opts="",
-            clusters="10",
+            clusters="39",
+            configfiles="config/config.go.yaml",
             sector_opts="",
-            planning_horizons="2050",
+            planning_horizons="2025",
         )
 
     configure_logging(snakemake)  # pylint: disable=E0606
@@ -6299,14 +6287,17 @@ if __name__ == "__main__":
 
     options = snakemake.params.sector
     cf_industry = snakemake.params.industry
+    ext_carriers = snakemake.params.electricity.get("extendable_carriers", dict())
 
     investment_year = int(snakemake.wildcards.planning_horizons)
+    overwrite_config_by_year(snakemake.config, snakemake.params, investment_year)
 
     n = pypsa.Network(snakemake.input.network)
 
     pop_layout = pd.read_csv(snakemake.input.clustered_pop_layout, index_col=0)
     nhours = n.snapshot_weightings.generators.sum()
     nyears = nhours / 8760
+    max_hours = snakemake.params.electricity["max_hours"]
 
     costs = load_costs(snakemake.input.costs)
 
@@ -6387,12 +6378,21 @@ if __name__ == "__main__":
         spatial=spatial,
         options=options,
         cf_industry=cf_industry,
-        ext_carriers=snakemake.params.electricity.get("extendable_carriers", dict()),
+        ext_carriers=ext_carriers,
         existing_capacities=existing_capacities,
         existing_efficiencies=existing_efficiencies,
     )
 
-    add_storage_and_grids(
+    novel_carriers = snakemake.params.electricity.get("novel_carriers")
+    if novel_carriers:
+        add_novel_technologies(
+            n=n,
+            costs=costs,
+            pop_layout=pop_layout,
+            novel_carriers=novel_carriers,
+        )
+
+    add_h2_gas_infrastructure(
         n=n,
         costs=costs,
         pop_layout=pop_layout,
@@ -6402,6 +6402,25 @@ if __name__ == "__main__":
         gas_input_nodes=gas_input_nodes,
         spatial=spatial,
         options=options,
+    )
+
+    # Hydrogen already implemented in add_h2_gas_infrastructure
+    extendable_storageunits = list(set(ext_carriers.get("StorageUnit", [])) - {"H2"})
+    extendable_stores = list(set(ext_carriers.get("Store", [])) - {"H2"})
+
+    attach_storageunits(
+        n=n,
+        costs=costs,
+        buses_i=pop_layout.index,
+        extendable_carriers=extendable_storageunits,
+        max_hours=max_hours,
+    )
+
+    attach_stores(
+        n=n,
+        costs=costs,
+        buses_i=pop_layout.index,
+        extendable_carriers=extendable_stores,
     )
 
     if options["transport"]:
@@ -6571,14 +6590,16 @@ if __name__ == "__main__":
         limit = co2_cap.loc[investment_year]
     else:
         limit = get(co2_budget, investment_year)
-    add_co2limit(
-        n,
-        options,
-        snakemake.input.co2_totals_name,
-        snakemake.params.countries,
-        nyears,
-        limit,
-    )
+
+    if limit:
+        add_co2limit(
+            n,
+            options,
+            snakemake.input.co2_totals_name,
+            snakemake.params.countries,
+            nyears,
+            limit,
+        )
 
     maxext = snakemake.params["lines"]["max_extension"]
     if maxext is not None:
